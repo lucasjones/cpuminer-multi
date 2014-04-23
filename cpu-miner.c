@@ -106,6 +106,7 @@ enum sha256_algos {
 	ALGO_KECCAK,        /* Keccak */
 	ALGO_HEAVY,         /* Heavy */
 	ALGO_QUARK,         /* Quark */
+	ALGO_SKEIN,         /* Skein */
 };
 
 static const char *algo_names[] = {
@@ -113,7 +114,8 @@ static const char *algo_names[] = {
 	[ALGO_SHA256D]		= "sha256d",
 	[ALGO_KECCAK]       = "keccak",
 	[ALGO_HEAVY]        = "heavy",
-	[ALGO_QUARK]        = "quark"
+	[ALGO_QUARK]        = "quark",
+	[ALGO_SKEIN]        = "skein",
 };
 
 bool opt_debug = false;
@@ -175,7 +177,9 @@ Options:\n\
                           scrypt    scrypt(1024, 1, 1) (default)\n\
                           sha256d   SHA-256d\n\
                           keccak    Keccak\n\
+                          quark     Quark\n\
                           heavy     Heavy\n\
+                          skein     Skein\n\
   -o, --url=URL         URL of mining server\n\
   -O, --userpass=U:P    username:password pair for mining server\n\
   -u, --user=USERNAME   username for mining server\n\
@@ -805,6 +809,11 @@ static void *miner_thread(void *userdata)
 	    case ALGO_QUARK:
 	        rc = scanhash_quark(thr_id, work.data, work.target,
 	                             max_nonce, &hashes_done);
+	        break;
+	    
+	    case ALGO_SKEIN:
+	        rc = scanhash_skein(thr_id, work.data, work.target,
+	                            max_nonce, &hashes_done);
 	        break;
 
 		default:

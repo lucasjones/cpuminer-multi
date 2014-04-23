@@ -18,7 +18,7 @@ dist_man_MANS	= minerd.1
 minerd_SOURCES	= elist.h miner.h compat.h \
 		  cpu-miner.c util.c \
 		  sha2.c scrypt.c keccak.c \
-		  heavy.c quark.c \
+		  heavy.c quark.c skein.c \
 		  sha3/sph_keccak.c \
 		  sha3/sph_hefty1.c \
 		  sha3/sph_groestl.c \
