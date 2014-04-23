@@ -26,7 +26,7 @@ static void skeinhash(void *state, const void *input)
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
     SHA256_Update(&sha256, hashA, 64);
-    SHA256_Final(hashB, &sha256);
+    SHA256_Final((unsigned char*) hashB, &sha256);
 
     memcpy(state, hashB, 32);
 	
@@ -62,7 +62,6 @@ int scanhash_skein(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	};
 
 	do {
-	
 		pdata[19] = ++n;
 		be32enc(&endiandata[19], n); 
 		skeinhash(hash64, &endiandata);

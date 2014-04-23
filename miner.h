@@ -168,6 +168,9 @@ extern int scanhash_quark(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 extern int scanhash_skein(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
        	uint32_t max_nonce, unsigned long *hashes_done);
 
+extern int scanhash_ink(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+       	uint32_t max_nonce, unsigned long *hashes_done);
+
 struct thr_info {
 	int		id;
 	pthread_t	pth;
