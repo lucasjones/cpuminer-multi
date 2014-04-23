@@ -1,3 +1,8 @@
+CPUMiner-Multi
+==============
+
+[![Build Status](https://travis-ci.org/LucasJones/cpuminer-multi.svg?branch=master)](https://travis-ci.org/LucasJones/cpuminer-multi)
+
 This is a multi-threaded CPU miner for Litecoin and Bitcoin,
 fork of Jeff Garzik's reference cpuminer.
 
