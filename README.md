@@ -3,18 +3,45 @@ CPUMiner-Multi
 
 [![Build Status](https://travis-ci.org/LucasJones/cpuminer-multi.svg?branch=master)](https://travis-ci.org/LucasJones/cpuminer-multi)
 
-This is a multi-threaded CPU miner for Litecoin and Bitcoin,
-fork of Jeff Garzik's reference cpuminer.
+This is a multi-threaded CPU miner,
+fork of [pooler](//github.com/pooler)'s cpuminer.
 
-License: GPLv2.  See COPYING for details.
+Algorithms
+==========
+#### Currently supported
+ * ✓ __scrypt__ (Litecoin, Dogecoin, Feathercoin, etc..)
+ * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, etc..)
+ * ✓ __keccak__ (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
+ * ✓ __hefty1__ (Heavycoin)
+ * ✓ __quark__ (Quarkcoin)
+ * ✓ __skein__ (Skeincoin, Myriadcoin)
+ * ✓ __shavite3__ (INKcoin)
 
-Downloads:  https://sourceforge.net/projects/cpuminer/files/
-Git tree:   https://github.com/pooler/cpuminer
+#### Planned support for
+ * *scrypt-n* (Vertcoin [VTC])
+ * *scrypt-jane* (YaCoin, CopperBars, Pennies, Tickets, etc..)
+ * *qubit* (Qubitcoin [Q2C], Myriadcoin [MYR])
+ * *blake* (Blakecoin [BLC])
+ * *groestl* (Groestlcoin [GRS])
+ * *x11* (Darkcoin [DRK], Hirocoin, Limecoin)
 
-Dependencies:
-	libcurl			http://curl.haxx.se/libcurl/
-	jansson			http://www.digip.org/jansson/
+License
+=======
+GPLv2.  See COPYING for details.
+
+Dependencies
+============
+* libcurl			http://curl.haxx.se/libcurl/
+* jansson			http://www.digip.org/jansson/
 		(jansson is included in-tree)
+
+Download
+========
+
+Git tree:   https://github.com/LucasJones/cpuminer-multi
+
+Build
+=====
 
 Basic *nix build instructions:
 	./autogen.sh	# only needed if building from git repo
@@ -58,7 +85,10 @@ Architecture-specific notes:
 		doesn't support some instruction sets. In that case, the miner
 		can still be built, but unavailable optimizations are left off.
 
-Usage instructions:  Run "minerd --help" to see options.
+Usage instructions
+==================
+
+Run "minerd --help" to see options.
 
 Connecting through a proxy:  Use the --proxy option.
 To use a SOCKS proxy, add a socks4:// or socks5:// prefix to the proxy host.
@@ -67,7 +97,3 @@ available since libcurl 7.18.0.
 If no protocol is specified, the proxy is assumed to be a HTTP proxy.
 When the --proxy option is not used, the program honors the http_proxy
 and all_proxy environment variables.
-
-Also many issues and FAQs are covered in the forum thread
-dedicated to this program,
-	https://bitcointalk.org/index.php?topic=55038.0
