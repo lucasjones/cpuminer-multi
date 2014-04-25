@@ -12,7 +12,7 @@ Algorithms
  * ✓ __scrypt__ (Litecoin, Dogecoin, Feathercoin, etc..)
  * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, etc..)
 
-#### Supported, but untested
+#### Implemented, but untested
  * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
  * ? hefty1 (Heavycoin)
  * ? quark (Quarkcoin)
