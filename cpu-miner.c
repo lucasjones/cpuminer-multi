@@ -107,7 +107,8 @@ enum sha256_algos {
 	ALGO_HEAVY,         /* Heavy */
 	ALGO_QUARK,         /* Quark */
 	ALGO_SKEIN,         /* Skein */
-	ALGO_INK,           /* INKcoin */
+	ALGO_SHAVITE3,      /* Shavite3 */
+	ALGO_BLAKE,         /* Blake */
 };
 
 static const char *algo_names[] = {
@@ -117,7 +118,8 @@ static const char *algo_names[] = {
 	[ALGO_HEAVY]        = "heavy",
 	[ALGO_QUARK]        = "quark",
 	[ALGO_SKEIN]        = "skein",
-	[ALGO_INK]          = "ink",
+	[ALGO_SHAVITE3]     = "shavite3",
+	[ALGO_BLAKE]        = "blake"
 };
 
 bool opt_debug = false;
@@ -182,7 +184,8 @@ Options:\n\
                           quark     Quark\n\
                           heavy     Heavy\n\
                           skein     Skein\n\
-                          ink       INKcoin\n\
+                          shavite3  Shavite3\n\
+                          blake     Blake\n\
   -o, --url=URL         URL of mining server\n\
   -O, --userpass=U:P    username:password pair for mining server\n\
   -u, --user=USERNAME   username for mining server\n\
@@ -818,10 +821,14 @@ static void *miner_thread(void *userdata)
 	        rc = scanhash_skein(thr_id, work.data, work.target,
 	                            max_nonce, &hashes_done);
 	        break;
-	    case ALGO_INK:
+	    case ALGO_SHAVITE3:
 	        rc = scanhash_ink(thr_id, work.data, work.target,
 	                            max_nonce, &hashes_done);
 	        break;
+	    case ALGO_BLAKE:
+	        rc = scanhash_blake(thr_id, work.data, work.target,
+                                max_nonce, &hashes_done);
+            break;
 
 		default:
 			/* should never happen */
@@ -1376,6 +1383,12 @@ int main(int argc, char *argv[])
 
 	/* parse command line */
 	parse_cmdline(argc, argv);
+	
+	if(opt_algo == ALGO_QUARK) {
+	    init_quarkhash_contexts();
+	} else if(opt_algo == ALGO_BLAKE) {
+	    init_blakehash_contexts();
+	}
 
 	if (!opt_benchmark && !rpc_url) {
 		fprintf(stderr, "%s: no URL supplied\n", argv[0]);

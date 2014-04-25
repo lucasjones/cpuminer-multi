@@ -11,17 +11,19 @@ Algorithms
 #### Currently supported
  * ✓ __scrypt__ (Litecoin, Dogecoin, Feathercoin, etc..)
  * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, etc..)
- * ✓ __keccak__ (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
- * ✓ __hefty1__ (Heavycoin)
- * ✓ __quark__ (Quarkcoin)
- * ✓ __skein__ (Skeincoin, Myriadcoin)
- * ✓ __shavite3__ (INKcoin)
+
+#### Supported, but untested
+ * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
+ * ? hefty1 (Heavycoin)
+ * ? quark (Quarkcoin)
+ * ? skein (Skeincoin, Myriadcoin)
+ * ? shavite3 (INKcoin)
+ * ? blake (Blakecoin [BLC])
 
 #### Planned support for
  * *scrypt-n* (Vertcoin [VTC])
  * *scrypt-jane* (YaCoin, CopperBars, Pennies, Tickets, etc..)
  * *qubit* (Qubitcoin [Q2C], Myriadcoin [MYR])
- * *blake* (Blakecoin [BLC])
  * *groestl* (Groestlcoin [GRS])
  * *x11* (Darkcoin [DRK], Hirocoin, Limecoin)
 
