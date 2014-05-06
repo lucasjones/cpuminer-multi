@@ -1350,9 +1350,7 @@ static void *longpoll_thread(void *userdata) {
             char *start_job_id = strdup(g_work.job_id);
             if (work_decode(json_object_get(val, "result"), &g_work)) {
                 if (strcmp(start_job_id, g_work.job_id)) {
-                    applog(LOG_INFO, "LONGPOLL detected new block");
-                    if (opt_debug)
-                        applog(LOG_DEBUG, "DEBUG: got new work");
+                    applog(LOG_INFO, "LONGPOLL pushed new work");
                     time(&g_work_time);
                     restart_threads();
                 }
@@ -1468,7 +1466,7 @@ static void *stratum_thread(void *userdata) {
                 stratum_gen_work(&stratum, &g_work);
                 time(&g_work_time);
                 pthread_mutex_unlock(&g_work_lock);
-                applog(LOG_INFO, "Stratum detected new block");
+                applog(LOG_INFO, "Stratum requested work restart");
                 restart_threads();
             }
         } else {
@@ -1480,7 +1478,7 @@ static void *stratum_thread(void *userdata) {
                 time(&g_work_time);
                 pthread_mutex_unlock(&g_work_lock);
                 if (stratum.job.clean) {
-                    applog(LOG_INFO, "Stratum detected new block");
+                    applog(LOG_INFO, "Stratum requested work restart");
                     restart_threads();
                 }
             }
