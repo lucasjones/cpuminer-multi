@@ -1353,8 +1353,6 @@ int main(int argc, char *argv[]) {
         init_quarkhash_contexts();
     } else if (opt_algo == ALGO_BLAKE) {
         init_blakehash_contexts();
-    } else if (opt_algo == ALGO_CRYPTONIGHT) {
-        init_cryptonight_contexts();
     }
 
     if (!opt_benchmark && !rpc_url) {

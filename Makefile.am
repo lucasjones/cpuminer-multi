@@ -35,6 +35,10 @@ minerd_SOURCES	= elist.h miner.h compat.h \
 		  sha3/sph_echo.c \
 		  crypto/oaes_lib.c \
 		  crypto/c_keccak.c \
+		  crypto/c_groestl.c \
+		  crypto/c_blake256.c \
+		  crypto/c_jh.c \
+		  crypto/c_skein.c \
 		  crypto/hash.c
 if ARCH_x86
 minerd_SOURCES += sha2-x86.S scrypt-x86.S
