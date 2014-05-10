@@ -98,22 +98,29 @@ struct workio_cmd {
 };
 
 enum mining_algos {
-    ALGO_SCRYPT, /* scrypt(1024,1,1) */
-    ALGO_SHA256D, /* SHA-256d */
-    ALGO_KECCAK, /* Keccak */
-    ALGO_HEAVY, /* Heavy */
-    ALGO_QUARK, /* Quark */
-    ALGO_SKEIN, /* Skein */
-    ALGO_SHAVITE3, /* Shavite3 */
-    ALGO_BLAKE, /* Blake */
+    ALGO_SCRYPT,      /* scrypt(1024,1,1) */
+    ALGO_SHA256D,     /* SHA-256d */
+    ALGO_KECCAK,      /* Keccak */
+    ALGO_HEAVY,       /* Heavy */
+    ALGO_QUARK,       /* Quark */
+    ALGO_SKEIN,       /* Skein */
+    ALGO_SHAVITE3,    /* Shavite3 */
+    ALGO_BLAKE,       /* Blake */
+    ALGO_X11,         /* X11 */
     ALGO_CRYPTONIGHT, /* CryptoNight */
 };
 
-static const char *algo_names[] = { [ALGO_SCRYPT] = "scrypt", [ALGO_SHA256D
-        ] = "sha256d", [ALGO_KECCAK] = "keccak", [ALGO_HEAVY] = "heavy",
-        [ALGO_QUARK] = "quark", [ALGO_SKEIN] = "skein", [ALGO_SHAVITE3
-                ] = "shavite3", [ALGO_BLAKE] = "blake", [ALGO_CRYPTONIGHT
-                ] = "cryptonight", };
+static const char *algo_names[] = {
+    [ALGO_SCRYPT] =      "scrypt", 
+    [ALGO_SHA256D] =     "sha256d",
+    [ALGO_KECCAK] =      "keccak",
+    [ALGO_HEAVY] =       "heavy",
+    [ALGO_QUARK] =       "quark",
+    [ALGO_SKEIN] =       "skein",
+    [ALGO_SHAVITE3] =    "shavite3",
+    [ALGO_BLAKE] =       "blake",
+    [ALGO_X11] =         "x11",
+    [ALGO_CRYPTONIGHT] = "cryptonight", };
 
 bool opt_debug = false;
 bool opt_protocol = false;
@@ -180,6 +187,7 @@ Options:\n\
                           skein        Skein\n\
                           shavite3     Shavite3\n\
                           blake        Blake\n\
+                          x11          X11\n\
                           cryptonight  CryptoNight\n\
   -o, --url=URL         URL of mining server\n\
   -O, --userpass=U:P    username:password pair for mining server\n\
@@ -793,7 +801,10 @@ static void *miner_thread(void *userdata) {
             rc = scanhash_blake(thr_id, work.data, work.target, max_nonce,
                     &hashes_done);
             break;
-
+        case ALGO_X11:
+            rc = scanhash_x11(thr_id, work.data, work.target, max_nonce,
+                    &hashes_done);
+            break;
         case ALGO_CRYPTONIGHT:
             rc = scanhash_cryptonight(thr_id, work.data, work.target, max_nonce,
                     &hashes_done);
