@@ -32,46 +32,62 @@ union cn_slow_hash_state {
 };
 #pragma pack(pop)
 
-static void blake_hash(const void* input, size_t len, char* output) {
-    sph_blake256_context ctx;
+typedef struct {
+    sph_blake256_context    blake1;
+    sph_groestl512_context  groestl1;
+    sph_jh256_context       jh1;
+    sph_skein256_context    skein1;
+} cryptonight_context_holder;
 
-    sph_blake256_init(&ctx);
-    sph_blake256(&ctx, input, len);
-    sph_blake256_close(&ctx, output);
+cryptonight_context_holder base_contexts;
+
+void init_cryptonight_contexts() {
+    sph_blake256_init(&base_contexts.blake1);
+    sph_groestl512_init(&base_contexts.groestl1);
+    sph_jh256_init(&base_contexts.jh1);
+    sph_skein256_init(&base_contexts.skein1);
 }
 
-void groestl_hash(const void* input, size_t len, char* output) {
+static void blake_hash(cryptonight_context_holder* hash_ctx, const void* input, size_t len, char* output) {
+    sph_blake256_context* ctx = &hash_ctx->blake1;
+
+    sph_blake256_init(ctx);
+    sph_blake256(ctx, input, len);
+    sph_blake256_close(ctx, output);
+}
+
+void groestl_hash(cryptonight_context_holder* hash_ctx, const void* input, size_t len, char* output) {
     char hash1[64];
     char hash2[64];
 
-    sph_groestl512_context ctx_groestl;
-    sph_groestl512_init(&ctx_groestl);
-    sph_groestl512(&ctx_groestl, input, len);
-    sph_groestl512_close(&ctx_groestl, &hash1);
+    sph_groestl512_context* ctx_groestl = &hash_ctx->groestl1;
+    sph_groestl512_init(ctx_groestl);
+    sph_groestl512(ctx_groestl, input, len);
+    sph_groestl512_close(ctx_groestl, &hash1);
 
-    sph_groestl512(&ctx_groestl, hash1, 64);
-    sph_groestl512_close(&ctx_groestl, &hash2);
+    sph_groestl512(ctx_groestl, hash1, 64);
+    sph_groestl512_close(ctx_groestl, &hash2);
 
     memcpy(output, &hash2, 32);
 }
 
-static void jh_hash(const void* input, size_t len, char* output) {
-    sph_jh256_context ctx;
+static void jh_hash(cryptonight_context_holder* hash_ctx, const void* input, size_t len, char* output) {
+    sph_jh256_context* ctx = &hash_ctx->jh1;
 
-    sph_jh256_init(&ctx);
-    sph_jh256(&ctx, input, len);
-    sph_jh256_close(&ctx, output);
+    sph_jh256_init(ctx);
+    sph_jh256(ctx, input, len);
+    sph_jh256_close(ctx, output);
 }
 
-static void skein_hash(const void* input, size_t len, char* output) {
-    sph_skein256_context ctx;
+static void skein_hash(cryptonight_context_holder* hash_ctx, const void* input, size_t len, char* output) {
+    sph_skein256_context* ctx = &hash_ctx->skein1;
 
-    sph_skein256_init(&ctx);
-    sph_skein256(&ctx, input, len);
-    sph_skein256_close(&ctx, output);
+    sph_skein256_init(ctx);
+    sph_skein256(ctx, input, len);
+    sph_skein256_close(ctx, output);
 }
 
-static void (* const extra_hashes[4])(const void *, size_t, char *) = {
+static void (* const extra_hashes[4])(cryptonight_context_holder*, const void *, size_t, char *) = {
     blake_hash, groestl_hash, jh_hash, skein_hash
 };
 
@@ -125,6 +141,8 @@ static void xor_blocks(uint8_t* a, const uint8_t* b) {
 }
 
 static void cryptonight_hash(void* output, const void* input) {
+    cryptonight_context_holder ctx;
+    memcpy(&ctx, &base_contexts, sizeof(base_contexts));
     uint8_t long_state[MEMORY];
     union cn_slow_hash_state state;
     uint8_t text[INIT_SIZE_BYTE];
@@ -191,7 +209,7 @@ static void cryptonight_hash(void* output, const void* input) {
     memcpy(state.init, text, INIT_SIZE_BYTE);
     hash_permutation(&state.hs);
     /*memcpy(hash, &state, 32);*/
-    extra_hashes[state.hs.b[0] & 3](&state, 200, output);
+    extra_hashes[state.hs.b[0] & 3](&ctx, &state, 200, output);
     oaes_free(&aes_ctx);
 }
 
