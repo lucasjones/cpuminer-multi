@@ -178,6 +178,9 @@ extern void init_blakehash_contexts();
 extern int scanhash_blake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	uint32_t max_nonce, unsigned long *hashes_done);
 
+extern int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+		uint32_t max_nonce, unsigned long *hashes_done);
+
 struct thr_info {
 	int		id;
 	pthread_t	pth;

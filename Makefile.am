@@ -19,7 +19,7 @@ minerd_SOURCES	= elist.h miner.h compat.h \
 		  cpu-miner.c util.c \
 		  sha2.c scrypt.c keccak.c \
 		  heavy.c quark.c skein.c \
-		  ink.c blake.c \
+		  ink.c blake.c cryptonight.c \
 		  sha3/sph_keccak.c \
 		  sha3/sph_hefty1.c \
 		  sha3/sph_groestl.c \
@@ -27,7 +27,10 @@ minerd_SOURCES	= elist.h miner.h compat.h \
 		  sha3/sph_bmw.c \
 		  sha3/sph_jh.c \
 		  sha3/sph_shavite.c \
-		  sha3/sph_blake.c
+		  sha3/sph_blake.c \
+		  crypto/oaes_lib.c \
+		  crypto/c_keccak.c \
+		  crypto/hash.c
 if ARCH_x86
 minerd_SOURCES += sha2-x86.S scrypt-x86.S
 endif
