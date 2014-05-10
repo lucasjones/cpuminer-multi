@@ -42,12 +42,12 @@ void do_groestl_hash(const void* input, size_t len, char* output) {
 
 static void do_jh_hash(const void* input, size_t len, char* output) {
     int r = jh_hash(HASH_SIZE * 8, input, 8 * len, (uint8_t*)output);
-    assert(SUCCESS == r);
+    assert(likely(SUCCESS == r));
 }
 
 static void do_skein_hash(const void* input, size_t len, char* output) {
     int r = skein_hash(8 * HASH_SIZE, input, 8 * len, (uint8_t*)output);
-    assert(SKEIN_SUCCESS == r);
+    assert(likely(SKEIN_SUCCESS == r));
 }
 
 static void (* const extra_hashes[4])(const void *, size_t, char *) = {
@@ -145,7 +145,6 @@ static void cryptonight_hash(void* output, const void* input) {
         xor_blocks(b, c);
         swap_blocks(b, c);
         copy_block(&long_state[j * AES_BLOCK_SIZE], c);
-        assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE));
         swap_blocks(a, b);
         /* Iteration 2 */
         j = e2i(a, MEMORY / AES_BLOCK_SIZE);
@@ -198,63 +197,63 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
             pdata[19] = ++n;
             be32enc(&endiandata[19], n);
             cryptonight_hash(hash64, &endiandata);
-            if (((hash64[7] & 0xFFFFFFFF) == 0) && fulltest(hash64, ptarget)) {
+            if (unlikely((hash64[7] & 0xFFFFFFFF) == 0) && fulltest(hash64, ptarget)) {
                 *hashes_done = n - first_nonce + 1;
                 return true;
             }
-        } while (n < max_nonce && !work_restart[thr_id].restart);
+        } while (likely(n < max_nonce && !work_restart[thr_id].restart));
     } else if (ptarget[7] <= 0xF) {
         do {
             pdata[19] = ++n;
             be32enc(&endiandata[19], n);
             cryptonight_hash(hash64, &endiandata);
-            if (((hash64[7] & 0xFFFFFFF0) == 0) && fulltest(hash64, ptarget)) {
+            if (unlikely((hash64[7] & 0xFFFFFFF0) == 0) && fulltest(hash64, ptarget)) {
                 *hashes_done = n - first_nonce + 1;
                 return true;
             }
-        } while (n < max_nonce && !work_restart[thr_id].restart);
+        } while (likely(n < max_nonce && !work_restart[thr_id].restart));
     } else if (ptarget[7] <= 0xFF) {
         do {
             pdata[19] = ++n;
             be32enc(&endiandata[19], n);
             cryptonight_hash(hash64, &endiandata);
-            if (((hash64[7] & 0xFFFFFF00) == 0) && fulltest(hash64, ptarget)) {
+            if (unlikely((hash64[7] & 0xFFFFFF00) == 0) && fulltest(hash64, ptarget)) {
                 *hashes_done = n - first_nonce + 1;
                 return true;
             }
-        } while (n < max_nonce && !work_restart[thr_id].restart);
+        } while (likely(n < max_nonce && !work_restart[thr_id].restart));
     } else if (ptarget[7] <= 0xFFF) {
         do {
             pdata[19] = ++n;
             be32enc(&endiandata[19], n);
             cryptonight_hash(hash64, &endiandata);
-            if (((hash64[7] & 0xFFFFF000) == 0) && fulltest(hash64, ptarget)) {
+            if (unlikely((hash64[7] & 0xFFFFF000) == 0) && fulltest(hash64, ptarget)) {
                 *hashes_done = n - first_nonce + 1;
                 return true;
             }
-        } while (n < max_nonce && !work_restart[thr_id].restart);
+        } while (likely(n < max_nonce && !work_restart[thr_id].restart));
 
     } else if (ptarget[7] <= 0xFFFF) {
         do {
             pdata[19] = ++n;
             be32enc(&endiandata[19], n);
             cryptonight_hash(hash64, &endiandata);
-            if (((hash64[7] & 0xFFFF0000) == 0) && fulltest(hash64, ptarget)) {
+            if (unlikely((hash64[7] & 0xFFFF0000) == 0) && fulltest(hash64, ptarget)) {
                 *hashes_done = n - first_nonce + 1;
                 return true;
             }
-        } while (n < max_nonce && !work_restart[thr_id].restart);
+        } while (likely(n < max_nonce && !work_restart[thr_id].restart));
 
     } else {
         do {
             pdata[19] = ++n;
             be32enc(&endiandata[19], n);
             cryptonight_hash(hash64, &endiandata);
-            if (fulltest(hash64, ptarget)) {
+            if (unlikely(fulltest(hash64, ptarget))) {
                 *hashes_done = n - first_nonce + 1;
                 return true;
             }
-        } while (n < max_nonce && !work_restart[thr_id].restart);
+        } while (likely(n < max_nonce && !work_restart[thr_id].restart));
     }
 
     *hashes_done = n - first_nonce + 1;

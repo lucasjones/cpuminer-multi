@@ -744,13 +744,13 @@ int scanhash_scrypt(int thr_id, uint32_t *pdata,
 		scrypt_1024_1_1_256(data, hash, midstate, scratchbuf);
 		
 		for (i = 0; i < throughput; i++) {
-			if (hash[i * 8 + 7] <= Htarg && fulltest(hash + i * 8, ptarget)) {
+			if (unlikely(hash[i * 8 + 7] <= Htarg && fulltest(hash + i * 8, ptarget))) {
 				*hashes_done = n - pdata[19] + 1;
 				pdata[19] = data[i * 20 + 19];
 				return 1;
 			}
 		}
-	} while (n < max_nonce && !work_restart[thr_id].restart);
+	} while (likely(n < max_nonce && !work_restart[thr_id].restart));
 	
 	*hashes_done = n - pdata[19] + 1;
 	pdata[19] = n;

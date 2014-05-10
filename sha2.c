@@ -614,7 +614,7 @@ int scanhash_sha256d(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	do {
 		data[3] = ++n;
 		sha256d_ms(hash, data, midstate, prehash);
-		if (swab32(hash[7]) <= Htarg) {
+		if (unlikely(swab32(hash[7]) <= Htarg)) {
 			pdata[19] = data[3];
 			sha256d_80_swap(hash, pdata);
 			if (fulltest(hash, ptarget)) {
@@ -622,7 +622,7 @@ int scanhash_sha256d(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 				return 1;
 			}
 		}
-	} while (n < max_nonce && !work_restart[thr_id].restart);
+	} while (likely(n < max_nonce && !work_restart[thr_id].restart));
 	
 	*hashes_done = n - first_nonce + 1;
 	pdata[19] = n;

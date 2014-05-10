@@ -31,6 +31,8 @@ static const char _NR[] = {
 	0x4e,0x61,0x62,0x69,0x6c,0x20,0x53,0x2e,0x20,
 	0x41,0x6c,0x20,0x52,0x61,0x6d,0x6c,0x69,0x00 };
 
+#include "miner.h"
+
 #include <stddef.h>
 #include <time.h> 
 #include <sys/timeb.h>
@@ -261,7 +263,7 @@ static OAES_RET oaes_sub_byte( uint8_t * byte )
 {
 	size_t _x, _y;
 	
-	if( NULL == byte )
+	if( unlikely(NULL == byte) )
 		return OAES_RET_ARG1;
 
 	_x = _y = *byte;
@@ -321,7 +323,7 @@ static OAES_RET oaes_shift_rows( uint8_t block[OAES_BLOCK_SIZE] )
 {
 	uint8_t _temp[OAES_BLOCK_SIZE];
 
-	if( NULL == block )
+	if( unlikely(NULL == block) )
 		return OAES_RET_ARG1;
 
 	_temp[0x00] = block[0x00];
@@ -412,7 +414,7 @@ static OAES_RET oaes_mix_cols( uint8_t word[OAES_COL_LEN] )
 {
 	uint8_t _temp[OAES_COL_LEN];
 
-	if( NULL == word )
+	if( unlikely(NULL == word) )
 		return OAES_RET_ARG1;
 	
 	_temp[0] = oaes_gf_mul(word[0], 0x02) ^ oaes_gf_mul( word[1], 0x03 ) ^
@@ -1438,10 +1440,10 @@ OAES_API OAES_RET oaes_encryption_round( const uint8_t * key, uint8_t * c )
 {
   size_t _i;
 
-  if( NULL == key )
+  if( unlikely(NULL == key) )
     return OAES_RET_ARG1;
 
-  if( NULL == c )
+  if( unlikely(NULL == c) )
     return OAES_RET_ARG2;
 
   // SubBytes(state)
@@ -1469,13 +1471,13 @@ OAES_API OAES_RET oaes_pseudo_encrypt_ecb( OAES_CTX * ctx, uint8_t * c )
   size_t _i;
   oaes_ctx * _ctx = (oaes_ctx *) ctx;
 
-  if( NULL == _ctx )
+  if( unlikely(NULL == _ctx) )
     return OAES_RET_ARG1;
 
-  if( NULL == c )
+  if( unlikely(NULL == c) )
     return OAES_RET_ARG2;
 
-  if( NULL == _ctx->key )
+  if( unlikely(NULL == _ctx->key) )
     return OAES_RET_NOKEY;
 
   for ( _i = 0; _i < 10; ++_i )
