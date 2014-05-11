@@ -97,7 +97,7 @@ struct workio_cmd {
     } u;
 };
 
-enum mining_algos {
+enum mining_algo {
     ALGO_SCRYPT,      /* scrypt(1024,1,1) */
     ALGO_SHA256D,     /* SHA-256d */
     ALGO_KECCAK,      /* Keccak */
@@ -120,7 +120,8 @@ static const char *algo_names[] = {
     [ALGO_SHAVITE3] =    "shavite3",
     [ALGO_BLAKE] =       "blake",
     [ALGO_X11] =         "x11",
-    [ALGO_CRYPTONIGHT] = "cryptonight", };
+    [ALGO_CRYPTONIGHT] = "cryptonight",
+};
 
 bool opt_debug = false;
 bool opt_protocol = false;
@@ -140,7 +141,7 @@ int opt_timeout = 0;
 static int opt_scantime = 5;
 static json_t *opt_config;
 static const bool opt_time = true;
-static enum mining_algos opt_algo = ALGO_SCRYPT;
+static enum mining_algo opt_algo = ALGO_SCRYPT;
 static int opt_n_threads;
 static int num_processors;
 static char *rpc_url;
@@ -232,24 +233,37 @@ static char const short_options[] =
 #endif
         "a:c:Dhp:Px:qr:R:s:t:T:o:u:O:V";
 
-static struct option const options[] = { { "algo", 1, NULL, 'a' },
+static struct option const options[] = {
+        { "algo", 1, NULL, 'a' },
 #ifndef WIN32
         { "background", 0, NULL, 'B' },
 #endif
-        { "benchmark", 0, NULL, 1005 }, { "cert", 1, NULL, 1001 }, { "config",
-                1, NULL, 'c' }, { "debug", 0, NULL, 'D' }, { "help", 0, NULL,
-                'h' }, { "no-longpoll", 0, NULL, 1003 }, { "no-redirect", 0,
-                NULL, 1009 }, { "no-stratum", 0, NULL, 1007 }, { "pass", 1,
-                NULL, 'p' }, { "protocol-dump", 0, NULL, 'P' }, { "proxy", 1,
-                NULL, 'x' }, { "quiet", 0, NULL, 'q' }, { "retries", 1, NULL,
-                'r' }, { "retry-pause", 1, NULL, 'R' }, { "scantime", 1, NULL,
-                's' },
+        { "benchmark", 0, NULL, 1005 },
+        { "cert", 1, NULL, 1001 },
+        { "config", 1, NULL, 'c' },
+        { "debug", 0, NULL, 'D' },
+        { "help", 0, NULL, 'h' },
+        { "no-longpoll", 0, NULL, 1003 },
+        { "no-redirect", 0, NULL, 1009 },
+        { "no-stratum", 0, NULL, 1007 },
+        { "pass", 1, NULL, 'p' },
+        { "protocol-dump", 0, NULL, 'P' },
+        { "proxy", 1, NULL, 'x' },
+        { "quiet", 0, NULL, 'q' },
+        { "retries", 1, NULL, 'r' },
+        { "retry-pause", 1, NULL, 'R' },
+        { "scantime", 1, NULL, 's' },
 #ifdef HAVE_SYSLOG_H
         { "syslog", 0, NULL, 'S' },
 #endif
-        { "threads", 1, NULL, 't' }, { "timeout", 1, NULL, 'T' }, { "url", 1,
-                NULL, 'o' }, { "user", 1, NULL, 'u' }, { "userpass", 1, NULL,
-                'O' }, { "version", 0, NULL, 'V' }, { 0, 0, 0, 0 } };
+        { "threads", 1, NULL, 't' },
+        { "timeout", 1, NULL, 'T' },
+        { "url", 1, NULL, 'o' },
+        { "user", 1, NULL, 'u' },
+        { "userpass", 1, NULL, 'O' },
+        { "version", 0, NULL, 'V' },
+        { 0, 0, 0, 0 }
+};
 
 struct work {
     uint32_t data[32];

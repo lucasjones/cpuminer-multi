@@ -19,13 +19,16 @@ Algorithms
  * ? quark (Quarkcoin)
  * ? skein (Skeincoin, Myriadcoin)
  * ? shavite3 (INKcoin)
- * ? blake (Blakecoin [BLC])
+ * ? blake (Blakecoin)
+
+#### Partially implemented
+ * *cryptonight* (Bytecoin [BCN], Monero)
 
 #### Planned support for
  * *scrypt-n* (Vertcoin [VTC])
  * *scrypt-jane* (YaCoin, CopperBars, Pennies, Tickets, etc..)
- * *qubit* (Qubitcoin [Q2C], Myriadcoin [MYR])
- * *groestl* (Groestlcoin [GRS])
+ * *qubit* (Qubitcoin, Myriadcoin)
+ * *groestl* (Groestlcoin)
 
 License
 =======
