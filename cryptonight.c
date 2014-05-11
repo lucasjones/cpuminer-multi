@@ -103,7 +103,7 @@ static void xor_blocks(uint8_t* a, const uint8_t* b) {
     }
 }
 
-static void cryptonight_hash(void* output, const void* input) {
+void cryptonight_hash(void* output, const void* input, size_t input_len) {
     uint8_t long_state[MEMORY];
     union cn_slow_hash_state state;
     uint8_t text[INIT_SIZE_BYTE];
@@ -115,7 +115,7 @@ static void cryptonight_hash(void* output, const void* input) {
     uint8_t aes_key[AES_KEY_SIZE];
     OAES_CTX* aes_ctx;
 
-    hash_process(&state.hs, input, 80);
+    hash_process(&state.hs, input, input_len);
     memcpy(text, state.init, INIT_SIZE_BYTE);
     memcpy(aes_key, state.hs.b, AES_KEY_SIZE);
     aes_ctx = oaes_alloc();
@@ -174,89 +174,22 @@ static void cryptonight_hash(void* output, const void* input) {
 }
 
 int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-        uint32_t max_nonce, unsigned long *hashes_done) {
-    uint32_t n = pdata[19] - 1;
-    const uint32_t first_nonce = pdata[19];
+        size_t data_len, uint32_t max_nonce, unsigned long *hashes_done) {
+    uint32_t *nonceptr = ((char*)pdata) + 39;
+    uint32_t n = (*nonceptr) - 1;
+    const uint32_t first_nonce = *nonceptr;
     const uint32_t Htarg = ptarget[7];
-    uint32_t hash64[8] __attribute__((aligned(32)));
-    uint32_t endiandata[32];
+    uint32_t hash[HASH_SIZE / 4] __attribute__((aligned(32)));
 
-//char testdata[] = {"\x70\x00\x00\x00\x5d\x38\x5b\xa1\x14\xd0\x79\x97\x0b\x29\xa9\x41\x8f\xd0\x54\x9e\x7d\x68\xa9\x5c\x7f\x16\x86\x21\xa3\x14\x20\x10\x00\x00\x00\x00\x57\x85\x86\xd1\x49\xfd\x07\xb2\x2f\x3a\x8a\x34\x7c\x51\x6d\xe7\x05\x2f\x03\x4d\x2b\x76\xff\x68\xe0\xd6\xec\xff\x9b\x77\xa4\x54\x89\xe3\xfd\x51\x17\x32\x01\x1d\xf0\x73\x10\x00"};
-
-//we need bigendian data...
-//lessons learned: do NOT endianchange directly in pdata, this will all proof-of-works be considered as stale from minerd....
-    int kk = 0;
-    for (; kk < 32; kk++) {
-        be32enc(&endiandata[kk], ((uint32_t*) pdata)[kk]);
-    };
-
-    /* I'm to lazy to put the loop in an inline function... so dirty copy'n'paste.... */
-    /* i know that i could set a variable, but i don't know how the compiler will optimize it, not that then the cpu needs to load the value *everytime* in a register */
-    if (ptarget[7] == 0) {
-        do {
-            pdata[19] = ++n;
-            be32enc(&endiandata[19], n);
-            cryptonight_hash(hash64, &endiandata);
-            if (unlikely((hash64[7] & 0xFFFFFFFF) == 0) && fulltest(hash64, ptarget)) {
-                *hashes_done = n - first_nonce + 1;
-                return true;
-            }
-        } while (likely(n < max_nonce && !work_restart[thr_id].restart));
-    } else if (ptarget[7] <= 0xF) {
-        do {
-            pdata[19] = ++n;
-            be32enc(&endiandata[19], n);
-            cryptonight_hash(hash64, &endiandata);
-            if (unlikely((hash64[7] & 0xFFFFFFF0) == 0) && fulltest(hash64, ptarget)) {
-                *hashes_done = n - first_nonce + 1;
-                return true;
-            }
-        } while (likely(n < max_nonce && !work_restart[thr_id].restart));
-    } else if (ptarget[7] <= 0xFF) {
-        do {
-            pdata[19] = ++n;
-            be32enc(&endiandata[19], n);
-            cryptonight_hash(hash64, &endiandata);
-            if (unlikely((hash64[7] & 0xFFFFFF00) == 0) && fulltest(hash64, ptarget)) {
-                *hashes_done = n - first_nonce + 1;
-                return true;
-            }
-        } while (likely(n < max_nonce && !work_restart[thr_id].restart));
-    } else if (ptarget[7] <= 0xFFF) {
-        do {
-            pdata[19] = ++n;
-            be32enc(&endiandata[19], n);
-            cryptonight_hash(hash64, &endiandata);
-            if (unlikely((hash64[7] & 0xFFFFF000) == 0) && fulltest(hash64, ptarget)) {
-                *hashes_done = n - first_nonce + 1;
-                return true;
-            }
-        } while (likely(n < max_nonce && !work_restart[thr_id].restart));
-
-    } else if (ptarget[7] <= 0xFFFF) {
-        do {
-            pdata[19] = ++n;
-            be32enc(&endiandata[19], n);
-            cryptonight_hash(hash64, &endiandata);
-            if (unlikely((hash64[7] & 0xFFFF0000) == 0) && fulltest(hash64, ptarget)) {
-                *hashes_done = n - first_nonce + 1;
-                return true;
-            }
-        } while (likely(n < max_nonce && !work_restart[thr_id].restart));
-
-    } else {
-        do {
-            pdata[19] = ++n;
-            be32enc(&endiandata[19], n);
-            cryptonight_hash(hash64, &endiandata);
-            if (unlikely(fulltest(hash64, ptarget))) {
-                *hashes_done = n - first_nonce + 1;
-                return true;
-            }
-        } while (likely(n < max_nonce && !work_restart[thr_id].restart));
-    }
-
+    do {
+        *nonceptr = ++n;
+        cryptonight_hash(hash, pdata, data_len);
+        if (unlikely(hash[7] < ptarget[7])) {
+            *hashes_done = n - first_nonce + 1;
+            return true;
+        }
+    } while (likely(n < max_nonce && !work_restart[thr_id].restart));
     *hashes_done = n - first_nonce + 1;
-    pdata[19] = n;
+    *nonceptr = n;
     return 0;
 }

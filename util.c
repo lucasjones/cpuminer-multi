@@ -362,8 +362,8 @@ json_t *json_rpc_call(CURL *curl, const char *url,
 	headers = curl_slist_append(headers, len_hdr);
 	headers = curl_slist_append(headers, "User-Agent: " USER_AGENT);
 	headers = curl_slist_append(headers, "X-Mining-Extensions: midstate");
-	headers = curl_slist_append(headers, "Accept:"); /* disable Accept hdr*/
-	headers = curl_slist_append(headers, "Expect:"); /* disable Expect hdr*/
+	//headers = curl_slist_append(headers, "Accept:"); /* disable Accept hdr*/
+	//headers = curl_slist_append(headers, "Expect:"); /* disable Expect hdr*/
 
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
