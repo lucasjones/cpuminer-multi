@@ -40,6 +40,7 @@
 
 #define PROGRAM_NAME		"minerd"
 #define LP_SCANTIME		60
+#define JSON_BUF_LEN 345
 
 #ifdef __linux /* Linux specific policy and affinity management */
 #include <sched.h>
@@ -157,7 +158,7 @@ int longpoll_thr_id = -1;
 int stratum_thr_id = -1;
 struct work_restart *work_restart = NULL;
 static struct stratum_ctx stratum;
-static char rpc2_id[32] = "";
+static char rpc2_id[64] = "";
 static char *rpc2_blob = NULL;
 static int rpc2_bloblen = 0;
 static uint32_t rpc2_target = 0;
@@ -436,7 +437,7 @@ static bool login_decode(const json_t *val) {
         goto err_out;
     }
 
-    memcpy(&rpc2_id, id, 32);
+    memcpy(&rpc2_id, id, 64);
 
     applog(LOG_INFO, "Auth id: %s", id);
 
@@ -491,7 +492,7 @@ static void share_result(int result, const char *reason) {
 static bool submit_upstream_work(CURL *curl, struct work *work) {
     char *str = NULL;
     json_t *val, *res, *reason;
-    char s[345];
+    char s[JSON_BUF_LEN];
     int i;
     bool rc = false;
 
@@ -511,7 +512,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
         ntimestr = bin2hex((const unsigned char *) (&ntime), 4);
         noncestr = bin2hex((const unsigned char *) (&nonce), 4);
         xnonce2str = bin2hex(work->xnonce2, work->xnonce2_len);
-        sprintf(s,
+        snprintf(s, JSON_BUF_LEN,
                 "{\"method\": \"mining.submit\", \"params\": [\"%s\", \"%s\", \"%s\", \"%s\", \"%s\"], \"id\":4}",
                 rpc_user, work->job_id, xnonce2str, ntimestr, noncestr);
         free(ntimestr);
@@ -534,7 +535,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
                 cryptonight_hash(hash, work->data, work->data_len);
             }
             char *hashhex = bin2hex(hash, 32);
-            sprintf(s,
+            snprintf(s, JSON_BUF_LEN,
                     "{\"method\": \"submit\", \"params\": {\"id\": \"%s\", \"job_id\": \"%s\", \"nonce\": \"%s\", \"result\": \"%s\"}, \"id\":1}\r\n",
                     rpc2_id, work->job_id, noncestr, hashhex);
             free(noncestr);
@@ -548,7 +549,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
                 applog(LOG_ERR, "submit_upstream_work OOM");
                 goto out;
             }
-            sprintf(s,
+            snprintf(s, JSON_BUF_LEN,
                     "{\"method\": \"getwork\", \"params\": [ \"%s\" ], \"id\":1}\r\n",
                     str);
         }
@@ -584,9 +585,9 @@ static bool get_upstream_work(CURL *curl, struct work *work) {
     struct timeval tv_start, tv_end, diff;
 
     if(jsonrpc_2) {
-        sprintf(s, "{\"method\": \"getjob\", \"params\": {\"id\": \"%s\"}, \"id\":1}\r\n", rpc2_id);
+        snprintf(s, 128, "{\"method\": \"getjob\", \"params\": {\"id\": \"%s\"}, \"id\":1}\r\n", rpc2_id);
     } else {
-        sprintf(s, rpc_req);
+        snprintf(s, 128, rpc_req);
     }
 
     gettimeofday(&tv_start, NULL );
@@ -626,9 +627,9 @@ static bool rpc_login(CURL *curl) {
     json_t *val;
     bool rc;
     struct timeval tv_start, tv_end, diff;
-    char s[345];
+    char s[JSON_BUF_LEN];
 
-    sprintf(s, "{\"method\": \"login\", \"params\": {\"login\": \"%s\", \"pass\": \"%s\", \"agent\": \"cpuminer-multi/0.1\"}, \"id\": 1}", rpc_user, rpc_pass);
+    snprintf(s, JSON_BUF_LEN, "{\"method\": \"login\", \"params\": {\"login\": \"%s\", \"pass\": \"%s\", \"agent\": \"cpuminer-multi/0.1\"}, \"id\": 1}", rpc_user, rpc_pass);
 
     gettimeofday(&tv_start, NULL );
     val = json_rpc_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
