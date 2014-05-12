@@ -560,10 +560,18 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
             goto out;
         }
 
-        res = json_object_get(val, "result");
-        reason = json_object_get(val, "reject-reason");
-        share_result(json_is_true(res),
-                reason ? json_string_value(reason) : NULL );
+        if(jsonrpc_2) {
+            res = json_object_get(val, "result");
+            json_t *status = json_object_get(res, "status");
+            reason = json_object_get(res, "reject-reason");
+            share_result(!strcmp(status ? json_string_value(status) : "", "OK"),
+                    reason ? json_string_value(reason) : NULL );
+        } else {
+            res = json_object_get(val, "result");
+            reason = json_object_get(val, "reject-reason");
+            share_result(json_is_true(res),
+                    reason ? json_string_value(reason) : NULL );
+        }
 
         json_decref(val);
     }
