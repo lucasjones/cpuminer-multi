@@ -526,8 +526,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
     } else {
         /* build JSON-RPC request */
         if(jsonrpc_2) {
-            uint32_t nonce = *(((char*)work->data) + 39);
-            char *noncestr = bin2hex((const unsigned char *) &nonce, 4);
+            char *noncestr = bin2hex(((const unsigned char*)work->data) + 39, 4);
             char hash[32];
             switch(opt_algo) {
             case ALGO_CRYPTONIGHT:
