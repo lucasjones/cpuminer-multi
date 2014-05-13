@@ -175,7 +175,7 @@ void cryptonight_hash(void* output, const void* input, size_t input_len) {
 
 int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
         size_t data_len, uint32_t max_nonce, unsigned long *hashes_done) {
-    uint32_t *nonceptr = ((char*)pdata) + 39;
+    uint32_t *nonceptr = (uint32_t*) (((char*)pdata) + 39);
     const uint32_t first_nonce = *nonceptr;
     const uint32_t Htarg = ptarget[7];
     uint32_t hash[HASH_SIZE / 4] __attribute__((aligned(32)));

@@ -114,7 +114,7 @@ int scanhash_x11(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 		do {
 			pdata[19] = ++n;
 			be32enc(&endiandata[19], n); 
-			x11_hash(hash64, &endiandata);
+			x11_hash((char*) hash64, (const char*) endiandata);
 			if (((hash64[7]&0xFFFFFFFF)==0) && 
 					fulltest(hash64, ptarget)) {
 				*hashes_done = n - first_nonce + 1;
@@ -127,7 +127,7 @@ int scanhash_x11(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 		do {
 			pdata[19] = ++n;
 			be32enc(&endiandata[19], n); 
-			x11_hash(hash64, &endiandata);
+			x11_hash((char*) hash64, (const char*) endiandata);
 			if (((hash64[7]&0xFFFFFFF0)==0) && 
 					fulltest(hash64, ptarget)) {
 				*hashes_done = n - first_nonce + 1;
@@ -140,7 +140,7 @@ int scanhash_x11(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 		do {
 			pdata[19] = ++n;
 			be32enc(&endiandata[19], n); 
-			x11_hash(hash64, &endiandata);
+			x11_hash((char*) hash64, (const char*) endiandata);
 			if (((hash64[7]&0xFFFFFF00)==0) && 
 					fulltest(hash64, ptarget)) {
 				*hashes_done = n - first_nonce + 1;
@@ -153,7 +153,7 @@ int scanhash_x11(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 		do {
 			pdata[19] = ++n;
 			be32enc(&endiandata[19], n); 
-			x11_hash(hash64, &endiandata);
+			x11_hash((char*) hash64, (const char*) endiandata);
 			if (((hash64[7]&0xFFFFF000)==0) && 
 					fulltest(hash64, ptarget)) {
 				*hashes_done = n - first_nonce + 1;
@@ -167,7 +167,7 @@ int scanhash_x11(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 		do {
 			pdata[19] = ++n;
 			be32enc(&endiandata[19], n); 
-			x11_hash(hash64, &endiandata);
+			x11_hash((char*) hash64, (const char*) endiandata);
 			if (((hash64[7]&0xFFFF0000)==0) && 
 					fulltest(hash64, ptarget)) {
 				*hashes_done = n - first_nonce + 1;
@@ -181,7 +181,7 @@ int scanhash_x11(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 		do {
 			pdata[19] = ++n;
 			be32enc(&endiandata[19], n); 
-			x11_hash(hash64, &endiandata);
+			x11_hash((char*) hash64, (const char*) endiandata);
 			if (fulltest(hash64, ptarget)) {
 				*hashes_done = n - first_nonce + 1;
 				return true;
