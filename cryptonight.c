@@ -176,18 +176,19 @@ void cryptonight_hash(void* output, const void* input, size_t input_len) {
 int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
         size_t data_len, uint32_t max_nonce, unsigned long *hashes_done) {
     uint32_t *nonceptr = (uint32_t*) (((char*)pdata) + 39);
-    const uint32_t first_nonce = *nonceptr;
+    uint32_t n = *nonceptr - 1;
+    const uint32_t first_nonce = n + 1;
     const uint32_t Htarg = ptarget[7];
     uint32_t hash[HASH_SIZE / 4] __attribute__((aligned(32)));
 
     do {
+        *nonceptr = ++n;
         cryptonight_hash(hash, pdata, data_len);
         if (unlikely(hash[7] < ptarget[7])) {
-            *hashes_done = (*nonceptr) - first_nonce + 1;
+            *hashes_done = n - first_nonce + 1;
             return true;
         }
-        ++(*nonceptr);
-    } while (likely((*nonceptr) <= max_nonce && !work_restart[thr_id].restart));
-    *hashes_done = (*nonceptr) - first_nonce;
+    } while (likely((n <= max_nonce) && !work_restart[thr_id].restart));
+    *hashes_done = n - first_nonce + 1;
     return 0;
 }

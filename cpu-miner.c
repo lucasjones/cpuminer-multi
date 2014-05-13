@@ -166,7 +166,7 @@ static char *rpc2_job_id = NULL;
 
 pthread_mutex_t applog_lock;
 static pthread_mutex_t stats_lock;
-static pthread_mutex_t job_lock;
+static pthread_mutex_t rpc2_job_lock;
 
 static unsigned long accepted_count = 0L;
 static unsigned long rejected_count = 0L;
@@ -287,13 +287,17 @@ static struct work g_work;
 static time_t g_work_time;
 static pthread_mutex_t g_work_lock;
 
-static bool rpc_login(CURL *curl);
+static bool rpc2_login(CURL *curl);
 
 json_t *json_rpc2_call_recur(CURL *curl, const char *url,
               const char *userpass, const char *rpc_req,
               int *curl_err, int flags, int recur) {
     if(recur >= 5) {
         applog(LOG_ERR, "Failed to call rpc command after %i tries", recur);
+        return NULL;
+    }
+    if(!strcmp(rpc2_id, "")) {
+        applog(LOG_ERR, "Tried to call rpc2 command before authentication");
         return NULL;
     }
     json_t *res = json_rpc_call(curl, url, userpass, rpc_req,
@@ -315,7 +319,7 @@ json_t *json_rpc2_call_recur(CURL *curl, const char *url,
     if(!strcmp(mes, "Unauthenticated")) {
         applog(LOG_WARNING, "Re-authenticating in 500ms");
         sleep(500);
-        rpc_login(curl);
+        rpc2_login(curl);
         return json_rpc2_call_recur(curl, url, userpass, rpc_req,
             curl_err, flags, recur + 1);
     } else if(!strcmp(mes, "Low difficulty share") || !strcmp(mes, "Block expired") || !strcmp(mes, "Invalid job id")) {
@@ -375,8 +379,81 @@ static bool jobj_binary(const json_t *obj, const char *key, void *buf,
     return true;
 }
 
+static bool rpc2_job_decode(const json_t *job, struct work *work) {
+    if (!jsonrpc_2) {
+        applog(LOG_ERR, "Tried to decode job without JSON-RPC 2.0");
+        return false;
+    }
+    json_t *tmp;
+    tmp = json_object_get(job, "job_id");
+    if (!tmp) {
+        applog(LOG_ERR, "JSON inval job id");
+        goto err_out;
+    }
+    const char *job_id = json_string_value(tmp);
+    tmp = json_object_get(job, "blob");
+    if (!tmp) {
+        applog(LOG_ERR, "JSON inval blob");
+        goto err_out;
+    }
+    const char *hexblob = json_string_value(tmp);
+    int blobLen = strlen(hexblob);
+    if (blobLen % 2 != 0 || ((blobLen / 2) < 40 && blobLen != 0)) {
+        applog(LOG_ERR, "JSON invalid blob length");
+        goto err_out;
+    }
+    if (blobLen != 0) {
+        pthread_mutex_lock(&rpc2_job_lock);
+        char *blob = malloc(blobLen / 2);
+        if (!hex2bin(blob, hexblob, blobLen / 2)) {
+            applog(LOG_ERR, "JSON inval blob");
+            goto err_out;
+        }
+        if (rpc2_blob) {
+            free(rpc2_blob);
+        }
+        rpc2_bloblen = blobLen / 2;
+        rpc2_blob = malloc(rpc2_bloblen);
+        memcpy(rpc2_blob, blob, blobLen / 2);
+
+        free(blob);
+
+        uint32_t target;
+        jobj_binary(job, "target", &target, 4);
+        rpc2_target = target;
+
+        if (rpc2_job_id) {
+            free(rpc2_job_id);
+        }
+        rpc2_job_id = strdup(job_id);
+        pthread_mutex_unlock(&rpc2_job_lock);
+    }
+    if (work) {
+        if (!rpc2_blob) {
+            applog(LOG_ERR, "Requested work before work was received");
+            goto err_out;
+        }
+        memcpy(work->data, rpc2_blob, rpc2_bloblen);
+        work->data_len = rpc2_bloblen;
+        memset(work->target, 0xff, sizeof(work->target));
+        work->target[7] = rpc2_target;
+        if (work->job_id)
+            free(work->job_id);
+        work->job_id = strdup(rpc2_job_id);
+    }
+    return true;
+
+    err_out:
+    pthread_mutex_unlock(&rpc2_job_lock);
+    return false;
+}
+
 static bool work_decode(const json_t *val, struct work *work) {
     int i;
+
+    if(jsonrpc_2) {
+        return rpc2_job_decode(val, work);
+    }
 
     if (unlikely(!jobj_binary(val, "data", work->data, sizeof(work->data)))) {
         applog(LOG_ERR, "JSON inval data");
@@ -395,76 +472,6 @@ static bool work_decode(const json_t *val, struct work *work) {
     return true;
 
     err_out: return false;
-}
-
-static bool job_decode(const json_t *job, struct work *work) {
-    if(!jsonrpc_2) {
-        applog(LOG_ERR, "Tried to decode job without JSON-RPC 2.0");
-        return false;
-    }
-    pthread_mutex_lock(&job_lock);
-    json_t *tmp;
-    tmp = json_object_get(job, "job_id");
-    if(!tmp) {
-        applog(LOG_ERR, "JSON inval job id");
-        goto err_out;
-    }
-    const char *job_id = json_string_value(tmp);
-    tmp = json_object_get(job, "blob");
-    if(!tmp) {
-        applog(LOG_ERR, "JSON inval blob");
-        goto err_out;
-    }
-    const char *hexblob = json_string_value(tmp);
-    int blobLen = strlen(hexblob);
-    if(blobLen % 2 != 0 || ((blobLen / 2) < 40 && blobLen != 0)) {
-        applog(LOG_ERR, "JSON invalid blob length");
-        goto err_out;
-    }
-    if(blobLen != 0) {
-        char *blob = malloc(blobLen / 2);
-        if(!hex2bin(blob, hexblob, blobLen / 2)) {
-            applog(LOG_ERR, "JSON inval blob");
-            goto err_out;
-        }
-        if(rpc2_blob) {
-            free(rpc2_blob);
-        }
-        rpc2_bloblen = blobLen / 2;
-        rpc2_blob = malloc(rpc2_bloblen);
-        memcpy(rpc2_blob, blob, blobLen / 2);
-
-        free(blob);
-
-        uint32_t target;
-        jobj_binary(job, "target", &target, 4);
-        rpc2_target = target;
-
-        if(rpc2_job_id) {
-            free(rpc2_job_id);
-        }
-        rpc2_job_id = strdup(job_id);
-    }
-
-    if(work) {
-        if(!rpc2_blob) {
-            applog(LOG_ERR, "Requested work before work was received");
-            goto err_out;
-        }
-        memcpy(work->data, rpc2_blob, rpc2_bloblen);
-        work->data_len = rpc2_bloblen;
-        memset(work->target, 0xff, sizeof(work->target));
-        work->target[7] = rpc2_target;
-        if(work->job_id) free(work->job_id);
-        work->job_id = strdup(rpc2_job_id);
-    }
-
-    pthread_mutex_unlock(&job_lock);
-    return true;
-
-    err_out:
-    pthread_mutex_unlock(&job_lock);
-    return false;
 }
 
 static bool login_decode(const json_t *val) {
@@ -510,7 +517,7 @@ static bool login_decode(const json_t *val) {
 
     json_t *job = json_object_get(res, "job");
 
-    if(!job_decode(job, NULL)) {
+    if(!rpc2_job_decode(job, &g_work)) {
         return false;
     }
 
@@ -531,11 +538,21 @@ static void share_result(int result, const char *reason) {
     result ? accepted_count++ : rejected_count++;
     pthread_mutex_unlock(&stats_lock);
 
-    sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", 1e-3 * hashrate);
-    applog(LOG_INFO, "accepted: %lu/%lu (%.2f%%), %s khash/s %s",
-            accepted_count, accepted_count + rejected_count,
-            100. * accepted_count / (accepted_count + rejected_count), s,
-            result ? "(yay!!!)" : "(booooo)");
+    switch (opt_algo) {
+    case ALGO_CRYPTONIGHT:
+        applog(LOG_INFO, "accepted: %lu/%lu (%.2f%%), %.2f hashes/s %s",
+                accepted_count, accepted_count + rejected_count,
+                100. * accepted_count / (accepted_count + rejected_count), hashrate,
+                result ? "(yay!!!)" : "(booooo)");
+        break;
+    default:
+        sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", 1e-3 * hashrate);
+        applog(LOG_INFO, "accepted: %lu/%lu (%.2f%%), %s khash/s %s",
+                accepted_count, accepted_count + rejected_count,
+                100. * accepted_count / (accepted_count + rejected_count), s,
+                result ? "(yay!!!)" : "(booooo)");
+        break;
+    }
 
     if (opt_debug && reason)
         applog(LOG_DEBUG, "DEBUG: reject reason: %s", reason);
@@ -665,11 +682,7 @@ static bool get_upstream_work(CURL *curl, struct work *work) {
     if (!val)
         return false;
 
-    if(jsonrpc_2) {
-        rc = job_decode(json_object_get(val, "result"), work);
-    } else {
-        rc = work_decode(json_object_get(val, "result"), work);
-    }
+    rc = work_decode(json_object_get(val, "result"), work);
 
     if (opt_debug && rc) {
         timeval_subtract(&diff, &tv_end, &tv_start);
@@ -682,7 +695,7 @@ static bool get_upstream_work(CURL *curl, struct work *work) {
     return rc;
 }
 
-static bool rpc_login(CURL *curl) {
+static bool rpc2_login(CURL *curl) {
     if(!jsonrpc_2) {
         return false;
     }
@@ -785,7 +798,7 @@ static bool workio_login(CURL *curl) {
     int failures = 0;
 
     /* submit solution to bitcoin via JSON-RPC */
-    while (!rpc_login(curl)) {
+    while (!rpc2_login(curl)) {
         if (unlikely((opt_retries >= 0) && (++failures > opt_retries))) {
             applog(LOG_ERR, "...terminating workio thread");
             return false;
@@ -1011,10 +1024,10 @@ static void *miner_thread(void *userdata) {
         } else {
             /* obtain new work from internal workio thread */
             pthread_mutex_lock(&g_work_lock);
-            if (!have_stratum
+            if ((!have_stratum
                     && (!have_longpoll
                             || time(NULL ) >= g_work_time + LP_SCANTIME * 3 / 4
-                            || *nonceptr >= end_nonce)) {
+                            || *nonceptr >= end_nonce)) && !jsonrpc_2) {
                 if (unlikely(!get_work(mythr, &g_work))) {
                     applog(LOG_ERR, "work retrieval failed, exiting "
                             "mining thread %d", mythr->id);
@@ -1044,8 +1057,19 @@ static void *miner_thread(void *userdata) {
             max64 = g_work_time + (have_longpoll ? LP_SCANTIME : opt_scantime)
                     - time(NULL );
         max64 *= thr_hashrates[thr_id];
-        if (max64 <= 0)
-            max64 = opt_algo == ALGO_SCRYPT ? 0xfffLL : 0x1fffffLL;
+        if (max64 <= 0) {
+            switch (opt_algo) {
+            case ALGO_SCRYPT:
+                max64 = 0xfffLL;
+                break;
+            case ALGO_CRYPTONIGHT:
+                max64 = 0x40LL;
+                break;
+            default:
+                max64 = 0x1fffffLL;
+                break;
+            }
+        }
         if (*nonceptr + max64 > end_nonce)
             max_nonce = end_nonce;
         else
@@ -1117,18 +1141,33 @@ static void *miner_thread(void *userdata) {
             pthread_mutex_unlock(&stats_lock);
         }
         if (!opt_quiet) {
-            sprintf(s, thr_hashrates[thr_id] >= 1e6 ? "%.0f" : "%.2f",
-                    1e-3 * thr_hashrates[thr_id]);
-            applog(LOG_INFO, "thread %d: %lu hashes, %s khash/s", thr_id,
-                    hashes_done, s);
+            switch(opt_algo) {
+            case ALGO_CRYPTONIGHT:
+                applog(LOG_INFO, "thread %d: %lu hashes, %.2f hashes/s", thr_id,
+                        hashes_done, thr_hashrates[thr_id]);
+                break;
+            default:
+                sprintf(s, thr_hashrates[thr_id] >= 1e6 ? "%.0f" : "%.2f",
+                        1e-3 * thr_hashrates[thr_id]);
+                applog(LOG_INFO, "thread %d: %lu hashes, %.2f khash/s", thr_id,
+                        hashes_done, s);
+                break;
+            }
         }
         if (opt_benchmark && thr_id == opt_n_threads - 1) {
             double hashrate = 0.;
             for (i = 0; i < opt_n_threads && thr_hashrates[i]; i++)
                 hashrate += thr_hashrates[i];
             if (i == opt_n_threads) {
-                sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", 1e-3 * hashrate);
-                applog(LOG_INFO, "Total: %s khash/s", s);
+                switch(opt_algo) {
+                case ALGO_CRYPTONIGHT:
+                    applog(LOG_INFO, "Total: %s hashes/s", hashrate);
+                    break;
+                default:
+                    sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", 1e-3 * hashrate);
+                    applog(LOG_INFO, "Total: %s khash/s", s);
+                    break;
+                }
             }
         }
 
@@ -1203,17 +1242,21 @@ static void *longpoll_thread(void *userdata) {
             goto out;
         }
         if (likely(val)) {
-            applog(LOG_INFO, "LONGPOLL detected new block");
             soval = json_object_get(json_object_get(val, "result"),
                     "submitold");
             submit_old = soval ? json_is_true(soval) : false;
             pthread_mutex_lock(&g_work_lock);
+            char *start_job_id = strdup(rpc2_job_id);
             if (work_decode(json_object_get(val, "result"), &g_work)) {
-                if (opt_debug)
-                    applog(LOG_DEBUG, "DEBUG: got new work");
-                time(&g_work_time);
-                restart_threads();
+                if (strcmp(start_job_id, rpc2_job_id)) {
+                    applog(LOG_INFO, "LONGPOLL detected new block");
+                    if (opt_debug)
+                        applog(LOG_DEBUG, "DEBUG: got new work");
+                    time(&g_work_time);
+                    restart_threads();
+                }
             }
+            free(start_job_id);
             pthread_mutex_unlock(&g_work_lock);
             json_decref(val);
         } else {
@@ -1671,7 +1714,7 @@ int main(int argc, char *argv[]) {
     pthread_mutex_init(&applog_lock, NULL );
     pthread_mutex_init(&stats_lock, NULL );
     pthread_mutex_init(&g_work_lock, NULL );
-    pthread_mutex_init(&job_lock, NULL );
+    pthread_mutex_init(&rpc2_job_lock, NULL );
     pthread_mutex_init(&stratum.sock_lock, NULL );
     pthread_mutex_init(&stratum.work_lock, NULL );
 
