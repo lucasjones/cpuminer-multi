@@ -287,6 +287,58 @@ static struct work g_work;
 static time_t g_work_time;
 static pthread_mutex_t g_work_lock;
 
+static bool rpc_login(CURL *curl);
+
+json_t *json_rpc2_call_recur(CURL *curl, const char *url,
+              const char *userpass, const char *rpc_req,
+              int *curl_err, int flags, int recur) {
+    if(recur >= 5) {
+        applog(LOG_ERR, "Failed to call rpc command after %i tries", recur);
+        return NULL;
+    }
+    json_t *res = json_rpc_call(curl, url, userpass, rpc_req,
+            curl_err, flags | JSON_RPC_IGNOREERR);
+    json_t *error = json_object_get(res, "error");
+    if(!error) {
+        goto end;
+    }
+    json_t *message;
+    if(json_is_string(error)) {
+        message = error;
+    } else {
+        message = json_object_get(error, "message");
+    }
+    if(!message) {
+        goto end;
+    }
+    const char *mes = json_string_value(message);
+    if(!strcmp(mes, "Unauthenticated")) {
+        applog(LOG_WARNING, "Re-authenticating in 500ms");
+        sleep(500);
+        rpc_login(curl);
+        return json_rpc2_call_recur(curl, url, userpass, rpc_req,
+            curl_err, flags, recur + 1);
+    } else if(!strcmp(mes, "Low difficulty share") || !strcmp(mes, "Block expired") || !strcmp(mes, "Invalid job id")) {
+        json_t *result = json_object_get(res, "result");
+        if(!result) {
+            goto end;
+        }
+        json_object_set(result, "reject-reason", json_string(mes));
+    } else {
+        applog(LOG_ERR, "json_rpc2.0 error: %s", mes);
+        return NULL;
+    }
+    end:
+    return res;
+}
+
+json_t *json_rpc2_call(CURL *curl, const char *url,
+              const char *userpass, const char *rpc_req,
+              int *curl_err, int flags) {
+    return json_rpc2_call_recur(curl, url, userpass, rpc_req,
+        curl_err, flags, 0);
+}
+
 static inline void work_free(struct work *w) {
     free(w->job_id);
     free(w->xnonce2);
@@ -539,10 +591,22 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
                     rpc2_id, work->job_id, noncestr, hashhex);
             free(noncestr);
             free(hashhex);
+
+            /* issue JSON-RPC request */
+            val = json_rpc2_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
+            if (unlikely(!val)) {
+                applog(LOG_ERR, "submit_upstream_work json_rpc_call failed");
+                goto out;
+            }
+            res = json_object_get(val, "result");
+            json_t *status = json_object_get(res, "status");
+            reason = json_object_get(res, "reject-reason");
+            share_result(!strcmp(status ? json_string_value(status) : "", "OK"),
+                    reason ? json_string_value(reason) : NULL );
         } else {
             /* build hex string */
             for (i = 0; i < work->data_len; i++)
-                le32enc(((char*)work->data) + i, ((char*)work->data) + i);
+                le32enc(((char*)work->data) + i, *((uint32_t*) (((char*)work->data) + i)));
             str = bin2hex((unsigned char *) work->data, work->data_len);
             if (unlikely(!str)) {
                 applog(LOG_ERR, "submit_upstream_work OOM");
@@ -551,22 +615,13 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
             snprintf(s, JSON_BUF_LEN,
                     "{\"method\": \"getwork\", \"params\": [ \"%s\" ], \"id\":1}\r\n",
                     str);
-        }
 
-        /* issue JSON-RPC request */
-        val = json_rpc_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
-        if (unlikely(!val)) {
-            applog(LOG_ERR, "submit_upstream_work json_rpc_call failed");
-            goto out;
-        }
-
-        if(jsonrpc_2) {
-            res = json_object_get(val, "result");
-            json_t *status = json_object_get(res, "status");
-            reason = json_object_get(res, "reject-reason");
-            share_result(!strcmp(status ? json_string_value(status) : "", "OK"),
-                    reason ? json_string_value(reason) : NULL );
-        } else {
+            /* issue JSON-RPC request */
+            val = json_rpc_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
+            if (unlikely(!val)) {
+                applog(LOG_ERR, "submit_upstream_work json_rpc_call failed");
+                goto out;
+            }
             res = json_object_get(val, "result");
             reason = json_object_get(val, "reject-reason");
             share_result(json_is_true(res),
@@ -588,17 +643,17 @@ static const char *rpc_req =
 static bool get_upstream_work(CURL *curl, struct work *work) {
     json_t *val;
     bool rc;
-    char s[128];
     struct timeval tv_start, tv_end, diff;
 
-    if(jsonrpc_2) {
-        snprintf(s, 128, "{\"method\": \"getjob\", \"params\": {\"id\": \"%s\"}, \"id\":1}\r\n", rpc2_id);
-    } else {
-        snprintf(s, 128, rpc_req);
-    }
-
     gettimeofday(&tv_start, NULL );
-    val = json_rpc_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
+
+    if(jsonrpc_2) {
+        char s[128];
+        snprintf(s, 128, "{\"method\": \"getjob\", \"params\": {\"id\": \"%s\"}, \"id\":1}\r\n", rpc2_id);
+        val = json_rpc2_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
+    } else {
+        val = json_rpc_call(curl, rpc_url, rpc_userpass, rpc_req, NULL, 0);
+    }
     gettimeofday(&tv_end, NULL );
 
     if (have_stratum) {
@@ -693,10 +748,12 @@ static bool workio_get_work(struct workio_cmd *wc, CURL *curl) {
             return false;
         }
 
+        int pause = jsonrpc_2 ? 1 : 30;
+
         /* pause, then restart work-request loop */
-        applog(LOG_ERR, "json_rpc_call failed, retry after %d seconds",
-                opt_fail_pause);
-        sleep(opt_fail_pause);
+        applog(LOG_ERR, "getwork failed, retry after %d seconds",
+                pause);
+        sleep(pause);
     }
 
     /* send work to requesting thread */
@@ -942,13 +999,13 @@ static void *miner_thread(void *userdata) {
         struct timeval tv_start, tv_end, diff;
         int64_t max64;
         int rc;
-        uint32_t *nonceptr = ((char*)work.data) + (opt_algo == ALGO_CRYPTONIGHT ? 39 : 76);
+        uint32_t *nonceptr = (uint32_t*) ((char*)work.data) + (opt_algo == ALGO_CRYPTONIGHT ? 39 : 76);
 
         if (have_stratum) {
             while (time(NULL ) >= g_work_time + 120)
                 sleep(1);
             pthread_mutex_lock(&g_work_lock);
-            if (&nonceptr >= end_nonce
+            if ((*nonceptr) >= end_nonce
                     && !memcmp(work.data, g_work.data, 76))
                 stratum_gen_work(&stratum, &g_work);
         } else {

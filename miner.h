@@ -217,6 +217,7 @@ extern struct work_restart *work_restart;
 
 #define JSON_RPC_LONGPOLL	(1 << 0)
 #define JSON_RPC_QUIET_404	(1 << 1)
+#define JSON_RPC_IGNOREERR  (1 << 2)
 
 extern void applog(int prio, const char *fmt, ...);
 extern json_t *json_rpc_call(CURL *curl, const char *url, const char *userpass,

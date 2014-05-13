@@ -415,8 +415,7 @@ json_t *json_rpc_call(CURL *curl, const char *url,
 	res_val = json_object_get(val, "result");
 	err_val = json_object_get(val, "error");
 
-	if (!res_val || json_is_null(res_val) ||
-	    (err_val && !json_is_null(err_val))) {
+	if ((err_val && !json_is_null(err_val) && !(flags & JSON_RPC_IGNOREERR))) {
 		char *s;
 
 		if (err_val)
