@@ -999,7 +999,7 @@ static void *miner_thread(void *userdata) {
         struct timeval tv_start, tv_end, diff;
         int64_t max64;
         int rc;
-        uint32_t *nonceptr = (uint32_t*) ((char*)work.data) + (opt_algo == ALGO_CRYPTONIGHT ? 39 : 76);
+        uint32_t *nonceptr = (uint32_t*) (((char*)work.data) + (opt_algo == ALGO_CRYPTONIGHT ? 39 : 76));
 
         if (have_stratum) {
             while (time(NULL ) >= g_work_time + 120)

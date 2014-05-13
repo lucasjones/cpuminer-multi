@@ -226,8 +226,6 @@ static size_t resp_hdr_cb(void *ptr, size_t size, size_t nmemb, void *user_data)
 	while ((*val) && (isspace(val[strlen(val) - 1]))) {
 		val[strlen(val) - 1] = 0;
 	}
-	if (!*val)			/* skip blank value */
-		goto out;
 
 	if (!strcasecmp("X-Long-Polling", key)) {
 		hi->lp_path = val;	/* steal memory reference */
