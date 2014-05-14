@@ -427,8 +427,7 @@ static bool rpc2_job_decode(const json_t *job, struct work *work) {
         }
         rpc2_job_id = strdup(job_id);
         pthread_mutex_unlock(&rpc2_job_lock);
-    }
-    if (work) {
+
         if (!rpc2_blob) {
             applog(LOG_ERR, "Requested work before work was received");
             goto err_out;
@@ -1242,13 +1241,15 @@ static void *longpoll_thread(void *userdata) {
             goto out;
         }
         if (likely(val)) {
-            soval = json_object_get(json_object_get(val, "result"),
-                    "submitold");
-            submit_old = soval ? json_is_true(soval) : false;
+            if (!jsonrpc_2) {
+                soval = json_object_get(json_object_get(val, "result"),
+                        "submitold");
+                submit_old = soval ? json_is_true(soval) : false;
+            }
             pthread_mutex_lock(&g_work_lock);
-            char *start_job_id = strdup(rpc2_job_id);
+            char *start_job_id = strdup(g_work.job_id);
             if (work_decode(json_object_get(val, "result"), &g_work)) {
-                if (strcmp(start_job_id, rpc2_job_id)) {
+                if (strcmp(start_job_id, g_work.job_id)) {
                     applog(LOG_INFO, "LONGPOLL detected new block");
                     if (opt_debug)
                         applog(LOG_DEBUG, "DEBUG: got new work");
