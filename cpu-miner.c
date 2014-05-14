@@ -292,7 +292,7 @@ static bool rpc2_login(CURL *curl);
 json_t *json_rpc2_call_recur(CURL *curl, const char *url,
               const char *userpass, const char *rpc_req,
               int *curl_err, int flags, int recur) {
-    if(recur >= 5) {
+    if(recur >= 2) {
         applog(LOG_ERR, "Failed to call rpc command after %i tries", recur);
         return NULL;
     }
@@ -318,7 +318,7 @@ json_t *json_rpc2_call_recur(CURL *curl, const char *url,
     const char *mes = json_string_value(message);
     if(!strcmp(mes, "Unauthenticated")) {
         applog(LOG_WARNING, "Re-authenticating in 500ms");
-        sleep(500);
+        sleep(1);
         rpc2_login(curl);
         return json_rpc2_call_recur(curl, url, userpass, rpc_req,
             curl_err, flags, recur + 1);
@@ -760,12 +760,10 @@ static bool workio_get_work(struct workio_cmd *wc, CURL *curl) {
             return false;
         }
 
-        int pause = jsonrpc_2 ? 1 : 30;
-
         /* pause, then restart work-request loop */
         applog(LOG_ERR, "getwork failed, retry after %d seconds",
-                pause);
-        sleep(pause);
+                opt_fail_pause);
+        sleep(opt_fail_pause);
     }
 
     /* send work to requesting thread */
