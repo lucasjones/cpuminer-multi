@@ -12,6 +12,7 @@ Algorithms
  * ✓ __scrypt__ (Litecoin, Dogecoin, Feathercoin, etc..)
  * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, etc..)
  * ✓ __x11__ (Darkcoin [DRK], Hirocoin, Limecoin)
+ * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
 
 #### Implemented, but untested
  * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
@@ -20,9 +21,6 @@ Algorithms
  * ? skein (Skeincoin, Myriadcoin)
  * ? shavite3 (INKcoin)
  * ? blake (Blakecoin)
-
-#### Partially implemented
- * *cryptonight* (Bytecoin [BCN], Monero)
 
 #### Planned support for
  * *scrypt-n* (Vertcoin [VTC])
