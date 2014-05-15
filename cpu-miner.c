@@ -427,7 +427,8 @@ static bool rpc2_job_decode(const json_t *job, struct work *work) {
         }
         rpc2_job_id = strdup(job_id);
         pthread_mutex_unlock(&rpc2_job_lock);
-
+    }
+    if(work) {
         if (!rpc2_blob) {
             applog(LOG_ERR, "Requested work before work was received");
             goto err_out;
@@ -1003,13 +1004,13 @@ static void *miner_thread(void *userdata) {
     if (opt_algo == ALGO_SCRYPT) {
         scratchbuf = scrypt_buffer_alloc();
     }
+    uint32_t *nonceptr = (uint32_t*) (((char*)work.data) + (opt_algo == ALGO_CRYPTONIGHT ? 39 : 76));
 
     while (1) {
         unsigned long hashes_done;
         struct timeval tv_start, tv_end, diff;
         int64_t max64;
         int rc;
-        uint32_t *nonceptr = (uint32_t*) (((char*)work.data) + (opt_algo == ALGO_CRYPTONIGHT ? 39 : 76));
 
         if (have_stratum) {
             while (time(NULL ) >= g_work_time + 120)
@@ -1024,7 +1025,7 @@ static void *miner_thread(void *userdata) {
             if ((!have_stratum
                     && (!have_longpoll
                             || time(NULL ) >= g_work_time + LP_SCANTIME * 3 / 4
-                            || *nonceptr >= end_nonce)) && !jsonrpc_2) {
+                            || *nonceptr >= end_nonce))) {
                 if (unlikely(!get_work(mythr, &g_work))) {
                     applog(LOG_ERR, "work retrieval failed, exiting "
                             "mining thread %d", mythr->id);
