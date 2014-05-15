@@ -302,19 +302,15 @@ json_t *json_rpc2_call_recur(CURL *curl, const char *url,
     }
     json_t *res = json_rpc_call(curl, url, userpass, rpc_req,
             curl_err, flags | JSON_RPC_IGNOREERR);
+    if(!res) goto end;
     json_t *error = json_object_get(res, "error");
-    if(!error) {
-        goto end;
-    }
+    if(!error) goto end;
     json_t *message;
-    if(json_is_string(error)) {
+    if(json_is_string(error))
         message = error;
-    } else {
+    else
         message = json_object_get(error, "message");
-    }
-    if(!message) {
-        goto end;
-    }
+    if(!message) goto end;
     const char *mes = json_string_value(message);
     if(!strcmp(mes, "Unauthenticated")) {
         applog(LOG_WARNING, "Authenticating and retrying..");
@@ -1061,7 +1057,7 @@ static void *miner_thread(void *userdata) {
                 max64 = 0xfffLL;
                 break;
             case ALGO_CRYPTONIGHT:
-                max64 = 0x40LL;
+                max64 = 0x8fLL;
                 break;
             default:
                 max64 = 0x1fffffLL;
