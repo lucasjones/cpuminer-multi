@@ -317,9 +317,9 @@ json_t *json_rpc2_call_recur(CURL *curl, const char *url,
     }
     const char *mes = json_string_value(message);
     if(!strcmp(mes, "Unauthenticated")) {
-        applog(LOG_WARNING, "Re-authenticating in 500ms");
-        sleep(1);
+        applog(LOG_WARNING, "Authenticating and retrying..");
         rpc2_login(curl);
+        sleep(1);
         return json_rpc2_call_recur(curl, url, userpass, rpc_req,
             curl_err, flags, recur + 1);
     } else if(!strcmp(mes, "Low difficulty share") || !strcmp(mes, "Block expired") || !strcmp(mes, "Invalid job id")) {
