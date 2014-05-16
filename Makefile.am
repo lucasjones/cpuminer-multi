@@ -50,6 +50,7 @@ minerd_SOURCES	= elist.h \
 		  crypto/c_skein.c \
 		  crypto/hash.c \
 		  crypto/aesb.c
+if USE_ASM
 if ARCH_x86
 minerd_SOURCES += sha2-x86.S scrypt-x86.S aesb-x86.S crypto/aesb-x86-impl.c
 endif
@@ -59,6 +60,8 @@ endif
 if ARCH_ARM
 minerd_SOURCES += sha2-arm.S scrypt-arm.S
 endif
+endif
+
 minerd_LDFLAGS	= $(PTHREAD_FLAGS)
 minerd_LDADD	= @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@
 minerd_CPPFLAGS = @LIBCURL_CPPFLAGS@
