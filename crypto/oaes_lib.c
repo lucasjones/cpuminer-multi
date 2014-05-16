@@ -266,10 +266,8 @@ static OAES_RET oaes_sub_byte( uint8_t * byte )
 	if( unlikely(NULL == byte) )
 		return OAES_RET_ARG1;
 
-	_x = _y = *byte;
+	_y = ((_x = *byte) >> 4) & 0x0f;
 	_x &= 0x0f;
-	_y &= 0xf0;
-	_y >>= 4;
 	*byte = oaes_sub_byte_value[_y][_x];
 	
 	return OAES_RET_SUCCESS;
@@ -373,11 +371,9 @@ static OAES_RET oaes_inv_shift_rows( uint8_t block[OAES_BLOCK_SIZE] )
 static uint8_t oaes_gf_mul(uint8_t left, uint8_t right)
 {
 	size_t _x, _y;
-	
-	_x = _y = left;
+
+	_y = ((_x = left) >> 4) & 0x0f;
 	_x &= 0x0f;
-	_y &= 0xf0;
-	_y >>= 4;
 	
 	switch( right )
 	{
