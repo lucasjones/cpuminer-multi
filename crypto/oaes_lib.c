@@ -321,29 +321,24 @@ static OAES_RET oaes_word_rot_left( uint8_t word[OAES_COL_LEN] )
 
 static OAES_RET oaes_shift_rows( uint8_t block[OAES_BLOCK_SIZE] )
 {
-	uint8_t _temp[OAES_BLOCK_SIZE];
-
 	if( unlikely(NULL == block) )
 		return OAES_RET_ARG1;
 
-	_temp[0x00] = block[0x00];
-	_temp[0x01] = block[0x05];
-	_temp[0x02] = block[0x0a];
-	_temp[0x03] = block[0x0f];
-	_temp[0x04] = block[0x04];
-	_temp[0x05] = block[0x09];
-	_temp[0x06] = block[0x0e];
-	_temp[0x07] = block[0x03];
-	_temp[0x08] = block[0x08];
-	_temp[0x09] = block[0x0d];
-	_temp[0x0a] = block[0x02];
-	_temp[0x0b] = block[0x07];
-	_temp[0x0c] = block[0x0c];
-	_temp[0x0d] = block[0x01];
-	_temp[0x0e] = block[0x06];
-	_temp[0x0f] = block[0x0b];
-	memcpy( block, _temp, OAES_BLOCK_SIZE );
-	
+	uint8_t _temp[] = { block[0x03], block[0x02], block[0x01], block[0x06], block[0x0b] };
+
+	block[0x0b] = block[0x07];
+	block[0x01] = block[0x05];
+	block[0x02] = block[0x0a];
+	block[0x03] = block[0x0f];
+	block[0x05] = block[0x09];
+	block[0x06] = block[0x0e];
+	block[0x07] = _temp[0];
+	block[0x09] = block[0x0d];
+	block[0x0a] = _temp[1];
+	block[0x0d] = _temp[2];
+	block[0x0e] = _temp[3];
+	block[0x0f] = _temp[4];
+
 	return OAES_RET_SUCCESS;
 }
 
