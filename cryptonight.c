@@ -103,7 +103,7 @@ static void xor_blocks(uint8_t* a, const uint8_t* b) {
     }
 }
 
-void cryptonight_hash(void* output, const void* input, size_t input_len) {
+struct cryptonight_ctx {
     uint8_t long_state[MEMORY];
     union cn_slow_hash_state state;
     uint8_t text[INIT_SIZE_BYTE];
@@ -111,26 +111,28 @@ void cryptonight_hash(void* output, const void* input, size_t input_len) {
     uint8_t b[AES_BLOCK_SIZE];
     uint8_t c[AES_BLOCK_SIZE];
     uint8_t d[AES_BLOCK_SIZE];
-    size_t i, j;
     uint8_t aes_key[AES_KEY_SIZE];
     OAES_CTX* aes_ctx;
+};
 
-    hash_process(&state.hs, input, input_len);
-    memcpy(text, state.init, INIT_SIZE_BYTE);
-    memcpy(aes_key, state.hs.b, AES_KEY_SIZE);
-    aes_ctx = oaes_alloc();
+void cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cryptonight_ctx* ctx) {
+    hash_process(&ctx->state.hs, (const uint8_t*) input, len);
+    memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
+    memcpy(ctx->aes_key, ctx->state.hs.b, AES_KEY_SIZE);
+    ctx->aes_ctx = oaes_alloc();
+    size_t i, j;
 
-    oaes_key_import_data(aes_ctx, aes_key, AES_KEY_SIZE);
+    oaes_key_import_data(ctx->aes_ctx, ctx->aes_key, AES_KEY_SIZE);
     for (i = 0; i < MEMORY / INIT_SIZE_BYTE; i++) {
         for (j = 0; j < INIT_SIZE_BLK; j++) {
-            oaes_pseudo_encrypt_ecb(aes_ctx, &text[AES_BLOCK_SIZE * j]);
+            oaes_pseudo_encrypt_ecb(ctx->aes_ctx, &ctx->text[AES_BLOCK_SIZE * j]);
         }
-        memcpy(&long_state[i * INIT_SIZE_BYTE], text, INIT_SIZE_BYTE);
+        memcpy(&ctx->long_state[i * INIT_SIZE_BYTE], ctx->text, INIT_SIZE_BYTE);
     }
 
     for (i = 0; i < 16; i++) {
-        a[i] = state.k[i] ^ state.k[32 + i];
-        b[i] = state.k[16 + i] ^ state.k[48 + i];
+        ctx->a[i] = ctx->state.k[i] ^ ctx->state.k[32 + i];
+        ctx->b[i] = ctx->state.k[16 + i] ^ ctx->state.k[48 + i];
     }
 
     for (i = 0; i < ITER / 2; i++) {
@@ -139,38 +141,40 @@ void cryptonight_hash(void* output, const void* input, size_t input_len) {
          * next address  <-+
          */
         /* Iteration 1 */
-        j = e2i(a, MEMORY / AES_BLOCK_SIZE);
-        copy_block(c, &long_state[j * AES_BLOCK_SIZE]);
-        oaes_encryption_round(a, c);
-        xor_blocks(b, c);
-        swap_blocks(b, c);
-        copy_block(&long_state[j * AES_BLOCK_SIZE], c);
-        swap_blocks(a, b);
+        j = e2i(ctx->a, MEMORY / AES_BLOCK_SIZE);
+        copy_block(ctx->c, &ctx->long_state[j * AES_BLOCK_SIZE]);
+        oaes_encryption_round(ctx->a, ctx->c);
+        xor_blocks(ctx->b, ctx->c);
+        copy_block(&ctx->long_state[j * AES_BLOCK_SIZE], ctx->b);
         /* Iteration 2 */
-        j = e2i(a, MEMORY / AES_BLOCK_SIZE);
-        copy_block(c, &long_state[j * AES_BLOCK_SIZE]);
-        mul(a, c, d);
-        sum_half_blocks(b, d);
-        swap_blocks(b, c);
-        xor_blocks(b, c);
-        copy_block(&long_state[j * AES_BLOCK_SIZE], c);
-        swap_blocks(a, b);
+        j = e2i(ctx->c, MEMORY / AES_BLOCK_SIZE);
+        copy_block(ctx->b, &ctx->long_state[j * AES_BLOCK_SIZE]);
+        mul(ctx->c, ctx->b, ctx->d);
+        sum_half_blocks(ctx->a, ctx->d);
+        xor_blocks(ctx->b, ctx->a);
+        copy_block(&ctx->long_state[j * AES_BLOCK_SIZE], ctx->a);
+        copy_block(ctx->a, ctx->b);
+        copy_block(ctx->b, ctx->c);
     }
 
-    memcpy(text, state.init, INIT_SIZE_BYTE);
-    oaes_key_import_data(aes_ctx, &state.hs.b[32], AES_KEY_SIZE);
+    memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
+    oaes_key_import_data(ctx->aes_ctx, &ctx->state.hs.b[32], AES_KEY_SIZE);
     for (i = 0; i < MEMORY / INIT_SIZE_BYTE; i++) {
         for (j = 0; j < INIT_SIZE_BLK; j++) {
-            xor_blocks(&text[j * AES_BLOCK_SIZE],
-                    &long_state[i * INIT_SIZE_BYTE + j * AES_BLOCK_SIZE]);
-            oaes_pseudo_encrypt_ecb(aes_ctx, &text[j * AES_BLOCK_SIZE]);
+            xor_blocks(&ctx->text[j * AES_BLOCK_SIZE],
+                    &ctx->long_state[i * INIT_SIZE_BYTE + j * AES_BLOCK_SIZE]);
+            oaes_pseudo_encrypt_ecb(ctx->aes_ctx, &ctx->text[j * AES_BLOCK_SIZE]);
         }
     }
-    memcpy(state.init, text, INIT_SIZE_BYTE);
-    hash_permutation(&state.hs);
+    memcpy(ctx->state.init, ctx->text, INIT_SIZE_BYTE);
+    hash_permutation(&ctx->state.hs);
     /*memcpy(hash, &state, 32);*/
-    extra_hashes[state.hs.b[0] & 3](&state, 200, output);
-    oaes_free(&aes_ctx);
+    extra_hashes[ctx->state.hs.b[0] & 3](&ctx->state, 200, output);
+    oaes_free(&ctx->aes_ctx);
+}
+
+void cryptonight_hash(void* output, const void* input, size_t len) {
+    cryptonight_hash_ctx(output, input, len, alloca(sizeof(struct cryptonight_ctx)));
 }
 
 int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
@@ -181,9 +185,11 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
     const uint32_t Htarg = ptarget[7];
     uint32_t hash[HASH_SIZE / 4] __attribute__((aligned(32)));
 
+    struct cryptonight_ctx *ctx = alloca(sizeof(struct cryptonight_ctx));
+
     do {
         *nonceptr = ++n;
-        cryptonight_hash(hash, pdata, data_len);
+        cryptonight_hash_ctx(hash, pdata, data_len, ctx);
         if (unlikely(hash[7] < ptarget[7])) {
             *hashes_done = n - first_nonce + 1;
             return true;

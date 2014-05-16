@@ -1057,7 +1057,7 @@ static void *miner_thread(void *userdata) {
                 max64 = 0xfffLL;
                 break;
             case ALGO_CRYPTONIGHT:
-                max64 = 0x8fLL;
+                max64 = 0x40LL;
                 break;
             default:
                 max64 = 0x1fffffLL;
