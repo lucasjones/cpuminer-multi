@@ -54,8 +54,8 @@ static void (* const extra_hashes[4])(const void *, size_t, char *) = {
         do_blake_hash, do_groestl_hash, do_jh_hash, do_skein_hash
 };
 
-static size_t e2i(const uint8_t* a, size_t count) {
-    return (*((uint64_t*) a) / AES_BLOCK_SIZE) & (count - 1);
+static inline size_t e2i(const uint8_t* a) {
+    return (*((uint64_t*) a) / AES_BLOCK_SIZE) & (MEMORY / AES_BLOCK_SIZE - 1);
 }
 
 static void mul(const uint8_t* a, const uint8_t* b, uint8_t* res) {
@@ -119,7 +119,6 @@ struct cryptonight_ctx {
     uint8_t a[AES_BLOCK_SIZE];
     uint8_t b[AES_BLOCK_SIZE];
     uint8_t c[AES_BLOCK_SIZE];
-    uint8_t d[AES_BLOCK_SIZE];
     uint8_t aes_key[AES_KEY_SIZE];
     OAES_CTX* aes_ctx;
 };
@@ -150,12 +149,12 @@ void cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cr
          * next address  <-+
          */
         /* Iteration 1 */
-        j = e2i(ctx->a, MEMORY / AES_BLOCK_SIZE);
+        j = e2i(ctx->a);
+        oaes_encryption_round(ctx->a, &ctx->long_state[j * AES_BLOCK_SIZE]);
         copy_block(ctx->c, &ctx->long_state[j * AES_BLOCK_SIZE]);
-        oaes_encryption_round(ctx->a, ctx->c);
-        xor_blocks_dst(ctx->b, ctx->c, &ctx->long_state[j * AES_BLOCK_SIZE]);
+        xor_blocks(&ctx->long_state[j * AES_BLOCK_SIZE], ctx->b);
         /* Iteration 2 */
-        mul_sum_xor_dst(ctx->c, ctx->a, ctx->b, &ctx->long_state[e2i(ctx->c, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE]);
+        mul_sum_xor_dst(ctx->c, ctx->a, ctx->b, &ctx->long_state[e2i(ctx->c) * AES_BLOCK_SIZE]);
         copy_block(ctx->a, ctx->b);
         copy_block(ctx->b, ctx->c);
     }
