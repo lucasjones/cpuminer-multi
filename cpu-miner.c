@@ -274,8 +274,7 @@ static struct option const options[] = {
 };
 
 struct work {
-    uint32_t data[1024];
-    size_t data_len;
+    uint32_t data[32];
     uint32_t target[8];
 
     char *job_id;
@@ -394,7 +393,7 @@ static bool rpc2_job_decode(const json_t *job, struct work *work) {
     }
     const char *hexblob = json_string_value(tmp);
     int blobLen = strlen(hexblob);
-    if (blobLen % 2 != 0 || ((blobLen / 2) < 40 && blobLen != 0)) {
+    if (blobLen % 2 != 0 || ((blobLen / 2) < 40 && blobLen != 0) || (blobLen / 2) > 128) {
         applog(LOG_ERR, "JSON invalid blob length");
         goto err_out;
     }
@@ -430,7 +429,6 @@ static bool rpc2_job_decode(const json_t *job, struct work *work) {
             goto err_out;
         }
         memcpy(work->data, rpc2_blob, rpc2_bloblen);
-        work->data_len = rpc2_bloblen;
         memset(work->target, 0xff, sizeof(work->target));
         work->target[7] = rpc2_target;
         if (work->job_id)
@@ -596,7 +594,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
             switch(opt_algo) {
             case ALGO_CRYPTONIGHT:
             default:
-                cryptonight_hash(hash, work->data, work->data_len);
+                cryptonight_hash(hash, work->data, 76);
             }
             char *hashhex = bin2hex(hash, 32);
             snprintf(s, JSON_BUF_LEN,
@@ -618,9 +616,9 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
                     reason ? json_string_value(reason) : NULL );
         } else {
             /* build hex string */
-            for (i = 0; i < work->data_len; i++)
+            for (i = 0; i < 76; i++)
                 le32enc(((char*)work->data) + i, *((uint32_t*) (((char*)work->data) + i)));
-            str = bin2hex((unsigned char *) work->data, work->data_len);
+            str = bin2hex((unsigned char *) work->data, 76);
             if (unlikely(!str)) {
                 applog(LOG_ERR, "submit_upstream_work OOM");
                 goto out;
@@ -1117,7 +1115,7 @@ static void *miner_thread(void *userdata) {
             break;
         case ALGO_CRYPTONIGHT:
             rc = scanhash_cryptonight(thr_id, work.data, work.target,
-                    work.data_len, max_nonce, &hashes_done);
+                    max_nonce, &hashes_done);
             break;
 
         default:
