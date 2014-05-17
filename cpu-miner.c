@@ -291,8 +291,8 @@ static bool rpc2_login(CURL *curl);
 json_t *json_rpc2_call_recur(CURL *curl, const char *url,
               const char *userpass, const char *rpc_req,
               int *curl_err, int flags, int recur) {
-    if(recur >= 2) {
-        applog(LOG_ERR, "Failed to call rpc command after %i tries", recur);
+    if(recur >= 5) {
+        applog(LOG_DEBUG, "Failed to call rpc command after %i tries", recur);
         return NULL;
     }
     if(!strcmp(rpc2_id, "")) {
@@ -415,7 +415,16 @@ static bool rpc2_job_decode(const json_t *job, struct work *work) {
 
         uint32_t target;
         jobj_binary(job, "target", &target, 4);
-        rpc2_target = target;
+        if(rpc2_target != target) {
+            float hashrate = 0.;
+            pthread_mutex_lock(&stats_lock);
+            for (size_t i = 0; i < opt_n_threads; i++)
+                hashrate += thr_hashrates[i];
+            pthread_mutex_unlock(&stats_lock);
+            double difficulty = (((double) 0xffffffff) / target);
+            applog(LOG_INFO, "[JSON-RPC] diff set to %g", difficulty);
+            rpc2_target = target;
+        }
 
         if (rpc2_job_id) {
             free(rpc2_job_id);
@@ -520,7 +529,7 @@ static bool login_decode(const json_t *val) {
     err_out: return false;
 }
 
-static void share_result(int result, const char *reason) {
+static void share_result(int result, struct work *work, const char *reason) {
     char s[345];
     double hashrate;
     int i;
@@ -534,9 +543,10 @@ static void share_result(int result, const char *reason) {
 
     switch (opt_algo) {
     case ALGO_CRYPTONIGHT:
-        applog(LOG_INFO, "accepted: %lu/%lu (%.2f%%), %.2f hashes/s %s",
+        applog(LOG_INFO, "accepted: %lu/%lu (%.2f%%), %.2f hashes/s at diff %g %s",
                 accepted_count, accepted_count + rejected_count,
                 100. * accepted_count / (accepted_count + rejected_count), hashrate,
+                result ? (((double) 0xffffffff) / (work ? work->target[7] : rpc2_target)) : 0,
                 result ? "(yay!!!)" : "(booooo)");
         break;
     default:
@@ -612,7 +622,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
             res = json_object_get(val, "result");
             json_t *status = json_object_get(res, "status");
             reason = json_object_get(res, "reject-reason");
-            share_result(!strcmp(status ? json_string_value(status) : "", "OK"),
+            share_result(!strcmp(status ? json_string_value(status) : "", "OK"), work,
                     reason ? json_string_value(reason) : NULL );
         } else {
             /* build hex string */
@@ -635,7 +645,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
             }
             res = json_object_get(val, "result");
             reason = json_object_get(val, "reject-reason");
-            share_result(json_is_true(res),
+            share_result(json_is_true(res), work,
                     reason ? json_string_value(reason) : NULL );
         }
 
@@ -1298,7 +1308,7 @@ static bool stratum_handle_response(char *buf) {
     if (!id_val || json_is_null(id_val) || !res_val)
         goto out;
 
-    share_result(json_is_true(res_val),
+    share_result(json_is_true(res_val), NULL,
             err_val ? json_string_value(json_array_get(err_val, 1)) : NULL );
 
     ret = true;
