@@ -543,7 +543,7 @@ static void share_result(int result, struct work *work, const char *reason) {
 
     switch (opt_algo) {
     case ALGO_CRYPTONIGHT:
-        applog(LOG_INFO, "accepted: %lu/%lu (%.2f%%), %.2f hashes/s at diff %g %s",
+        applog(LOG_INFO, "accepted: %lu/%lu (%.2f%%), %.2f H/s at diff %g %s",
                 accepted_count, accepted_count + rejected_count,
                 100. * accepted_count / (accepted_count + rejected_count), hashrate,
                 result ? (((double) 0xffffffff) / (work ? work->target[7] : rpc2_target)) : 0,
@@ -1145,7 +1145,7 @@ static void *miner_thread(void *userdata) {
         if (!opt_quiet) {
             switch(opt_algo) {
             case ALGO_CRYPTONIGHT:
-                applog(LOG_INFO, "thread %d: %lu hashes, %.2f hashes/s", thr_id,
+                applog(LOG_INFO, "thread %d: %lu hashes, %.2f H/s", thr_id,
                         hashes_done, thr_hashrates[thr_id]);
                 break;
             default:
@@ -1163,7 +1163,7 @@ static void *miner_thread(void *userdata) {
             if (i == opt_n_threads) {
                 switch(opt_algo) {
                 case ALGO_CRYPTONIGHT:
-                    applog(LOG_INFO, "Total: %s hashes/s", hashrate);
+                    applog(LOG_INFO, "Total: %s H/s", hashrate);
                     break;
                 default:
                     sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", 1e-3 * hashrate);
