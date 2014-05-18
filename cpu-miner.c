@@ -167,6 +167,7 @@ static char *rpc2_job_id = NULL;
 pthread_mutex_t applog_lock;
 static pthread_mutex_t stats_lock;
 static pthread_mutex_t rpc2_job_lock;
+static pthread_mutex_t rpc2_login_lock;
 
 static unsigned long accepted_count = 0L;
 static unsigned long rejected_count = 0L;
@@ -287,16 +288,17 @@ static time_t g_work_time;
 static pthread_mutex_t g_work_lock;
 
 static bool rpc2_login(CURL *curl);
+static void workio_cmd_free(struct workio_cmd *wc);
 
 json_t *json_rpc2_call_recur(CURL *curl, const char *url,
               const char *userpass, const char *rpc_req,
               int *curl_err, int flags, int recur) {
-    if(recur >= 5) {
+    if(recur >= 3) {
         applog(LOG_DEBUG, "Failed to call rpc command after %i tries", recur);
         return NULL;
     }
     if(!strcmp(rpc2_id, "")) {
-        applog(LOG_ERR, "Tried to call rpc2 command before authentication");
+        applog(LOG_DEBUG, "Tried to call rpc2 command before authentication");
         return NULL;
     }
     json_t *res = json_rpc_call(curl, url, userpass, rpc_req,
@@ -309,7 +311,7 @@ json_t *json_rpc2_call_recur(CURL *curl, const char *url,
         message = error;
     else
         message = json_object_get(error, "message");
-    if(!message) goto end;
+    if(!message || !json_is_string(message)) goto end;
     const char *mes = json_string_value(message);
     if(!strcmp(mes, "Unauthenticated")) {
         applog(LOG_INFO, "Authenticating and retrying..");
@@ -700,6 +702,7 @@ static bool get_upstream_work(CURL *curl, struct work *work) {
 }
 
 static bool rpc2_login(CURL *curl) {
+    pthread_mutex_lock(&rpc2_login_lock);
     if(!jsonrpc_2) {
         return false;
     }
@@ -715,7 +718,7 @@ static bool rpc2_login(CURL *curl) {
     gettimeofday(&tv_end, NULL );
 
     if (!val)
-        return false;
+        goto end;
 
 //    applog(LOG_DEBUG, "JSON value: %s", json_dumps(val, 0));
 
@@ -729,6 +732,8 @@ static bool rpc2_login(CURL *curl) {
 
     json_decref(val);
 
+    end:
+    pthread_mutex_unlock(&rpc2_login_lock);
     return rc;
 }
 
