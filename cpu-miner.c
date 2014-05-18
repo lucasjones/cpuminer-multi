@@ -291,17 +291,26 @@ static bool rpc2_login(CURL *curl);
 static void workio_cmd_free(struct workio_cmd *wc);
 
 json_t *json_rpc2_call_recur(CURL *curl, const char *url,
-              const char *userpass, const char *rpc_req,
+              const char *userpass, json_t *rpc_req,
               int *curl_err, int flags, int recur) {
-    if(recur >= 3) {
-        applog(LOG_DEBUG, "Failed to call rpc command after %i tries", recur);
+    if(recur >= 5) {
+        if(opt_debug)
+            applog(LOG_DEBUG, "Failed to call rpc command after %i tries", recur);
         return NULL;
     }
     if(!strcmp(rpc2_id, "")) {
-        applog(LOG_DEBUG, "Tried to call rpc2 command before authentication");
+        if(opt_debug)
+            applog(LOG_DEBUG, "Tried to call rpc2 command before authentication");
         return NULL;
     }
-    json_t *res = json_rpc_call(curl, url, userpass, rpc_req,
+    json_t *params = json_object_get(rpc_req, "params");
+    if (params) {
+        json_t *auth_id = json_object_get(params, "id");
+        if (auth_id) {
+            json_string_set(auth_id, rpc2_id);
+        }
+    }
+    json_t *res = json_rpc_call(curl, url, userpass, json_dumps(rpc_req, 0),
             curl_err, flags | JSON_RPC_IGNOREERR);
     if(!res) goto end;
     json_t *error = json_object_get(res, "error");
@@ -314,9 +323,10 @@ json_t *json_rpc2_call_recur(CURL *curl, const char *url,
     if(!message || !json_is_string(message)) goto end;
     const char *mes = json_string_value(message);
     if(!strcmp(mes, "Unauthenticated")) {
-        applog(LOG_INFO, "Authenticating and retrying..");
+        pthread_mutex_lock(&rpc2_login_lock);
         rpc2_login(curl);
         sleep(1);
+        pthread_mutex_unlock(&rpc2_login_lock);
         return json_rpc2_call_recur(curl, url, userpass, rpc_req,
             curl_err, flags, recur + 1);
     } else if(!strcmp(mes, "Low difficulty share") || !strcmp(mes, "Block expired") || !strcmp(mes, "Invalid job id")) {
@@ -336,7 +346,7 @@ json_t *json_rpc2_call_recur(CURL *curl, const char *url,
 json_t *json_rpc2_call(CURL *curl, const char *url,
               const char *userpass, const char *rpc_req,
               int *curl_err, int flags) {
-    return json_rpc2_call_recur(curl, url, userpass, rpc_req,
+    return json_rpc2_call_recur(curl, url, userpass, JSON_LOADS(rpc_req, NULL),
         curl_err, flags, 0);
 }
 
@@ -503,7 +513,8 @@ static bool login_decode(const json_t *val) {
 
     memcpy(&rpc2_id, id, 64);
 
-    applog(LOG_DEBUG, "Auth id: %s", id);
+    if(opt_debug)
+        applog(LOG_DEBUG, "Auth id: %s", id);
 
     tmp = json_object_get(res, "status");
     if(!tmp) {
@@ -702,7 +713,6 @@ static bool get_upstream_work(CURL *curl, struct work *work) {
 }
 
 static bool rpc2_login(CURL *curl) {
-    pthread_mutex_lock(&rpc2_login_lock);
     if(!jsonrpc_2) {
         return false;
     }
@@ -733,7 +743,6 @@ static bool rpc2_login(CURL *curl) {
     json_decref(val);
 
     end:
-    pthread_mutex_unlock(&rpc2_login_lock);
     return rc;
 }
 
@@ -805,16 +814,21 @@ static bool workio_login(CURL *curl) {
     int failures = 0;
 
     /* submit solution to bitcoin via JSON-RPC */
+    pthread_mutex_lock(&rpc2_login_lock);
     while (!rpc2_login(curl)) {
         if (unlikely((opt_retries >= 0) && (++failures > opt_retries))) {
             applog(LOG_ERR, "...terminating workio thread");
+            pthread_mutex_unlock(&rpc2_login_lock);
             return false;
         }
 
         /* pause, then restart work-request loop */
         applog(LOG_ERR, "...retry after %d seconds", opt_fail_pause);
         sleep(opt_fail_pause);
+        pthread_mutex_unlock(&rpc2_login_lock);
+        pthread_mutex_lock(&rpc2_login_lock);
     }
+    pthread_mutex_unlock(&rpc2_login_lock);
 
     return true;
 }
@@ -1237,11 +1251,17 @@ static void *longpoll_thread(void *userdata) {
         int err;
 
         if(jsonrpc_2) {
+            pthread_mutex_lock(&rpc2_login_lock);
+            if(!strcmp(rpc2_id, "")) {
+                sleep(1);
+                continue;
+            }
             char s[128];
             snprintf(s, 128, "{\"method\": \"getjob\", \"params\": {\"id\": \"%s\"}, \"id\":1}\r\n", rpc2_id);
-            val = json_rpc2_call(curl, rpc_url, rpc_userpass, s, NULL, JSON_RPC_LONGPOLL);
+            pthread_mutex_unlock(&rpc2_login_lock);
+            val = json_rpc2_call(curl, rpc_url, rpc_userpass, s, &err, JSON_RPC_LONGPOLL);
         } else {
-            val = json_rpc_call(curl, rpc_url, rpc_userpass, rpc_req, NULL, JSON_RPC_LONGPOLL);
+            val = json_rpc_call(curl, rpc_url, rpc_userpass, rpc_req, &err, JSON_RPC_LONGPOLL);
         }
         if (have_stratum) {
             if (val)
