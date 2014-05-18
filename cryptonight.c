@@ -80,12 +80,12 @@ static void mul_sum_dst(const uint8_t* a, const uint8_t* b, const uint8_t* c, ui
     ((uint64_t*) dst)[0] += ((uint64_t*) c)[0];
 }
 
-static void mul_sum_xor_dst(const uint8_t* a, const uint8_t* c, uint8_t* xordst, uint8_t* dst) {
+static void mul_sum_xor_dst(const uint8_t* a, uint8_t* c, uint8_t* dst) {
     uint64_t hi, lo = mul128(((uint64_t*) a)[0], ((uint64_t*) dst)[0], &hi) + ((uint64_t*) c)[1];
     hi += ((uint64_t*) c)[0];
 
-    ((uint64_t*) xordst)[0] = ((uint64_t*) dst)[0] ^ hi;
-    ((uint64_t*) xordst)[1] = ((uint64_t*) dst)[1] ^ lo;
+    ((uint64_t*) c)[0] = ((uint64_t*) dst)[0] ^ hi;
+    ((uint64_t*) c)[1] = ((uint64_t*) dst)[1] ^ lo;
     ((uint64_t*) dst)[0] = hi;
     ((uint64_t*) dst)[1] = lo;
 }
@@ -153,12 +153,10 @@ void cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cr
          */
         /* Iteration 1 */
         j = e2i(ctx->a);
-        aesb_single_round(&ctx->long_state[j * AES_BLOCK_SIZE], &ctx->long_state[j * AES_BLOCK_SIZE], ctx->a);
-        copy_block(ctx->c, &ctx->long_state[j * AES_BLOCK_SIZE]);
-        xor_blocks(&ctx->long_state[j * AES_BLOCK_SIZE], ctx->b);
+        aesb_single_round(&ctx->long_state[j * AES_BLOCK_SIZE], ctx->c, ctx->a);
+        xor_blocks_dst(ctx->c, ctx->b, &ctx->long_state[j * AES_BLOCK_SIZE]);
         /* Iteration 2 */
-        mul_sum_xor_dst(ctx->c, ctx->a, ctx->b, &ctx->long_state[e2i(ctx->c) * AES_BLOCK_SIZE]);
-        copy_block(ctx->a, ctx->b);
+        mul_sum_xor_dst(ctx->c, ctx->a, &ctx->long_state[e2i(ctx->c) * AES_BLOCK_SIZE]);
         copy_block(ctx->b, ctx->c);
     }
 
