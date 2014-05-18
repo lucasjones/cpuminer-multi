@@ -15,11 +15,20 @@ bin_PROGRAMS	= minerd
 
 dist_man_MANS	= minerd.1
 
-minerd_SOURCES	= elist.h miner.h compat.h \
-		  cpu-miner.c util.c \
-		  sha2.c scrypt.c keccak.c \
-		  heavy.c quark.c skein.c \
-		  ink.c blake.c cryptonight.c \
+minerd_SOURCES	= elist.h \
+          miner.h \
+          compat.h \
+		  cpu-miner.c \
+		  util.c \
+		  sha2.c \
+		  scrypt.c \
+		  keccak.c \
+		  heavy.c \
+		  quark.c \
+		  skein.c \
+		  ink.c \
+		  blake.c \
+		  cryptonight.c \
 		  x11.c \
 		  sha3/sph_keccak.c \
 		  sha3/sph_hefty1.c \
@@ -39,7 +48,8 @@ minerd_SOURCES	= elist.h miner.h compat.h \
 		  crypto/c_blake256.c \
 		  crypto/c_jh.c \
 		  crypto/c_skein.c \
-		  crypto/hash.c
+		  crypto/hash.c \
+		  crypto/aesb.c
 if ARCH_x86
 minerd_SOURCES += sha2-x86.S scrypt-x86.S
 endif
