@@ -16,8 +16,8 @@ bin_PROGRAMS	= minerd
 dist_man_MANS	= minerd.1
 
 minerd_SOURCES	= elist.h \
-          miner.h \
-          compat.h \
+		  miner.h \
+		  compat.h \
 		  cpu-miner.c \
 		  util.c \
 		  sha2.c \
@@ -62,4 +62,8 @@ endif
 minerd_LDFLAGS	= $(PTHREAD_FLAGS)
 minerd_LDADD	= @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@ -lcrypto
 minerd_CPPFLAGS = @LIBCURL_CPPFLAGS@
+minerd_CFLAGS   = 
 
+if HAVE_WINDOWS
+minerd_CFLAGS += -Wl,--stack,10485760
+endif
