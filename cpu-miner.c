@@ -312,7 +312,7 @@ json_t *json_rpc2_call_recur(CURL *curl, const char *url,
     if(!message) goto end;
     const char *mes = json_string_value(message);
     if(!strcmp(mes, "Unauthenticated")) {
-        applog(LOG_WARNING, "Authenticating and retrying..");
+        applog(LOG_INFO, "Authenticating and retrying..");
         rpc2_login(curl);
         sleep(1);
         return json_rpc2_call_recur(curl, url, userpass, rpc_req,
@@ -501,7 +501,7 @@ static bool login_decode(const json_t *val) {
 
     memcpy(&rpc2_id, id, 64);
 
-    applog(LOG_INFO, "Auth id: %s", id);
+    applog(LOG_DEBUG, "Auth id: %s", id);
 
     tmp = json_object_get(res, "status");
     if(!tmp) {
