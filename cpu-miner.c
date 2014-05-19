@@ -329,7 +329,7 @@ json_t *json_rpc2_call_recur(CURL *curl, const char *url,
         pthread_mutex_unlock(&rpc2_login_lock);
         return json_rpc2_call_recur(curl, url, userpass, rpc_req,
             curl_err, flags, recur + 1);
-    } else if(!strcmp(mes, "Low difficulty share") || !strcmp(mes, "Block expired") || !strcmp(mes, "Invalid job id")) {
+    } else if(!strcmp(mes, "Low difficulty share") || !strcmp(mes, "Block expired") || !strcmp(mes, "Invalid job id") || !strcmp(mes, "Duplicate share")) {
         json_t *result = json_object_get(res, "result");
         if(!result) {
             goto end;
