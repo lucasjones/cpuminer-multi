@@ -6,6 +6,17 @@ CPUMiner-Multi
 This is a multi-threaded CPU miner,
 fork of [pooler](//github.com/pooler)'s cpuminer.
 
+#### Table of contents
+
+* [Algorithms](#algorithms)
+* [Dependencies](#dependencies)
+* [Download](#download)
+* [Build](#build)
+* [Usage instructions](#usage-instructions)
+* [Donations](#donations)
+* [Credits](#credits)
+* [License](#license)
+
 Algorithms
 ==========
 #### Currently supported
@@ -27,10 +38,6 @@ Algorithms
  * *scrypt-jane* (YaCoin, CopperBars, Pennies, Tickets, etc..)
  * *qubit* (Qubitcoin, Myriadcoin)
  * *groestl* (Groestlcoin)
-
-License
-=======
-GPLv2.  See COPYING for details.
 
 Dependencies
 ============
@@ -85,7 +92,6 @@ Build
 
 Usage instructions
 ==================
-
 Run "minerd --help" to see options.
 
 ### Connecting through a proxy
@@ -97,3 +103,17 @@ Protocols socks4a and socks5h, allowing remote name resolving, are also availabl
 
 If no protocol is specified, the proxy is assumed to be a HTTP proxy.  
 When the --proxy option is not used, the program honors the http_proxy and all_proxy environment variables.
+
+Donations
+=========
+Donations for the work done in this fork are accepted at
+* MRO: `472haywQKoxFzf7asaQ4XKBc2foAY4ezk8HiN63ifW4iAbJiLnfmJfhHSR9XmVKw2WYPnszJV9MEHj9Z5WMK9VCNHaGLDmJ`
+* BTC: `139QWoktddChHsZMWZFxmBva4FM96X2dhE`
+
+Credits
+=======
+CPUMiner-multi was forked from pooler's CPUMiner, and has been developed by Lucas Jones.
+
+License
+=======
+GPLv2.  See COPYING for details.
