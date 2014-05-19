@@ -1027,7 +1027,7 @@ static void *miner_thread(void *userdata) {
     if (opt_algo == ALGO_SCRYPT) {
         scratchbuf = scrypt_buffer_alloc();
     }
-    uint32_t *nonceptr = (uint32_t*) (((char*)work.data) + (opt_algo == ALGO_CRYPTONIGHT ? 39 : 76));
+    uint32_t *nonceptr = (uint32_t*) (((char*)work.data) + (jsonrpc_2 ? 39 : 76));
 
     while (1) {
         unsigned long hashes_done;
@@ -1040,7 +1040,8 @@ static void *miner_thread(void *userdata) {
                 sleep(1);
             pthread_mutex_lock(&g_work_lock);
             if ((*nonceptr) >= end_nonce
-                    && !memcmp(work.data, g_work.data, 76))
+           	    && !(jsonrpc_2 ? memcmp(work.data, g_work.data, 39)
+           	      : memcmp(work.data, g_work.data, 76)))
                 stratum_gen_work(&stratum, &g_work);
         } else {
             /* obtain new work from internal workio thread */
@@ -1062,9 +1063,10 @@ static void *miner_thread(void *userdata) {
                 continue;
             }
         }
-        if (memcmp(work.data, g_work.data, 76)) {
+        if (jsonrpc_2 ? memcmp(work.data, g_work.data, 39) : memcmp(work.data, g_work.data, 76)) {
             work_free(&work);
             work_copy(&work, &g_work);
+            nonceptr = (uint32_t*) (((char*)work.data) + (jsonrpc_2 ? 39 : 76));
             *nonceptr = 0xffffffffU / opt_n_threads * thr_id;
         } else
             ++(*nonceptr);
