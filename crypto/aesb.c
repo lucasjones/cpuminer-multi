@@ -146,27 +146,22 @@ d_4(uint32_t, t_dec(f,n), sb_data, u0, u1, u2, u3);
 
 void aesb_single_round(const uint8_t *in, uint8_t *out, uint8_t *expandedKey)
 {
-    const uint32_t  *kp = (uint32_t *) expandedKey;
-    uint32_t *i = (uint32_t*) in;
-    uint32_t *o = (uint32_t*) out;
-    round(o, i, kp);
+    round(((uint32_t*) out), ((uint32_t*) in), ((uint32_t*) expandedKey));
 }
 
 void aesb_pseudo_round_mut(uint8_t *val, uint8_t *expandedKey)
 {
     uint32_t b1[4];
-    uint32_t *v = (uint32_t*) val;
-    const uint32_t  *kp = (uint32_t *) expandedKey;
-    round(b1, v, kp);
-    round(v, b1, kp + 1 * N_COLS);
-    round(b1, v, kp + 2 * N_COLS);
-    round(v, b1, kp + 3 * N_COLS);
-    round(b1, v, kp + 4 * N_COLS);
-    round(v, b1, kp + 5 * N_COLS);
-    round(b1, v, kp + 6 * N_COLS);
-    round(v, b1, kp + 7 * N_COLS);
-    round(b1, v, kp + 8 * N_COLS);
-    round(v, b1, kp + 9 * N_COLS);
+    round(b1, ((uint32_t*) val), ((const uint32_t *) expandedKey));
+    round(((uint32_t*) val), b1, ((const uint32_t *) expandedKey) + 1 * N_COLS);
+    round(b1, ((uint32_t*) val), ((const uint32_t *) expandedKey) + 2 * N_COLS);
+    round(((uint32_t*) val), b1, ((const uint32_t *) expandedKey) + 3 * N_COLS);
+    round(b1, ((uint32_t*) val), ((const uint32_t *) expandedKey) + 4 * N_COLS);
+    round(((uint32_t*) val), b1, ((const uint32_t *) expandedKey) + 5 * N_COLS);
+    round(b1, ((uint32_t*) val), ((const uint32_t *) expandedKey) + 6 * N_COLS);
+    round(((uint32_t*) val), b1, ((const uint32_t *) expandedKey) + 7 * N_COLS);
+    round(b1, ((uint32_t*) val), ((const uint32_t *) expandedKey) + 8 * N_COLS);
+    round(((uint32_t*) val), b1, ((const uint32_t *) expandedKey) + 9 * N_COLS);
 }
 
 

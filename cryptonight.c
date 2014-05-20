@@ -80,7 +80,7 @@ static void mul_sum_dst(const uint8_t* a, const uint8_t* b, const uint8_t* c, ui
     ((uint64_t*) dst)[0] += ((uint64_t*) c)[0];
 }
 
-static void mul_sum_xor_dst(const uint8_t* a, uint8_t* c, uint8_t* dst) {
+static inline void mul_sum_xor_dst(const uint8_t* a, uint8_t* c, uint8_t* dst) {
     uint64_t hi, lo = mul128(((uint64_t*) a)[0], ((uint64_t*) dst)[0], &hi) + ((uint64_t*) c)[1];
     hi += ((uint64_t*) c)[0];
 
@@ -95,16 +95,6 @@ static inline void copy_block(uint8_t* dst, const uint8_t* src) {
     ((uint64_t*) dst)[1] = ((uint64_t*) src)[1];
 }
 
-static void swap_blocks(uint8_t* a, uint8_t* b) {
-    size_t i;
-    uint8_t t;
-    for (i = 0; i < AES_BLOCK_SIZE; i++) {
-        t = a[i];
-        a[i] = b[i];
-        b[i] = t;
-    }
-}
-
 static inline void xor_blocks(uint8_t* a, const uint8_t* b) {
     ((uint64_t*) a)[0] ^= ((uint64_t*) b)[0];
     ((uint64_t*) a)[1] ^= ((uint64_t*) b)[1];
@@ -116,12 +106,12 @@ static inline void xor_blocks_dst(const uint8_t* a, const uint8_t* b, uint8_t* d
 }
 
 struct cryptonight_ctx {
-    uint8_t long_state[MEMORY];
+    uint8_t long_state[MEMORY] __attribute((aligned(8)));
     union cn_slow_hash_state state;
     uint8_t text[INIT_SIZE_BYTE];
-    uint8_t a[AES_BLOCK_SIZE] __attribute__((aligned(64)));
-    uint8_t b[AES_BLOCK_SIZE] __attribute__((aligned(64)));
-    uint8_t c[AES_BLOCK_SIZE] __attribute__((aligned(64)));
+    uint8_t a[AES_BLOCK_SIZE] __attribute__((aligned(8)));
+    uint8_t b[AES_BLOCK_SIZE] __attribute__((aligned(8)));
+    uint8_t c[AES_BLOCK_SIZE] __attribute__((aligned(8)));
     oaes_ctx* aes_ctx;
 };
 
@@ -132,43 +122,54 @@ void cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cr
     memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
 
     oaes_key_import_data(ctx->aes_ctx, ctx->state.hs.b, AES_KEY_SIZE);
-    for (i = 0; likely(i < MEMORY / INIT_SIZE_BYTE); ++i) {
-        aesb_pseudo_round_mut(&ctx->text[AES_BLOCK_SIZE * 0], ctx->aes_ctx->key->exp_data);
-        aesb_pseudo_round_mut(&ctx->text[AES_BLOCK_SIZE * 1], ctx->aes_ctx->key->exp_data);
-        aesb_pseudo_round_mut(&ctx->text[AES_BLOCK_SIZE * 2], ctx->aes_ctx->key->exp_data);
-        aesb_pseudo_round_mut(&ctx->text[AES_BLOCK_SIZE * 3], ctx->aes_ctx->key->exp_data);
-        aesb_pseudo_round_mut(&ctx->text[AES_BLOCK_SIZE * 4], ctx->aes_ctx->key->exp_data);
-        aesb_pseudo_round_mut(&ctx->text[AES_BLOCK_SIZE * 5], ctx->aes_ctx->key->exp_data);
-        aesb_pseudo_round_mut(&ctx->text[AES_BLOCK_SIZE * 6], ctx->aes_ctx->key->exp_data);
-        aesb_pseudo_round_mut(&ctx->text[AES_BLOCK_SIZE * 7], ctx->aes_ctx->key->exp_data);
-        memcpy(&ctx->long_state[i * INIT_SIZE_BYTE], ctx->text, INIT_SIZE_BYTE);
+    for (i = 0; likely(i < MEMORY); i += INIT_SIZE_BYTE) {
+#define RND(p) aesb_pseudo_round_mut(&ctx->text[AES_BLOCK_SIZE * p], ctx->aes_ctx->key->exp_data);
+        RND(0);
+        RND(1);
+        RND(2);
+        RND(3);
+        RND(4);
+        RND(5);
+        RND(6);
+        RND(7);
+        memcpy(&ctx->long_state[i], ctx->text, INIT_SIZE_BYTE);
     }
 
     xor_blocks_dst(&ctx->state.k[0], &ctx->state.k[32], ctx->a);
     xor_blocks_dst(&ctx->state.k[16], &ctx->state.k[48], ctx->b);
 
-    for (i = 0; likely(i < ITER / 2); ++i) {
+    for (i = 0; likely(i < ITER / 4); ++i) {
         /* Dependency chain: address -> read value ------+
          * written value <-+ hard function (AES or MUL) <+
          * next address  <-+
          */
         /* Iteration 1 */
-        j = e2i(ctx->a);
-        aesb_single_round(&ctx->long_state[j * AES_BLOCK_SIZE], ctx->c, ctx->a);
-        xor_blocks_dst(ctx->c, ctx->b, &ctx->long_state[j * AES_BLOCK_SIZE]);
+        j = e2i(ctx->a) * AES_BLOCK_SIZE;
+        aesb_single_round(&ctx->long_state[j], ctx->c, ctx->a);
+        xor_blocks_dst(ctx->c, ctx->b, &ctx->long_state[j]);
         /* Iteration 2 */
         mul_sum_xor_dst(ctx->c, ctx->a, &ctx->long_state[e2i(ctx->c) * AES_BLOCK_SIZE]);
-        copy_block(ctx->b, ctx->c);
+        /* Iteration 3 */
+        j = e2i(ctx->a) * AES_BLOCK_SIZE;
+        aesb_single_round(&ctx->long_state[j], ctx->b, ctx->a);
+        xor_blocks_dst(ctx->b, ctx->c, &ctx->long_state[j]);
+        /* Iteration 4 */
+        mul_sum_xor_dst(ctx->b, ctx->a, &ctx->long_state[e2i(ctx->b) * AES_BLOCK_SIZE]);
     }
 
     memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
     oaes_key_import_data(ctx->aes_ctx, &ctx->state.hs.b[32], AES_KEY_SIZE);
-    for (i = 0; likely(i < MEMORY / INIT_SIZE_BYTE); ++i) {
-        for (j = 0; likely(j < INIT_SIZE_BLK); ++j) {
-            xor_blocks(&ctx->text[j * AES_BLOCK_SIZE],
-                    &ctx->long_state[i * INIT_SIZE_BYTE + j * AES_BLOCK_SIZE]);
-            aesb_pseudo_round_mut(&ctx->text[j * AES_BLOCK_SIZE], ctx->aes_ctx->key->exp_data);
-        }
+    for (i = 0; likely(i < MEMORY); i += INIT_SIZE_BYTE) {
+#define RND(p) xor_blocks(&ctx->text[p * AES_BLOCK_SIZE], &ctx->long_state[i + p * AES_BLOCK_SIZE]); \
+        aesb_pseudo_round_mut(&ctx->text[p * AES_BLOCK_SIZE], ctx->aes_ctx->key->exp_data);
+        RND(0);
+        RND(1);
+        RND(2);
+        RND(3);
+        RND(4);
+        RND(5);
+        RND(6);
+        RND(7);
     }
     memcpy(ctx->state.init, ctx->text, INIT_SIZE_BYTE);
     hash_permutation(&ctx->state.hs);
