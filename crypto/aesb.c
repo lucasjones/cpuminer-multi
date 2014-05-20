@@ -48,7 +48,11 @@ extern "C"
 #define so(y,x,c) word_out(y, c, s(x,c))
 #define state_in(y,x) si(y,x,0); si(y,x,1); si(y,x,2); si(y,x,3)
 #define state_out(y,x)  so(y,x,0); so(y,x,1); so(y,x,2); so(y,x,3)
-#define round(rm,y,x,k) rm(y,x,k,0); rm(y,x,k,1); rm(y,x,k,2); rm(y,x,k,3)
+#define round(y,x,k) \
+y[0] = (k)[0]  ^ (t_fn[0][x[0] & 0xff] ^ t_fn[1][(x[1] >> 8) & 0xff] ^ t_fn[2][(x[2] >> 16) & 0xff] ^ t_fn[3][x[3] >> 24]); \
+y[1] = (k)[1]  ^ (t_fn[0][x[1] & 0xff] ^ t_fn[1][(x[2] >> 8) & 0xff] ^ t_fn[2][(x[3] >> 16) & 0xff] ^ t_fn[3][x[0] >> 24]); \
+y[2] = (k)[2]  ^ (t_fn[0][x[2] & 0xff] ^ t_fn[1][(x[3] >> 8) & 0xff] ^ t_fn[2][(x[0] >> 16) & 0xff] ^ t_fn[3][x[1] >> 24]); \
+y[3] = (k)[3]  ^ (t_fn[0][x[3] & 0xff] ^ t_fn[1][(x[0] >> 8) & 0xff] ^ t_fn[2][(x[1] >> 16) & 0xff] ^ t_fn[3][x[2] >> 24]);
 #define to_byte(x) ((x) & 0xff)
 #define bval(x,n) to_byte((x) >> (8 * (n)))
 
@@ -145,7 +149,7 @@ void aesb_single_round(const uint8_t *in, uint8_t *out, uint8_t *expandedKey)
     const uint32_t  *kp = (uint32_t *) expandedKey;
     uint32_t *i = (uint32_t*) in;
     uint32_t *o = (uint32_t*) out;
-    round(fwd_rnd, o, i, kp);
+    round(o, i, kp);
 }
 
 void aesb_pseudo_round_mut(uint8_t *val, uint8_t *expandedKey)
@@ -153,16 +157,16 @@ void aesb_pseudo_round_mut(uint8_t *val, uint8_t *expandedKey)
     uint32_t b1[4];
     uint32_t *v = (uint32_t*) val;
     const uint32_t  *kp = (uint32_t *) expandedKey;
-    round(fwd_rnd,  b1, v, kp);
-    round(fwd_rnd,  v, b1, kp + 1 * N_COLS);
-    round(fwd_rnd,  b1, v, kp + 2 * N_COLS);
-    round(fwd_rnd,  v, b1, kp + 3 * N_COLS);
-    round(fwd_rnd,  b1, v, kp + 4 * N_COLS);
-    round(fwd_rnd,  v, b1, kp + 5 * N_COLS);
-    round(fwd_rnd,  b1, v, kp + 6 * N_COLS);
-    round(fwd_rnd,  v, b1, kp + 7 * N_COLS);
-    round(fwd_rnd,  b1, v, kp + 8 * N_COLS);
-    round(fwd_rnd,  v, b1, kp + 9 * N_COLS);
+    round(b1, v, kp);
+    round(v, b1, kp + 1 * N_COLS);
+    round(b1, v, kp + 2 * N_COLS);
+    round(v, b1, kp + 3 * N_COLS);
+    round(b1, v, kp + 4 * N_COLS);
+    round(v, b1, kp + 5 * N_COLS);
+    round(b1, v, kp + 6 * N_COLS);
+    round(v, b1, kp + 7 * N_COLS);
+    round(b1, v, kp + 8 * N_COLS);
+    round(v, b1, kp + 9 * N_COLS);
 }
 
 
