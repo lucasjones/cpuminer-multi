@@ -54,7 +54,7 @@ if ARCH_x86
 minerd_SOURCES += sha2-x86.S scrypt-x86.S
 endif
 if ARCH_x86_64
-minerd_SOURCES += sha2-x64.S scrypt-x64.S
+minerd_SOURCES += sha2-x64.S scrypt-x64.S aesb-x64.S
 endif
 if ARCH_ARM
 minerd_SOURCES += sha2-arm.S scrypt-arm.S
