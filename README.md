@@ -114,6 +114,7 @@ Donations for the work done in this fork are accepted at
 Credits
 =======
 CPUMiner-multi was forked from pooler's CPUMiner, and has been developed by Lucas Jones.
+* [Wolf9466](https://github.com/wolf9466) Helped with Intel AES-NI support for CryptoNight
 
 License
 =======
