@@ -96,7 +96,7 @@ AC_CHECK_LIB([pthread], [pthread_create], PTHREAD_LIBS="-lpthread",
       AC_CHECK_LIB([pthreadGC], [pthread_create], PTHREAD_LIBS="-lpthreadGC"
 ))))
 
-AC_CHECK_LIB([ssl], [SSL_library_init], [], [AC_MSG_FAILURE([could not find ssl])])
+AC_CHECK_LIB([crypto], [OPENSSL_init], [], [AC_MSG_FAILURE([could not find crypto])])
 
 AM_CONDITIONAL([WANT_JANSSON], [test x$request_jansson = xtrue])
 AM_CONDITIONAL([HAVE_WINDOWS], [test x$have_win32 = xtrue])
