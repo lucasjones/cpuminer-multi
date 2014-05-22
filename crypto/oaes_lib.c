@@ -36,7 +36,9 @@ static const char _NR[] = {
 #include <stddef.h>
 #include <time.h> 
 #include <sys/timeb.h>
+#if !((defined(__FreeBSD__) && __FreeBSD__ >= 10) || defined(__APPLE__))
 #include <malloc.h>
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
