@@ -28,28 +28,26 @@ _fast_aesb_single_round:
 fast_aesb_pseudo_round_mut:
 _fast_aesb_pseudo_round_mut:
 #if defined(_WIN64) || defined(__CYGWIN__)
-    mov $0, %r9
-    mov $10, %r10
+    mov %rsi, %r9
+    add $0xA0, %r9
     movdqu (%rcx), %xmm1
  
     .LOOP:
             aesenc (%rdx), %xmm1
             add $0x10, %rdx
-            inc %r9
-            cmp %r10, %r9
+			cmp %r9, %rsi
             jl .LOOP
 
     movdqu %xmm1, (%rcx)
 #else
-    mov $0, %r9
-    mov $10, %r10
+    mov %rsi, %r9
+    add $0xA0, %r9
     movdqu (%rdi), %xmm1
  
     .LOOP:
             aesenc (%rsi), %xmm1
             add $0x10, %rsi
-            inc %r9
-            cmp %r10, %r9
+            cmp %r9, %rsi
             jl .LOOP
 
     movdqu %xmm1, (%rdi)
