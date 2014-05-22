@@ -194,7 +194,9 @@ void cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cr
 }
 
 void cryptonight_hash(void* output, const void* input, size_t len) {
-    cryptonight_hash_ctx(output, input, len, alloca(sizeof(struct cryptonight_ctx)));
+    struct cryptonight_ctx *ctx = (struct cryptonight_ctx*)malloc(sizeof(struct cryptonight_ctx));
+    cryptonight_hash_ctx(output, input, len, ctx);
+    free(ctx);
 }
 
 void cryptonight_hash_ctx_aes_ni(void* output, const void* input, size_t len, struct cryptonight_ctx* ctx) {
@@ -269,7 +271,7 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
     const uint32_t Htarg = ptarget[7];
     uint32_t hash[HASH_SIZE / 4] __attribute__((aligned(32)));
 
-    struct cryptonight_ctx *ctx = alloca(sizeof(struct cryptonight_ctx));
+    struct cryptonight_ctx *ctx = (struct cryptonight_ctx*)malloc(sizeof(struct cryptonight_ctx));
 
     if (aes_ni) {
         do {
@@ -277,6 +279,7 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
             cryptonight_hash_ctx_aes_ni(hash, pdata, 76, ctx);
             if (unlikely(hash[7] < ptarget[7])) {
                 *hashes_done = n - first_nonce + 1;
+                free(ctx);
                 return true;
             }
         } while (likely((n <= max_nonce && !work_restart[thr_id].restart)));
@@ -286,10 +289,13 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
             cryptonight_hash_ctx(hash, pdata, 76, ctx);
             if (unlikely(hash[7] < ptarget[7])) {
                 *hashes_done = n - first_nonce + 1;
+                free(ctx);
                 return true;
             }
         } while (likely((n <= max_nonce && !work_restart[thr_id].restart)));
     }
+    
+    free(ctx);
     *hashes_done = n - first_nonce + 1;
     return 0;
 }
