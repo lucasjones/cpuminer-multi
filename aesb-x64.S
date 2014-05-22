@@ -11,13 +11,13 @@
 fast_aesb_single_round:
 _fast_aesb_single_round:
 #if defined(_WIN64) || defined(__CYGWIN__)
-    movdqu (%rcx), %xmm1
+    movdqa (%rcx), %xmm1
     aesenc (%r8), %xmm1
-    movdqu %xmm1, (%rdx)
+    movdqa %xmm1, (%rdx)
 #else
-    movdqu (%rdi), %xmm1
+    movdqa (%rdi), %xmm1
     aesenc (%rdx), %xmm1
-    movdqu %xmm1, (%rsi)
+    movdqa %xmm1, (%rsi)
 #endif
     ret
 
@@ -30,7 +30,7 @@ _fast_aesb_pseudo_round_mut:
 #if defined(_WIN64) || defined(__CYGWIN__)
     mov %rdx, %r9
     add $0xA0, %r9
-    movdqu (%rcx), %xmm1
+    movdqa (%rcx), %xmm1
  
     .LOOP:
             aesenc (%rdx), %xmm1
@@ -38,11 +38,11 @@ _fast_aesb_pseudo_round_mut:
 			cmp %r9, %rdx
             jl .LOOP
 
-    movdqu %xmm1, (%rcx)
+    movdqa %xmm1, (%rcx)
 #else
     mov %rsi, %r9
     add $0xA0, %r9
-    movdqu (%rdi), %xmm1
+    movdqa (%rdi), %xmm1
  
     .LOOP:
             aesenc (%rsi), %xmm1
@@ -50,6 +50,6 @@ _fast_aesb_pseudo_round_mut:
             cmp %r9, %rsi
             jl .LOOP
 
-    movdqu %xmm1, (%rdi)
+    movdqa %xmm1, (%rdi)
 #endif
     ret
