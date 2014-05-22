@@ -123,7 +123,7 @@ static inline void xor_blocks_dst(const uint8_t* a, const uint8_t* b, uint8_t* d
 struct cryptonight_ctx {
     uint8_t long_state[MEMORY] __attribute((aligned(16)));
     union cn_slow_hash_state state;
-    uint8_t text[INIT_SIZE_BYTE];
+    uint8_t text[INIT_SIZE_BYTE] __attribute((aligned(16)));
     uint8_t a[AES_BLOCK_SIZE] __attribute__((aligned(16)));
     uint8_t b[AES_BLOCK_SIZE] __attribute__((aligned(16)));
     uint8_t c[AES_BLOCK_SIZE] __attribute__((aligned(16)));
