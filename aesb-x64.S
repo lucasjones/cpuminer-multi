@@ -28,14 +28,14 @@ _fast_aesb_single_round:
 fast_aesb_pseudo_round_mut:
 _fast_aesb_pseudo_round_mut:
 #if defined(_WIN64) || defined(__CYGWIN__)
-    mov %rsi, %r9
+    mov %rdx, %r9
     add $0xA0, %r9
     movdqu (%rcx), %xmm1
  
     .LOOP:
             aesenc (%rdx), %xmm1
             add $0x10, %rdx
-			cmp %r9, %rsi
+			cmp %r9, %rdx
             jl .LOOP
 
     movdqu %xmm1, (%rcx)
