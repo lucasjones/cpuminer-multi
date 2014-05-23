@@ -425,7 +425,7 @@ bool rpc2_job_decode(const json_t *job, struct work *work) {
                 hashrate += thr_hashrates[i];
             pthread_mutex_unlock(&stats_lock);
             double difficulty = (((double) 0xffffffff) / target);
-            applog(LOG_INFO, "[JSON-RPC] diff set to %g", difficulty);
+            applog(LOG_INFO, "Pool set diff to %g", difficulty);
             rpc2_target = target;
         }
 
