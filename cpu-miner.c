@@ -138,7 +138,7 @@ static bool opt_background = false;
 static bool opt_quiet = false;
 static int opt_retries = -1;
 static int opt_fail_pause = 10;
-static int jsonrpc_2 = false;
+bool jsonrpc_2 = false;
 int opt_timeout = 0;
 static int opt_scantime = 5;
 static json_t *opt_config;
@@ -274,15 +274,6 @@ static struct option const options[] = {
         { 0, 0, 0, 0 }
 };
 
-struct work {
-    uint32_t data[32];
-    uint32_t target[8];
-
-    char *job_id;
-    size_t xnonce2_len;
-    unsigned char *xnonce2;
-};
-
 static struct work g_work;
 static time_t g_work_time;
 static pthread_mutex_t g_work_lock;
@@ -386,7 +377,7 @@ static bool jobj_binary(const json_t *obj, const char *key, void *buf,
     return true;
 }
 
-static bool rpc2_job_decode(const json_t *job, struct work *work) {
+bool rpc2_job_decode(const json_t *job, struct work *work) {
     if (!jsonrpc_2) {
         applog(LOG_ERR, "Tried to decode job without JSON-RPC 2.0");
         return false;
@@ -489,7 +480,7 @@ static bool work_decode(const json_t *val, struct work *work) {
     err_out: return false;
 }
 
-static bool login_decode(const json_t *val) {
+bool rpc2_login_decode(const json_t *val) {
     const char *id;
     const char *s;
 
@@ -528,12 +519,6 @@ static bool login_decode(const json_t *val) {
     }
     if(strcmp(s, "OK")) {
         applog(LOG_ERR, "JSON returned status \"%s\"", s);
-        return false;
-    }
-
-    json_t *job = json_object_get(res, "job");
-
-    if(!rpc2_job_decode(job, &g_work)) {
         return false;
     }
 
@@ -593,17 +578,32 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
         uint32_t ntime, nonce;
         char *ntimestr, *noncestr, *xnonce2str;
 
-        le32enc(&ntime, work->data[17]);
-        le32enc(&nonce, work->data[19]);
-        ntimestr = bin2hex((const unsigned char *) (&ntime), 4);
-        noncestr = bin2hex((const unsigned char *) (&nonce), 4);
-        xnonce2str = bin2hex(work->xnonce2, work->xnonce2_len);
-        snprintf(s, JSON_BUF_LEN,
-                "{\"method\": \"mining.submit\", \"params\": [\"%s\", \"%s\", \"%s\", \"%s\", \"%s\"], \"id\":4}",
-                rpc_user, work->job_id, xnonce2str, ntimestr, noncestr);
-        free(ntimestr);
+        if (jsonrpc_2) {
+            noncestr = bin2hex(((const unsigned char*)work->data) + 39, 4);
+            char hash[32];
+            switch(opt_algo) {
+            case ALGO_CRYPTONIGHT:
+            default:
+                cryptonight_hash(hash, work->data, 76);
+            }
+            char *hashhex = bin2hex(hash, 32);
+            snprintf(s, JSON_BUF_LEN,
+                    "{\"method\": \"submit\", \"params\": {\"id\": \"%s\", \"job_id\": \"%s\", \"nonce\": \"%s\", \"result\": \"%s\"}, \"id\":1}\r\n",
+                    rpc2_id, work->job_id, noncestr, hashhex);
+            free(hashhex);
+        } else {
+            le32enc(&ntime, work->data[17]);
+            le32enc(&nonce, work->data[19]);
+            ntimestr = bin2hex((const unsigned char *) (&ntime), 4);
+            noncestr = bin2hex((const unsigned char *) (&nonce), 4);
+            xnonce2str = bin2hex(work->xnonce2, work->xnonce2_len);
+            snprintf(s, JSON_BUF_LEN,
+                    "{\"method\": \"mining.submit\", \"params\": [\"%s\", \"%s\", \"%s\", \"%s\", \"%s\"], \"id\":4}",
+                    rpc_user, work->job_id, xnonce2str, ntimestr, noncestr);
+            free(ntimestr);
+            free(xnonce2str);
+        }
         free(noncestr);
-        free(xnonce2str);
 
         if (unlikely(!stratum_send_line(&stratum, s))) {
             applog(LOG_ERR, "submit_upstream_work stratum_send_line failed");
@@ -732,7 +732,13 @@ static bool rpc2_login(CURL *curl) {
 
 //    applog(LOG_DEBUG, "JSON value: %s", json_dumps(val, 0));
 
-    rc = login_decode(val);
+    rc = rpc2_login_decode(val);
+
+    json_t *job = json_object_get(val, "job");
+
+    if(!rpc2_job_decode(job, &g_work)) {
+        return false;
+    }
 
     if (opt_debug && rc) {
         timeval_subtract(&diff, &tv_end, &tv_start);
@@ -842,10 +848,6 @@ static void *workio_thread(void *userdata) {
     if (unlikely(!curl)) {
         applog(LOG_ERR, "CURL initialization failed");
         return NULL ;
-    }
-
-    if(jsonrpc_2) {
-        ok = workio_login(curl);
     }
 
     while (ok) {
@@ -1321,6 +1323,7 @@ static bool stratum_handle_response(char *buf) {
     json_t *val, *err_val, *res_val, *id_val;
     json_error_t err;
     bool ret = false;
+    bool valid = false;
 
     val = JSON_LOADS(buf, &err);
     if (!val) {
@@ -1335,7 +1338,17 @@ static bool stratum_handle_response(char *buf) {
     if (!id_val || json_is_null(id_val) || !res_val)
         goto out;
 
-    share_result(json_is_true(res_val), NULL,
+    if(jsonrpc_2) {
+        json_t *status = json_object_get(res_val, "status");
+        if(status) {
+            char *s = json_string_value(status);
+            valid = !strcmp(s, "OK");
+        }
+    } else {
+        valid = json_is_true(res_val);
+    }
+
+    share_result(valid, NULL,
             err_val ? json_string_value(json_array_get(err_val, 1)) : NULL );
 
     ret = true;
@@ -1377,15 +1390,29 @@ static void *stratum_thread(void *userdata) {
             }
         }
 
-        if (stratum.job.job_id
-                && (!g_work_time || strcmp(stratum.job.job_id, g_work.job_id))) {
-            pthread_mutex_lock(&g_work_lock);
-            stratum_gen_work(&stratum, &g_work);
-            time(&g_work_time);
-            pthread_mutex_unlock(&g_work_lock);
-            if (stratum.job.clean) {
+        if (jsonrpc_2) {
+            if (stratum.work.job_id
+                    && (!g_work_time
+                            || strcmp(stratum.work.job_id, g_work.job_id))) {
+                pthread_mutex_lock(&g_work_lock);
+                memcpy(&g_work, &stratum.work, sizeof(struct work));
+                time(&g_work_time);
+                pthread_mutex_unlock(&g_work_lock);
                 applog(LOG_INFO, "Stratum detected new block");
                 restart_threads();
+            }
+        } else {
+            if (stratum.job.job_id
+                    && (!g_work_time
+                            || strcmp(stratum.job.job_id, g_work.job_id))) {
+                pthread_mutex_lock(&g_work_lock);
+                stratum_gen_work(&stratum, &g_work);
+                time(&g_work_time);
+                pthread_mutex_unlock(&g_work_lock);
+                if (stratum.job.clean) {
+                    applog(LOG_INFO, "Stratum detected new block");
+                    restart_threads();
+                }
             }
         }
 
