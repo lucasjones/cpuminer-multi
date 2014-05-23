@@ -734,10 +734,14 @@ static bool rpc2_login(CURL *curl) {
 
     rc = rpc2_login_decode(val);
 
-    json_t *job = json_object_get(val, "job");
+    json_t *result = json_object_get(val, "result");
+
+    if(!result) goto end;
+
+    json_t *job = json_object_get(result, "job");
 
     if(!rpc2_job_decode(job, &g_work)) {
-        return false;
+        goto end;
     }
 
     if (opt_debug && rc) {
@@ -848,6 +852,10 @@ static void *workio_thread(void *userdata) {
     if (unlikely(!curl)) {
         applog(LOG_ERR, "CURL initialization failed");
         return NULL ;
+    }
+
+    if(!have_stratum) {
+        ok = workio_login(curl);
     }
 
     while (ok) {
@@ -1349,7 +1357,7 @@ static bool stratum_handle_response(char *buf) {
     if(jsonrpc_2) {
         json_t *status = json_object_get(res_val, "status");
         if(status) {
-            char *s = json_string_value(status);
+            const char *s = json_string_value(status);
             valid = !strcmp(s, "OK");
         }
     } else {
