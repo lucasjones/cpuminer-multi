@@ -993,16 +993,9 @@ out:
 static bool stratum_2_job(struct stratum_ctx *sctx, json_t *params)
 {
     bool ret = false;
-
-    json_t *job = json_object_get(params, "job");
-    if(!job) goto out;
-
     pthread_mutex_lock(&sctx->work_lock);
-    ret = rpc2_job_decode(job, &sctx->work);
+    ret = rpc2_job_decode(params, &sctx->work);
     pthread_mutex_unlock(&sctx->work_lock);
-
-    out:
-
     return ret;
 }
 
