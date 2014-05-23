@@ -405,6 +405,7 @@ bool rpc2_job_decode(const json_t *job, struct work *work) {
         char *blob = malloc(blobLen / 2);
         if (!hex2bin(blob, hexblob, blobLen / 2)) {
             applog(LOG_ERR, "JSON inval blob");
+            pthread_mutex_unlock(&rpc2_job_lock);
             goto err_out;
         }
         if (rpc2_blob) {
@@ -450,7 +451,6 @@ bool rpc2_job_decode(const json_t *job, struct work *work) {
     return true;
 
     err_out:
-    pthread_mutex_unlock(&rpc2_job_lock);
     return false;
 }
 
@@ -955,48 +955,55 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work) {
 
     pthread_mutex_lock(&sctx->work_lock);
 
-    free(work->job_id);
-    work->job_id = strdup(sctx->job.job_id);
-    work->xnonce2_len = sctx->xnonce2_size;
-    work->xnonce2 = realloc(work->xnonce2, sctx->xnonce2_size);
-    memcpy(work->xnonce2, sctx->job.xnonce2, sctx->xnonce2_size);
+    if (jsonrpc_2) {
+        free(work->job_id);
+        memcpy(work, &sctx->work, sizeof(struct work));
+        work->job_id = strdup(sctx->work.job_id);
+        pthread_mutex_unlock(&sctx->work_lock);
+    } else {
+        free(work->job_id);
+        work->job_id = strdup(sctx->job.job_id);
+        work->xnonce2_len = sctx->xnonce2_size;
+        work->xnonce2 = realloc(work->xnonce2, sctx->xnonce2_size);
+        memcpy(work->xnonce2, sctx->job.xnonce2, sctx->xnonce2_size);
 
-    /* Generate merkle root */
-    sha256d(merkle_root, sctx->job.coinbase, sctx->job.coinbase_size);
-    for (i = 0; i < sctx->job.merkle_count; i++) {
-        memcpy(merkle_root + 32, sctx->job.merkle[i], 32);
-        sha256d(merkle_root, merkle_root, 64);
+        /* Generate merkle root */
+        sha256d(merkle_root, sctx->job.coinbase, sctx->job.coinbase_size);
+        for (i = 0; i < sctx->job.merkle_count; i++) {
+            memcpy(merkle_root + 32, sctx->job.merkle[i], 32);
+            sha256d(merkle_root, merkle_root, 64);
+        }
+
+        /* Increment extranonce2 */
+        for (i = 0; i < sctx->xnonce2_size && !++sctx->job.xnonce2[i]; i++)
+            ;
+
+        /* Assemble block header */
+        memset(work->data, 0, 128);
+        work->data[0] = le32dec(sctx->job.version);
+        for (i = 0; i < 8; i++)
+            work->data[1 + i] = le32dec((uint32_t *) sctx->job.prevhash + i);
+        for (i = 0; i < 8; i++)
+            work->data[9 + i] = be32dec((uint32_t *) merkle_root + i);
+        work->data[17] = le32dec(sctx->job.ntime);
+        work->data[18] = le32dec(sctx->job.nbits);
+        work->data[20] = 0x80000000;
+        work->data[31] = 0x00000280;
+
+        pthread_mutex_unlock(&sctx->work_lock);
+
+        if (opt_debug) {
+            char *xnonce2str = bin2hex(work->xnonce2, work->xnonce2_len);
+            applog(LOG_DEBUG, "DEBUG: job_id='%s' extranonce2=%s ntime=%08x",
+                    work->job_id, xnonce2str, swab32(work->data[17]));
+            free(xnonce2str);
+        }
+
+        if (opt_algo == ALGO_SCRYPT)
+            diff_to_target(work->target, sctx->job.diff / 65536.0);
+        else
+            diff_to_target(work->target, sctx->job.diff);
     }
-
-    /* Increment extranonce2 */
-    for (i = 0; i < sctx->xnonce2_size && !++sctx->job.xnonce2[i]; i++)
-        ;
-
-    /* Assemble block header */
-    memset(work->data, 0, 128);
-    work->data[0] = le32dec(sctx->job.version);
-    for (i = 0; i < 8; i++)
-        work->data[1 + i] = le32dec((uint32_t *) sctx->job.prevhash + i);
-    for (i = 0; i < 8; i++)
-        work->data[9 + i] = be32dec((uint32_t *) merkle_root + i);
-    work->data[17] = le32dec(sctx->job.ntime);
-    work->data[18] = le32dec(sctx->job.nbits);
-    work->data[20] = 0x80000000;
-    work->data[31] = 0x00000280;
-
-    pthread_mutex_unlock(&sctx->work_lock);
-
-    if (opt_debug) {
-        char *xnonce2str = bin2hex(work->xnonce2, work->xnonce2_len);
-        applog(LOG_DEBUG, "DEBUG: job_id='%s' extranonce2=%s ntime=%08x",
-                work->job_id, xnonce2str, swab32(work->data[17]));
-        free(xnonce2str);
-    }
-
-    if (opt_algo == ALGO_SCRYPT)
-        diff_to_target(work->target, sctx->job.diff / 65536.0);
-    else
-        diff_to_target(work->target, sctx->job.diff);
 }
 
 static void *miner_thread(void *userdata) {
@@ -1042,7 +1049,8 @@ static void *miner_thread(void *userdata) {
                 sleep(1);
             pthread_mutex_lock(&g_work_lock);
             if ((*nonceptr) >= end_nonce
-           	    && !(jsonrpc_2 ? memcmp(work.data, g_work.data, 39)
+           	    && !(jsonrpc_2 ? memcmp(work.data, g_work.data, 39) ||
+           	            memcmp(((uint8_t*) work.data) + 43, ((uint8_t*) g_work.data) + 43, 33)
            	      : memcmp(work.data, g_work.data, 76)))
                 stratum_gen_work(&stratum, &g_work);
         } else {
@@ -1065,7 +1073,7 @@ static void *miner_thread(void *userdata) {
                 continue;
             }
         }
-        if (jsonrpc_2 ? memcmp(work.data, g_work.data, 39) : memcmp(work.data, g_work.data, 76)) {
+        if (jsonrpc_2 ? memcmp(work.data, g_work.data, 39) || memcmp(((uint8_t*) work.data) + 43, ((uint8_t*) g_work.data) + 43, 33) : memcmp(work.data, g_work.data, 76)) {
             work_free(&work);
             work_copy(&work, &g_work);
             nonceptr = (uint32_t*) (((char*)work.data) + (jsonrpc_2 ? 39 : 76));
