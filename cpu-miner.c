@@ -1358,14 +1358,16 @@ static bool stratum_handle_response(char *buf) {
         json_t *status = json_object_get(res_val, "status");
         if(status) {
             const char *s = json_string_value(status);
-            valid = !strcmp(s, "OK");
+            valid = !strcmp(s, "OK") && json_is_null(err_val);
+        } else {
+            valid = json_is_null(err_val);
         }
     } else {
         valid = json_is_true(res_val);
     }
 
     share_result(valid, NULL,
-            err_val ? json_string_value(json_array_get(err_val, 1)) : NULL );
+            err_val ? (jsonrpc_2 ? json_string_value(err_val) : json_string_value(json_array_get(err_val, 1))) : NULL );
 
     ret = true;
     out: if (val)
@@ -1412,6 +1414,8 @@ static void *stratum_thread(void *userdata) {
                             || strcmp(stratum.work.job_id, g_work.job_id))) {
                 pthread_mutex_lock(&g_work_lock);
                 memcpy(&g_work, &stratum.work, sizeof(struct work));
+                if(g_work.job_id) free(g_work.job_id);
+                g_work.job_id = strdup(stratum.work.job_id);
                 time(&g_work_time);
                 pthread_mutex_unlock(&g_work_lock);
                 applog(LOG_INFO, "Stratum detected new block");
