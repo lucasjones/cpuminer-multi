@@ -160,7 +160,7 @@ static void F512(uint32_t *h, const uint32_t *m) {
 
 
 /* digest up to msglen bytes of input (full blocks only) */
-static void Transform(hashState *ctx, 
+static void Transform(groestlHashState *ctx,
 	       const uint8_t *input, 
 	       int msglen) {
 
@@ -176,7 +176,7 @@ static void Transform(hashState *ctx,
 }
 
 /* given state h, do h <- P(h)+h */
-static void OutputTransformation(hashState *ctx) {
+static void OutputTransformation(groestlHashState *ctx) {
   int j;
   uint32_t temp[2*COLS512];
   uint32_t y[2*COLS512];
@@ -203,7 +203,7 @@ static void OutputTransformation(hashState *ctx) {
 }
 
 /* initialise context */
-static void Init(hashState* ctx) {
+static void Init(groestlHashState* ctx) {
   int i = 0;
   /* allocate memory for state and data buffer */
 
@@ -223,7 +223,7 @@ static void Init(hashState* ctx) {
 }
 
 /* update state with databitlen bits of input */
-static void Update(hashState* ctx,
+static void Update(groestlHashState* ctx,
 		  const BitSequence* input,
 		  DataLength databitlen) {
   int index = 0;
@@ -272,7 +272,7 @@ static void Update(hashState* ctx,
 
 /* finalise: process remaining data (including padding), perform
    output transformation, and write hash result to 'output' */
-static void Final(hashState* ctx,
+static void Final(groestlHashState* ctx,
 		 BitSequence* output) {
   int i, j = 0, hashbytelen = HASH_BIT_LEN/8;
   uint8_t *s = (BitSequence*)ctx->chaining;
@@ -336,7 +336,7 @@ void groestl(const BitSequence* data,
 		DataLength databitlen,
 		BitSequence* hashval) {
 
-  hashState context;
+  groestlHashState context;
 
   /* initialise */
     Init(&context);
