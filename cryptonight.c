@@ -274,7 +274,8 @@ void cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cr
 
 void cryptonight_hash(void* output, const void* input, size_t len) {
     struct cryptonight_ctx *ctx = (struct cryptonight_ctx*)malloc(sizeof(struct cryptonight_ctx));
-    cryptonight_hash_ctx(output, input, len, ctx);
+    if(has_aes_ni()) cryptonight_hash_ctx_aes_ni(output, input, len, ctx);
+    else cryptonight_hash_ctx(output, input, len, ctx);
     free(ctx);
 }
 
