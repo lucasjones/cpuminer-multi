@@ -57,7 +57,8 @@ Build
 #### Basic *nix build instructions:
  * ./autogen.sh	# only needed if building from git repo
  * ./nomacro.pl	# only needed if building on Mac OS X or with Clang
- * ./configure CFLAGS="-O3"
+ * ./configure CFLAGS="-O3 *-march=native*"
+   * # Use -march=native if building for a single machine
  * make
 
 #### Notes for AIX users:
@@ -74,7 +75,8 @@ Build
  * Install openssl devel (https://www.openssl.org/related/binaries.html)
  * In the MSYS shell, run:
    * ./autogen.sh	# only needed if building from git repo
-   * LIBCURL="-lcurldll" ./configure CFLAGS="-O3"
+   * LIBCURL="-lcurldll" ./configure CFLAGS="-O3 *-march=native*"
+     * # Use -march=native if building for a single machine
    * make
 
 #### Architecture-specific notes:
