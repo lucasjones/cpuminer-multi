@@ -1413,9 +1413,7 @@ static void *stratum_thread(void *userdata) {
                     && (!g_work_time
                             || strcmp(stratum.work.job_id, g_work.job_id))) {
                 pthread_mutex_lock(&g_work_lock);
-                memcpy(&g_work, &stratum.work, sizeof(struct work));
-                if(g_work.job_id) free(g_work.job_id);
-                g_work.job_id = strdup(stratum.work.job_id);
+                stratum_gen_work(&stratum, &g_work);
                 time(&g_work_time);
                 pthread_mutex_unlock(&g_work_lock);
                 applog(LOG_INFO, "Stratum detected new block");
