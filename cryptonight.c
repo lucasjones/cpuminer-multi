@@ -14,6 +14,7 @@
 #include "crypto/c_skein.h"
 #include "crypto/int-util.h"
 #include "crypto/hash-ops.h"
+#include <x86intrin.h>
 
 #define MEMORY         (1 << 21) /* 2 MiB */
 #define ITER           (1 << 20)
@@ -128,6 +129,86 @@ struct cryptonight_ctx {
     oaes_ctx* aes_ctx;
 };
 
+static inline void ExpandAESKey256_sub1(__m128i *tmp1, __m128i *tmp2)
+{
+	__m128i tmp4;
+	*tmp2 = _mm_shuffle_epi32(*tmp2, 0xFF);
+	tmp4 = _mm_slli_si128(*tmp1, 0x04);
+	*tmp1 = _mm_xor_si128(*tmp1, tmp4);
+	tmp4 = _mm_slli_si128(tmp4, 0x04);
+	*tmp1 = _mm_xor_si128(*tmp1, tmp4);
+	tmp4 = _mm_slli_si128(tmp4, 0x04);
+	*tmp1 = _mm_xor_si128(*tmp1, tmp4);
+	*tmp1 = _mm_xor_si128(*tmp1, *tmp2);
+}
+
+static inline void ExpandAESKey256_sub2(__m128i *tmp1, __m128i *tmp3)
+{
+	__m128i tmp2, tmp4;
+	
+	tmp4 = _mm_aeskeygenassist_si128(*tmp1, 0x00);
+	tmp2 = _mm_shuffle_epi32(tmp4, 0xAA);
+	tmp4 = _mm_slli_si128(*tmp3, 0x04);
+	*tmp3 = _mm_xor_si128(*tmp3, tmp4);
+	tmp4 = _mm_slli_si128(tmp4, 0x04);
+	*tmp3 = _mm_xor_si128(*tmp3, tmp4);
+	tmp4 = _mm_slli_si128(tmp4, 0x04);
+	*tmp3 = _mm_xor_si128(*tmp3, tmp4);
+	*tmp3 = _mm_xor_si128(*tmp3, tmp2);
+}
+
+// Special thanks to Intel for helping me
+// with ExpandAESKey256() and its subroutines
+static inline void ExpandAESKey256(char *keybuf)
+{
+	__m128i tmp1, tmp2, tmp3, *keys;
+	
+	keys = (__m128i *)keybuf;
+	
+	tmp1 = _mm_loadu_si128((__m128i *)keybuf);
+	tmp3 = _mm_loadu_si128((__m128i *)(keybuf+0x10));
+	
+	tmp2 = _mm_aeskeygenassist_si128(tmp3, 0x01);
+	ExpandAESKey256_sub1(&tmp1, &tmp2);
+	keys[2] = tmp1;
+	ExpandAESKey256_sub2(&tmp1, &tmp3);
+	keys[3] = tmp3;
+	
+	tmp2 = _mm_aeskeygenassist_si128(tmp3, 0x02);
+	ExpandAESKey256_sub1(&tmp1, &tmp2);
+	keys[4] = tmp1;
+	ExpandAESKey256_sub2(&tmp1, &tmp3);
+	keys[5] = tmp3;
+	
+	tmp2 = _mm_aeskeygenassist_si128(tmp3, 0x04);
+	ExpandAESKey256_sub1(&tmp1, &tmp2);
+	keys[6] = tmp1;
+	ExpandAESKey256_sub2(&tmp1, &tmp3);
+	keys[7] = tmp3;
+	
+	tmp2 = _mm_aeskeygenassist_si128(tmp3, 0x08);
+	ExpandAESKey256_sub1(&tmp1, &tmp2);
+	keys[8] = tmp1;
+	ExpandAESKey256_sub2(&tmp1, &tmp3);
+	keys[9] = tmp3;
+	
+	tmp2 = _mm_aeskeygenassist_si128(tmp3, 0x10);
+	ExpandAESKey256_sub1(&tmp1, &tmp2);
+	keys[10] = tmp1;
+	ExpandAESKey256_sub2(&tmp1, &tmp3);
+	keys[11] = tmp3;
+	
+	tmp2 = _mm_aeskeygenassist_si128(tmp3, 0x20);
+	ExpandAESKey256_sub1(&tmp1, &tmp2);
+	keys[12] = tmp1;
+	ExpandAESKey256_sub2(&tmp1, &tmp3);
+	keys[13] = tmp3;
+	
+	tmp2 = _mm_aeskeygenassist_si128(tmp3, 0x40);
+	ExpandAESKey256_sub1(&tmp1, &tmp2);
+	keys[14] = tmp1;
+}
+
 void cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cryptonight_ctx* ctx) {
     hash_process(&ctx->state.hs, (const uint8_t*) input, len);
     ctx->aes_ctx = (oaes_ctx*) oaes_alloc();
@@ -199,13 +280,15 @@ void cryptonight_hash(void* output, const void* input, size_t len) {
 
 void cryptonight_hash_ctx_aes_ni(void* output, const void* input, size_t len, struct cryptonight_ctx* ctx) {
     hash_process(&ctx->state.hs, (const uint8_t*) input, len);
-    ctx->aes_ctx = (oaes_ctx*) oaes_alloc();
+    uint8_t ExpandedKey[256];
     size_t i, j;
+    
     memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
-
-    oaes_key_import_data(ctx->aes_ctx, ctx->state.hs.b, AES_KEY_SIZE);
+    memcpy(ExpandedKey, ctx->state.hs.b, AES_KEY_SIZE);
+    ExpandAESKey256(ExpandedKey);
+    
     for (i = 0; likely(i < MEMORY); i += INIT_SIZE_BYTE) {
-#define RND(p) fast_aesb_pseudo_round_mut(&ctx->text[AES_BLOCK_SIZE * p], ctx->aes_ctx->key->exp_data);
+#define RND(p) fast_aesb_pseudo_round_mut(&ctx->text[AES_BLOCK_SIZE * p], ExpandedKey);
         RND(0);
         RND(1);
         RND(2);
@@ -240,10 +323,12 @@ void cryptonight_hash_ctx_aes_ni(void* output, const void* input, size_t len, st
     }
 
     memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
-    oaes_key_import_data(ctx->aes_ctx, &ctx->state.hs.b[32], AES_KEY_SIZE);
+    memcpy(ExpandedKey, &ctx->state.hs.b[32], AES_KEY_SIZE);
+    ExpandAESKey256(ExpandedKey);
+    
     for (i = 0; likely(i < MEMORY); i += INIT_SIZE_BYTE) {
 #define RND(p) xor_blocks(&ctx->text[p * AES_BLOCK_SIZE], &ctx->long_state[i + p * AES_BLOCK_SIZE]); \
-        fast_aesb_pseudo_round_mut(&ctx->text[p * AES_BLOCK_SIZE], ctx->aes_ctx->key->exp_data);
+        fast_aesb_pseudo_round_mut(&ctx->text[p * AES_BLOCK_SIZE], ExpandedKey);
         RND(0);
         RND(1);
         RND(2);
@@ -257,7 +342,6 @@ void cryptonight_hash_ctx_aes_ni(void* output, const void* input, size_t len, st
     hash_permutation(&ctx->state.hs);
     /*memcpy(hash, &state, 32);*/
     extra_hashes[ctx->state.hs.b[0] & 3](&ctx->state, 200, output);
-    oaes_free((OAES_CTX **) &ctx->aes_ctx);
 }
 
 int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
