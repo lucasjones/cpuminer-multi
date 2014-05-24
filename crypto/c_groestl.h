@@ -12,6 +12,8 @@ typedef crypto_uint64 uint64_t;
 */
 #include <stdint.h>
 
+#include "hash.h"
+
 /* some sizes (number of bytes) */
 #define ROWS 8
 #define LENGTHFIELDLEN ROWS
@@ -33,8 +35,6 @@ typedef crypto_uint64 uint64_t;
 
 
 /* NIST API begin */
-typedef unsigned char BitSequence;
-typedef unsigned long long DataLength;
 typedef struct {
   uint32_t chaining[SIZE512/sizeof(uint32_t)];            /* actual state */
   uint32_t block_counter1,
@@ -43,7 +43,7 @@ typedef struct {
   int buf_ptr;              /* data buffer pointer */
   int bits_in_last_byte;    /* no. of message bits in last byte of
 			       data buffer */
-} hashState;
+} groestlHashState;
 
 /*void Init(hashState*);
 void Update(hashState*, const BitSequence*, DataLength);
