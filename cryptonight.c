@@ -20,7 +20,7 @@
 #define AES_BLOCK_SIZE  16
 #define AES_KEY_SIZE    32 /*16*/
 #define INIT_SIZE_BLK   8
-#define INIT_SIZE_BYTE (INIT_SIZE_BLK * AES_BLOCK_SIZE)
+#define INIT_SIZE_BYTE (INIT_SIZE_BLK * AES_BLOCK_SIZE)	// 128
 
 #pragma pack(push, 1)
 union cn_slow_hash_state {
@@ -41,13 +41,11 @@ void do_groestl_hash(const void* input, size_t len, char* output) {
 }
 
 static void do_jh_hash(const void* input, size_t len, char* output) {
-    int r = jh_hash(HASH_SIZE * 8, input, 8 * len, (uint8_t*)output);
-    assert(likely(SUCCESS == r));
+    jh_hash(HASH_SIZE * 8, input, 8 * len, (uint8_t*)output);
 }
 
 static void do_skein_hash(const void* input, size_t len, char* output) {
-    int r = skein_hash(8 * HASH_SIZE, input, 8 * len, (uint8_t*)output);
-    assert(likely(SKEIN_SUCCESS == r));
+    skein_hash(8 * HASH_SIZE, input, 8 * len, (uint8_t*)output);
 }
 
 extern int fast_aesb_single_round(const uint8_t *in, uint8_t*out, const uint8_t *expandedKey);
