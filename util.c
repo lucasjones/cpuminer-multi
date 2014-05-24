@@ -828,6 +828,7 @@ static const char *get_stratum_session_id(json_t *val)
 
 bool stratum_subscribe(struct stratum_ctx *sctx)
 {
+    if(jsonrpc_2) return true;
 	char *s, *sret = NULL;
 	const char *sid, *xnonce1;
 	int xn2_size;
@@ -933,9 +934,15 @@ bool stratum_authorize(struct stratum_ctx *sctx, const char *user, const char *p
 	json_error_t err;
 	bool ret = false;
 
-	s = malloc(80 + strlen(user) + strlen(pass));
-	sprintf(s, "{\"id\": 2, \"method\": \"mining.authorize\", \"params\": [\"%s\", \"%s\"]}",
-	        user, pass);
+	if(jsonrpc_2) {
+        s = malloc(300 + strlen(user) + strlen(pass));
+        sprintf(s, "{\"method\": \"login\", \"params\": {\"login\": \"%s\", \"pass\": \"%s\", \"agent\": \"cpuminer-multi/0.1\"}, \"id\": 1}",
+                user, pass);
+	} else {
+        s = malloc(80 + strlen(user) + strlen(pass));
+        sprintf(s, "{\"id\": 2, \"method\": \"mining.authorize\", \"params\": [\"%s\", \"%s\"]}",
+                user, pass);
+	}
 
 	if (!stratum_send_line(sctx, s))
 		goto out;
@@ -965,6 +972,14 @@ bool stratum_authorize(struct stratum_ctx *sctx, const char *user, const char *p
 		goto out;
 	}
 
+    if(jsonrpc_2) {
+        rpc2_login_decode(val);
+        json_t *job_val = json_object_get(res_val, "job");
+        pthread_mutex_lock(&sctx->work_lock);
+        if(job_val) rpc2_job_decode(job_val, &sctx->work);
+        pthread_mutex_unlock(&sctx->work_lock);
+    }
+
 	ret = true;
 
 out:
@@ -973,6 +988,15 @@ out:
 		json_decref(val);
 
 	return ret;
+}
+
+static bool stratum_2_job(struct stratum_ctx *sctx, json_t *params)
+{
+    bool ret = false;
+    pthread_mutex_lock(&sctx->work_lock);
+    ret = rpc2_job_decode(params, &sctx->work);
+    pthread_mutex_unlock(&sctx->work_lock);
+    return ret;
 }
 
 static bool stratum_notify(struct stratum_ctx *sctx, json_t *params)
@@ -1173,26 +1197,33 @@ bool stratum_handle_method(struct stratum_ctx *sctx, const char *s)
 	id = json_object_get(val, "id");
 	params = json_object_get(val, "params");
 
-	if (!strcasecmp(method, "mining.notify")) {
-		ret = stratum_notify(sctx, params);
-		goto out;
-	}
-	if (!strcasecmp(method, "mining.set_difficulty")) {
-		ret = stratum_set_difficulty(sctx, params);
-		goto out;
-	}
-	if (!strcasecmp(method, "client.reconnect")) {
-		ret = stratum_reconnect(sctx, params);
-		goto out;
-	}
-	if (!strcasecmp(method, "client.get_version")) {
-		ret = stratum_get_version(sctx, id);
-		goto out;
-	}
-	if (!strcasecmp(method, "client.show_message")) {
-		ret = stratum_show_message(sctx, id, params);
-		goto out;
-	}
+    if (jsonrpc_2) {
+        if (!strcasecmp(method, "job")) {
+            ret = stratum_2_job(sctx, params);
+            goto out;
+        }
+    } else {
+        if (!strcasecmp(method, "mining.notify")) {
+            ret = stratum_notify(sctx, params);
+            goto out;
+        }
+        if (!strcasecmp(method, "mining.set_difficulty")) {
+            ret = stratum_set_difficulty(sctx, params);
+            goto out;
+        }
+        if (!strcasecmp(method, "client.reconnect")) {
+            ret = stratum_reconnect(sctx, params);
+            goto out;
+        }
+        if (!strcasecmp(method, "client.get_version")) {
+            ret = stratum_get_version(sctx, id);
+            goto out;
+        }
+        if (!strcasecmp(method, "client.show_message")) {
+            ret = stratum_show_message(sctx, id, params);
+            goto out;
+        }
+    }
 
 out:
 	if (val)
