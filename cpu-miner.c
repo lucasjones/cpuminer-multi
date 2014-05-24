@@ -1053,7 +1053,7 @@ static void *miner_thread(void *userdata) {
         int rc;
 
         if (have_stratum) {
-            while (time(NULL ) >= g_work_time + 120)
+            while (!jsonrpc_2 && time(NULL) >= g_work_time + 120)
                 sleep(1);
             pthread_mutex_lock(&g_work_lock);
             if ((*nonceptr) >= end_nonce
