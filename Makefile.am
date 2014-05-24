@@ -51,7 +51,7 @@ minerd_SOURCES	= elist.h \
 		  crypto/hash.c \
 		  crypto/aesb.c
 if ARCH_x86
-minerd_SOURCES += sha2-x86.S scrypt-x86.S
+minerd_SOURCES += sha2-x86.S scrypt-x86.S aesb-x86.S
 endif
 if ARCH_x86_64
 minerd_SOURCES += sha2-x64.S scrypt-x64.S aesb-x64.S
