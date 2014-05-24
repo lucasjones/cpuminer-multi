@@ -61,6 +61,9 @@ Build
    * # Use -march=native if building for a single machine
  * make
 
+#### Advanced CryptoNight build instructions
+ * CFLAGS="-O3 -Ofast -fweb -flto -fuse-linker-plugin -funsafe-loop-optimizations -fprefetch-loop-arrays -march=native" ./configure && make # Using this command is highly recommended - only use -march=native if you do NOT plan to run it on any other machine!
+
 #### Notes for AIX users:
  * To build a 64-bit binary, export OBJECT_MODE=64
  * GNU-style long options are not supported, but are accessible via configuration file
