@@ -165,8 +165,8 @@ static inline void ExpandAESKey256(char *keybuf)
 	
 	keys = (__m128i *)keybuf;
 	
-	tmp1 = _mm_loadu_si128((__m128i *)keybuf);
-	tmp3 = _mm_loadu_si128((__m128i *)(keybuf+0x10));
+	tmp1 = _mm_load_si128((__m128i *)keybuf);
+	tmp3 = _mm_load_si128((__m128i *)(keybuf+0x10));
 	
 	tmp2 = _mm_aeskeygenassist_si128(tmp3, 0x01);
 	ExpandAESKey256_sub1(&tmp1, &tmp2);
