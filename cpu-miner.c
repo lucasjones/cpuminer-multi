@@ -99,7 +99,7 @@ struct workio_cmd {
     } u;
 };
 
-enum mining_algo {
+enum algos {
     ALGO_SCRYPT,      /* scrypt(1024,1,1) */
     ALGO_SHA256D,     /* SHA-256d */
     ALGO_KECCAK,      /* Keccak */
@@ -144,7 +144,8 @@ int opt_timeout = 0;
 static int opt_scantime = 5;
 static json_t *opt_config;
 static const bool opt_time = true;
-static enum mining_algo opt_algo = ALGO_SCRYPT;
+static enum algos opt_algo = ALGO_SCRYPT;
+static int opt_scrypt_n = 1024;
 static int opt_n_threads;
 static int num_processors;
 static char *rpc_url;
@@ -192,6 +193,7 @@ Usage: " PROGRAM_NAME " [OPTIONS]\n\
 Options:\n\
   -a, --algo=ALGO       specify the algorithm to use\n\
                           scrypt       scrypt(1024, 1, 1) (default)\n\
+                          scrypt:N     scrypt(N, 1, 1)\n\
                           sha256d      SHA-256d\n\
                           keccak       Keccak\n\
                           quark        Quark\n\
@@ -1047,7 +1049,12 @@ static void *miner_thread(void *userdata) {
     }
 
     if (opt_algo == ALGO_SCRYPT) {
-        scratchbuf = scrypt_buffer_alloc();
+        scratchbuf = scrypt_buffer_alloc(opt_scrypt_n);
+        if (!scratchbuf) {
+            applog(LOG_ERR, "scrypt buffer allocation failed");
+            pthread_mutex_lock(&applog_lock);
+            exit(1);
+        }
     }
     uint32_t *nonceptr = (uint32_t*) (((char*)work.data) + (jsonrpc_2 ? 39 : 76));
 
@@ -1106,7 +1113,7 @@ static void *miner_thread(void *userdata) {
         if (max64 <= 0) {
             switch (opt_algo) {
             case ALGO_SCRYPT:
-                max64 = 0xfffLL;
+                max64 = opt_scrypt_n < 16 ? 0x3ffff : 0x3fffff / opt_scrypt_n;
                 break;
             case ALGO_CRYPTONIGHT:
                 max64 = 0x40LL;
@@ -1128,7 +1135,7 @@ static void *miner_thread(void *userdata) {
         switch (opt_algo) {
         case ALGO_SCRYPT:
             rc = scanhash_scrypt(thr_id, work.data, scratchbuf, work.target,
-                    max_nonce, &hashes_done);
+                    max_nonce, &hashes_done, opt_scrypt_n);
             break;
 
         case ALGO_SHA256D:
@@ -1518,9 +1525,21 @@ static void parse_arg(int key, char *arg) {
     switch (key) {
     case 'a':
         for (i = 0; i < ARRAY_SIZE(algo_names); i++) {
-            if (algo_names[i] && !strcmp(arg, algo_names[i])) {
-                opt_algo = i;
-                break;
+            v = strlen(algo_names[i]);
+            if (!strncmp(arg, algo_names[i], v)) {
+                if (arg[v] == '\0') {
+                    opt_algo = i;
+                    break;
+                }
+                if (arg[v] == ':' && i == ALGO_SCRYPT) {
+                    char *ep;
+                    v = strtol(arg+v+1, &ep, 10);
+                    if (*ep || v & (v-1) || v < 2)
+                        continue;
+                    opt_algo = i;
+                    opt_scrypt_n = v;
+                    break;
+                }
             }
         }
         if (i == ARRAY_SIZE(algo_names))

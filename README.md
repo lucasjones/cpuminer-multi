@@ -21,6 +21,7 @@ Algorithms
 ==========
 #### Currently supported
  * ✓ __scrypt__ (Litecoin, Dogecoin, Feathercoin, etc..)
+ * ✓ __scrypt:N__ (Vertcoin [VTC])
  * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, etc..)
  * ✓ __x11__ (Darkcoin [DRK], Hirocoin, Limecoin)
  * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
@@ -34,7 +35,6 @@ Algorithms
  * ? blake (Blakecoin)
 
 #### Planned support for
- * *scrypt-n* (Vertcoin [VTC])
  * *scrypt-jane* (YaCoin, CopperBars, Pennies, Tickets, etc..)
  * *qubit* (Qubitcoin, Myriadcoin)
  * *groestl* (Groestlcoin)
