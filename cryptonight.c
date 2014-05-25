@@ -289,16 +289,7 @@ void cryptonight_hash_ctx_aes_ni(void* output, const void* input, size_t len, st
     ExpandAESKey256(ExpandedKey);
     
     for (i = 0; likely(i < MEMORY); i += INIT_SIZE_BYTE) {
-#define RND(p) fast_aesb_pseudo_round_mut(&ctx->text[AES_BLOCK_SIZE * p], ExpandedKey);
-        RND(0);
-        RND(1);
-        RND(2);
-        RND(3);
-        RND(4);
-        RND(5);
-        RND(6);
-        RND(7);
-        memcpy(&ctx->long_state[i], ctx->text, INIT_SIZE_BYTE);
+        aesni_parallel_noxor(&ctx->long_state[i], ctx->text, ExpandedKey);
     }
 
     xor_blocks_dst(&ctx->state.k[0], &ctx->state.k[32], ctx->a);
@@ -328,16 +319,7 @@ void cryptonight_hash_ctx_aes_ni(void* output, const void* input, size_t len, st
     ExpandAESKey256(ExpandedKey);
     
     for (i = 0; likely(i < MEMORY); i += INIT_SIZE_BYTE) {
-#define RND(p) xor_blocks(&ctx->text[p * AES_BLOCK_SIZE], &ctx->long_state[i + p * AES_BLOCK_SIZE]); \
-        fast_aesb_pseudo_round_mut(&ctx->text[p * AES_BLOCK_SIZE], ExpandedKey);
-        RND(0);
-        RND(1);
-        RND(2);
-        RND(3);
-        RND(4);
-        RND(5);
-        RND(6);
-        RND(7);
+        aesni_parallel_xor(&ctx->text, ExpandedKey, &ctx->long_state[i]);
     }
     memcpy(ctx->state.init, ctx->text, INIT_SIZE_BYTE);
     hash_permutation(&ctx->state.hs);
