@@ -1,4 +1,5 @@
-#pragma once
+#include "int-util.h"
+#include <stdint.h>
 
 uint64_t mul128(uint64_t multiplier, uint64_t multiplicand, uint64_t* product_hi) {
   // multiplier   = ab = a * 2^32 + b
@@ -21,7 +22,6 @@ uint64_t mul128(uint64_t multiplier, uint64_t multiplicand, uint64_t* product_hi
   uint64_t product_lo = bd + (adbc << 32);
   uint64_t product_lo_carry = product_lo < bd ? 1 : 0;
   *product_hi = ac + (adbc >> 32) + (adbc_carry << 32) + product_lo_carry;
-  assert(ac <= *product_hi);
 
   return product_lo;
 }
