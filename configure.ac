@@ -9,12 +9,18 @@ AC_CONFIG_HEADERS([cpuminer-config.h])
 dnl Make sure anyone changing configure.ac/Makefile.am has a clue
 AM_MAINTAINER_MODE
 
+dnl Save the CFLAGS before the retarded autotools clobber them
+OLDCFLAGS=$CFLAGS
+
 dnl Checks for programs
 AC_PROG_CC_C99
 AC_PROG_GCC_TRADITIONAL
 AM_PROG_CC_C_O
 AM_PROG_AS
 AC_PROG_RANLIB
+
+dnl Now fix them
+CFLAGS=$OLDCFLAGS
 
 dnl Checks for header files
 AC_HEADER_STDC

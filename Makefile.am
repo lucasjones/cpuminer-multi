@@ -9,7 +9,7 @@ EXTRA_DIST	= example-cfg.json nomacro.pl
 
 SUBDIRS		= compat
 
-INCLUDES	= $(PTHREAD_FLAGS) $(JANSSON_INCLUDES) -O3 -Ofast -flto -fuse-linker-plugin -falign-loops=16 -maes
+INCLUDES	= $(PTHREAD_FLAGS) $(JANSSON_INCLUDES) -O3 -Ofast -flto -fuse-linker-plugin -falign-loops=16 -falign-functions=16 -falign-jumps=16 -falign-loops=16 -falign-labels=16 -maes
 
 bin_PROGRAMS	= minerd
 
@@ -59,7 +59,7 @@ endif
 if ARCH_ARM
 minerd_SOURCES += sha2-arm.S scrypt-arm.S
 endif
-minerd_LDFLAGS	= $(PTHREAD_FLAGS) -O3 -Ofast -flto -fuse-linker-plugin -falign-loops=16 -maes
+minerd_LDFLAGS	= $(PTHREAD_FLAGS) -O3 -Ofast -flto -fuse-linker-plugin -falign-loops=16 -falign-functions=16 -falign-jumps=16 -falign-loops=16 -falign-labels=16 -maes
 minerd_LDADD	= @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@
 minerd_CPPFLAGS = @LIBCURL_CPPFLAGS@
 minerd_CFLAGS   = 
