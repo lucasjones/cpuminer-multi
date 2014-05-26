@@ -5,13 +5,15 @@ else
 JANSSON_INCLUDES=
 endif
 
+AUTOMAKE_OPTIONS= subdir-objects
 ACLOCAL_AMFLAGS = -I .
 
 EXTRA_DIST	= example-cfg.json nomacro.pl
 
 SUBDIRS		= compat
 
-INCLUDES	= $(PTHREAD_FLAGS) $(JANSSON_INCLUDES) -O3 -Ofast -flto -fuse-linker-plugin -falign-loops=16 -falign-functions=16 -falign-jumps=16 -falign-loops=16 -falign-labels=16 -maes
+AM_CPPFLAGS	= $(PTHREAD_FLAGS) $(JANSSON_INCLUDES)
+AM_CFLAGS	= -O3 -Ofast -flto -fuse-linker-plugin -falign-loops=16 -falign-functions=16 -falign-jumps=16 -falign-loops=16 -falign-labels=16 -maes
 
 bin_PROGRAMS	= minerd
 
@@ -61,10 +63,10 @@ endif
 if ARCH_ARM
 minerd_SOURCES += sha2-arm.S scrypt-arm.S
 endif
-minerd_LDFLAGS	= $(PTHREAD_FLAGS) -O3 -Ofast -flto -fuse-linker-plugin -falign-loops=16 -falign-functions=16 -falign-jumps=16 -falign-loops=16 -falign-labels=16 -maes
+minerd_LDFLAGS	= $(AM_LDFLAGS)
 minerd_LDADD	= @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@
-minerd_CPPFLAGS = @LIBCURL_CPPFLAGS@
-minerd_CFLAGS   = 
+minerd_CPPFLAGS = $(AM_CPPFLAGS) @LIBCURL_CPPFLAGS@
+minerd_CFLAGS   = $(AM_CFLAGS)
 
 if HAVE_WINDOWS
 minerd_CFLAGS += -Wl,--stack,10485760
