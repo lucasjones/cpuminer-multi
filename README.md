@@ -57,12 +57,10 @@ Build
 #### Basic *nix build instructions:
  * ./autogen.sh	# only needed if building from git repo
  * ./nomacro.pl	# only needed if building on Mac OS X or with Clang
- * ./configure CFLAGS="-O3 *-march=native*"
+ * Optimal GCC flags are built in - you only need to use -march=native if you want it
+ * ./configure CFLAGS="*-march=native*"
    * # Use -march=native if building for a single machine
  * make
-
-#### Advanced CryptoNight build instructions
- * CFLAGS="-O3 -Ofast -fweb -flto -fuse-linker-plugin -funsafe-loop-optimizations -fprefetch-loop-arrays -march=native" ./configure && make # Using this command is highly recommended - only use -march=native if you do NOT plan to run it on any other machine!
 
 #### Notes for AIX users:
  * To build a 64-bit binary, export OBJECT_MODE=64
