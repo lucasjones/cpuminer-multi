@@ -166,3 +166,62 @@ aesni_parallel_xor:
 	movdqa %xmm7, 0x70(%rdi)
 	
 	ret
+
+	.text
+	.p2align 4
+	.globl that_fucking_loop
+# void that_fucking_loop(uint64_t *a, uint64_t *b, uint8_t *long_state)
+that_fucking_loop:
+	mov $0x80000, %r11
+	movdqa (%rdi), %xmm1
+	movdqa (%rsi), %xmm2
+	# b == xmm2 & a == xmm1 from now on
+	
+	.p2align 4
+	.HUGELOOP:
+		movq %xmm1, %r9
+		
+		and $0x1FFFF0, %r9
+		add %rdx, %r9
+		
+		movdqa (%r9), %xmm3
+		aesenc %xmm1, %xmm3
+		
+		pxor %xmm3, %xmm2
+		
+		movdqa %xmm2, (%r9)
+		
+		movq %xmm3, %r9
+		
+		and $0x1FFFF0, %r9
+		add %rdx, %r9
+		
+		movdqa (%r9), %xmm4
+		push %rdx
+		
+		movq %xmm3, %rax
+		mulq (%r9)
+		
+		sub $16, %rsp
+		movdqa %xmm1, (%rsp)
+		add %rdx, (%rsp)
+		add %rax, 8(%rsp)
+		
+		movdqa (%rsp), %xmm1
+		add $16, %rsp
+		pop %rdx
+		
+		movdqa %xmm1, (%r9)
+		
+		pxor %xmm4, %xmm1
+		movdqa %xmm3, %xmm2
+		
+		# This is a branch prediction hint. Don't fuck with it.
+		dec %r11
+		cmp $0, %r11
+		setne %al
+		movzx %al, %eax
+		test %rax, %rax
+		jne .HUGELOOP
+	
+	ret

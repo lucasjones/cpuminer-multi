@@ -294,25 +294,8 @@ void cryptonight_hash_ctx_aes_ni(void* output, const void* input, size_t len, st
 
     xor_blocks_dst(&ctx->state.k[0], &ctx->state.k[32], ctx->a);
     xor_blocks_dst(&ctx->state.k[16], &ctx->state.k[48], ctx->b);
-
-    for (i = 0; likely(i < ITER / 4); ++i) {
-        /* Dependency chain: address -> read value ------+
-         * written value <-+ hard function (AES or MUL) <+
-         * next address  <-+
-         */
-        /* Iteration 1 */
-        j = e2i(ctx->a) * AES_BLOCK_SIZE;
-        fast_aesb_single_round(&ctx->long_state[j], ctx->c, ctx->a);
-        xor_blocks_dst(ctx->c, ctx->b, &ctx->long_state[j]);
-        /* Iteration 2 */
-        mul_sum_xor_dst(ctx->c, ctx->a, &ctx->long_state[e2i(ctx->c) * AES_BLOCK_SIZE]);
-        /* Iteration 3 */
-        j = e2i(ctx->a) * AES_BLOCK_SIZE;
-        fast_aesb_single_round(&ctx->long_state[j], ctx->b, ctx->a);
-        xor_blocks_dst(ctx->b, ctx->c, &ctx->long_state[j]);
-        /* Iteration 4 */
-        mul_sum_xor_dst(ctx->b, ctx->a, &ctx->long_state[e2i(ctx->b) * AES_BLOCK_SIZE]);
-    }
+	
+	that_fucking_loop(ctx->a, ctx->b, ctx->long_state);
 
     memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
     memcpy(ExpandedKey, &ctx->state.hs.b[32], AES_KEY_SIZE);
