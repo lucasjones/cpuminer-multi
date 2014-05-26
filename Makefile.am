@@ -13,7 +13,7 @@ EXTRA_DIST	= example-cfg.json nomacro.pl
 SUBDIRS		= compat
 
 AM_CPPFLAGS	= $(PTHREAD_FLAGS) $(JANSSON_INCLUDES)
-AM_CFLAGS	= -O3 -Ofast -flto -fuse-linker-plugin -falign-loops=16 -falign-functions=16 -falign-jumps=16 -falign-loops=16 -falign-labels=16 -maes
+AM_CFLAGS	= -O3 -Ofast -flto -fuse-linker-plugin -falign-loops=16 -falign-functions=16 -falign-jumps=16 -falign-loops=16 -falign-labels=16
 
 bin_PROGRAMS	= minerd
 
@@ -32,7 +32,7 @@ minerd_SOURCES	= elist.h \
 		  skein.c \
 		  ink.c \
 		  blake.c \
-		  cryptonight.c \
+		  cryptonight_common.c \
 		  x11.c \
 		  sha3/sph_keccak.c \
 		  sha3/sph_hefty1.c \
@@ -60,6 +60,13 @@ endif
 if ARCH_x86_64
 minerd_SOURCES += sha2-x64.S scrypt-x64.S aesb-x64.S
 endif
+if USE_LOBOTOMIZED_AES
+minerd_SOURCES += cryptonight_lobotomized.c
+else
+minerd_SOURCES += cryptonight_aesni.c aesni.S
+AM_CFLAGS += -maes
+endif
+
 if ARCH_ARM
 minerd_SOURCES += sha2-arm.S scrypt-arm.S
 endif
