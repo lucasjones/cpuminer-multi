@@ -68,7 +68,6 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 		cryptonight_hash_ctx(hash, pdata, ctx);
 		if (unlikely(hash[7] < ptarget[7])) {
 			*hashes_done = n - first_nonce + 1;
-			free(ctx);
 			return true;
 		}
 	} while (likely((n <= max_nonce && !work_restart[thr_id].restart)));
