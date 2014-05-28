@@ -1,10 +1,7 @@
 CPUMiner-Multi
 ==============
 
-[![Build Status](https://travis-ci.org/LucasJones/cpuminer-multi.svg?branch=master)](https://travis-ci.org/LucasJones/cpuminer-multi)
-
-This is a multi-threaded CPU miner,
-fork of [pooler](//github.com/pooler)'s cpuminer.
+This is a multi-threaded CPU miner, fork of [LucasJones](//github.com/lucasjones)' cpuminer-multi.
 
 #### Table of contents
 
@@ -33,67 +30,31 @@ Algorithms
  * ? shavite3 (INKcoin)
  * ? blake (Blakecoin)
 
-#### Planned support for
- * *scrypt-n* (Vertcoin [VTC])
- * *scrypt-jane* (YaCoin, CopperBars, Pennies, Tickets, etc..)
- * *qubit* (Qubitcoin, Myriadcoin)
- * *groestl* (Groestlcoin)
-
 Dependencies
 ============
 * libcurl			http://curl.haxx.se/libcurl/
 * jansson			http://www.digip.org/jansson/ (jansson is included in-tree)
-* openssl           https://www.openssl.org/
+* openssl			https://www.openssl.org/
 
 Download
 ========
-* Binary releases: https://github.com/LucasJones/cpuminer-multi/releases
-* Git tree:   https://github.com/LucasJones/cpuminer-multi
-  * Clone with `git clone https://github.com/LucasJones/cpuminer-multi`
+* Binary releases: None yet
+* Git tree:   https://github.com/wolf9466/cpuminer-multi
+* Clone with `git clone https://github.com/wolf9466/cpuminer-multi`
 
 Build
 =====
 
 #### Basic *nix build instructions:
  * ./autogen.sh	# only needed if building from git repo
- * ./nomacro.pl	# only needed if building on Mac OS X or with Clang
  * Optimal GCC flags are built in - you only need to use -march=native if you want it
  * ./configure CFLAGS="*-march=native*"
    * # Use -march=native if building for a single machine
  * make
 
-#### Notes for AIX users:
- * To build a 64-bit binary, export OBJECT_MODE=64
- * GNU-style long options are not supported, but are accessible via configuration file
-
-#### Basic Windows build instructions, using MinGW:
- * Install MinGW and the MSYS Developer Tool Kit (http://www.mingw.org/)
-   * Make sure you have mstcpip.h in MinGW\include
- * If using MinGW-w64, install pthreads-w64
- * Install libcurl devel (http://curl.haxx.se/download.html)
-   * Make sure you have libcurl.m4 in MinGW\share\aclocal
-   * Make sure you have curl-config in MinGW\bin
- * Install openssl devel (https://www.openssl.org/related/binaries.html)
- * In the MSYS shell, run:
-   * ./autogen.sh	# only needed if building from git repo
-   * LIBCURL="-lcurldll" ./configure CFLAGS="-O3 *-march=native*"
-     * # Use -march=native if building for a single machine
-   * make
-
 #### Architecture-specific notes:
- * ARM:
-   * No runtime CPU detection. The miner can take advantage of some instructions specific to ARMv5E and later processors, but the decision whether to use them is made at compile time, based on compiler-defined macros.
-   * To use NEON instructions, add "-mfpu=neon" to CFLAGS.
- * x86:
-   * The miner checks for SSE2 instructions support at runtime, and uses them if they are available.
- * x86-64:	
-   * The miner can take advantage of AVX, AVX2 and XOP instructions, but only if both the CPU and the operating system support them.
-     * Linux supports AVX starting from kernel version 2.6.30.
-     * FreeBSD supports AVX starting with 9.1-RELEASE.
-     * Mac OS X added AVX support in the 10.6.8 update.
-     * Windows supports AVX starting from Windows 7 SP1 and Windows Server 2008 R2 SP1.
-   * The configure script outputs a warning if the assembler doesn't support some instruction sets. In that case, the miner can still be built, but unavailable optimizations are left off.
-
+ * CryptoNight works only on x86 and x86-64.
+ * If you don't have AES-NI, it's slow. This implementation is deprecated and will not be improved.
 Usage instructions
 ==================
 Run "minerd --help" to see options.
@@ -112,12 +73,12 @@ Donations
 =========
 Donations for the work done in this fork are accepted at
 * MRO: `472haywQKoxFzf7asaQ4XKBc2foAY4ezk8HiN63ifW4iAbJiLnfmJfhHSR9XmVKw2WYPnszJV9MEHj9Z5WMK9VCNHaGLDmJ`
-* BTC: `139QWoktddChHsZMWZFxmBva4FM96X2dhE`
+* BTC: `1WoLFumNUvjCgaCyjFzvFrbGfDddYrKNR`
 
 Credits
 =======
-CPUMiner-multi was forked from pooler's CPUMiner, and has been developed by Lucas Jones.
-* [Wolf9466](https://github.com/wolf9466) Helped with Intel AES-NI support for CryptoNight
+This faster CPUMiner-multi was forked from LucasJones', and has been developed by Wolf.
+Special thanks to Intel for helping me with the usage of the AESKEYGENASSIST instruction, which I used to replace the calls to the slow, unoptimized oaes_lib.
 
 License
 =======
