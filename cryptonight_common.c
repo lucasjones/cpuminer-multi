@@ -15,6 +15,10 @@
 #include "crypto/hash-ops.h"
 #include "cryptonight.h"
 
+#ifdef __unix__
+#include <sys/mman.h>
+#endif
+
 void do_blake_hash(const void* input, size_t len, char* output) {
     blake256_hash((uint8_t*)output, input, len);
 }
@@ -40,7 +44,7 @@ void (* const extra_hashes[4])(const void *, size_t, char *) = {do_blake_hash, d
 
 void cryptonight_hash(void* output, const void* input, size_t len) {
     struct cryptonight_ctx *ctx = (struct cryptonight_ctx*)malloc(sizeof(struct cryptonight_ctx));
-    cryptonight_hash_ctx(output, input, len, ctx);
+    cryptonight_hash_ctx(output, input, ctx);
     free(ctx);
 }
 
@@ -51,12 +55,23 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
     const uint32_t first_nonce = n + 1;
     const uint32_t Htarg = ptarget[7];
     uint32_t hash[HASH_SIZE / 4] __attribute__((aligned(32)));
-
-    struct cryptonight_ctx *ctx = (struct cryptonight_ctx*)malloc(sizeof(struct cryptonight_ctx));
-
+	uint8_t use_free = 0;
+    //struct cryptonight_ctx *ctx = (struct cryptonight_ctx*)malloc(sizeof(struct cryptonight_ctx));
+	
+	#ifdef __unix__
+	struct cryptonight_ctx *ctx = (struct cryptonight_ctx *)mmap(0, sizeof(struct cryptonight_ctx), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, 0, 0);
+	if(ctx == MAP_FAILED)
+	{
+		ctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
+		use_free = 1;
+	}
+	#else
+	struct cryptonight_ctx *ctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
+	#endif
+	
 	do {
 		*nonceptr = ++n;
-		cryptonight_hash_ctx(hash, pdata, 76, ctx);
+		cryptonight_hash_ctx(hash, pdata, ctx);
 		if (unlikely(hash[7] < ptarget[7])) {
 			*hashes_done = n - first_nonce + 1;
 			free(ctx);
@@ -64,7 +79,13 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 		}
 	} while (likely((n <= max_nonce && !work_restart[thr_id].restart)));
     
+    #ifdef __unix__
+    if(use_free) free(ctx);
+    else munmap(ctx, sizeof(struct cryptonight_ctx));
+    #else
     free(ctx);
+    #endif
+    
     *hashes_done = n - first_nonce + 1;
     return 0;
 }

@@ -85,8 +85,9 @@ static inline void ExpandAESKey256(char *keybuf)
 	keys[14] = tmp1;
 }
 
-void cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cryptonight_ctx* ctx) {
-    hash_process(&ctx->state.hs, (const uint8_t*) input, len);
+void cryptonight_hash_ctx(void* output, const void* input, struct cryptonight_ctx* ctx)
+{
+    hash_process(&ctx->state.hs, (const uint8_t*) input, 76);
     uint8_t ExpandedKey[256];
     size_t i, j;
     

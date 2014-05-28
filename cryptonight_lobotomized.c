@@ -19,8 +19,8 @@ static inline void xor_blocks(uint8_t* a, const uint8_t* b) {
     ((uint64_t*) a)[1] ^= ((uint64_t*) b)[1];
 }
 
-void cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cryptonight_ctx* ctx) {
-    hash_process(&ctx->state.hs, (const uint8_t*) input, len);
+void cryptonight_hash_ctx(void* output, const void* input, struct cryptonight_ctx* ctx) {
+    hash_process(&ctx->state.hs, (const uint8_t*) input, 76);
     ctx->aes_ctx = (oaes_ctx*) oaes_alloc();
     size_t i, j;
     memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);

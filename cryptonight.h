@@ -37,7 +37,7 @@ void do_groestl_hash(const void* input, size_t len, char* output);
 void do_jh_hash(const void* input, size_t len, char* output);
 void do_skein_hash(const void* input, size_t len, char* output);
 void xor_blocks_dst(const uint8_t* a, const uint8_t* b, uint8_t* dst);
-void cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cryptonight_ctx* ctx);
+void cryptonight_hash_ctx(void* output, const void* input, struct cryptonight_ctx* ctx);
 
 extern void (* const extra_hashes[4])(const void *, size_t, char *);
 
