@@ -80,6 +80,7 @@ Credits
 =======
 This faster CPUMiner-multi was forked from LucasJones', and has been developed by Wolf.
 Special thanks to Intel for helping me with the usage of the AESKEYGENASSIST instruction, which I used to replace the calls to the slow, unoptimized oaes_lib.
+Special thanks also to dga for his code with that loop - since it runs over 500,000 times per hash, it's extremely important.
 
 License
 =======
