@@ -48,6 +48,8 @@ void cryptonight_hash(void* output, const void* input, size_t len) {
     free(ctx);
 }
 
+__thread struct cryptonight_ctx *persistentctx = NULL;
+
 int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
         uint32_t max_nonce, unsigned long *hashes_done) {
     uint32_t *nonceptr = (uint32_t*) (((char*)pdata) + 39);
@@ -56,16 +58,19 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
     const uint32_t Htarg = ptarget[7];
     uint32_t hash[HASH_SIZE / 4] __attribute__((aligned(32)));
 	
-	#ifdef __unix__
-	struct cryptonight_ctx *ctx = (struct cryptonight_ctx *)mmap(0, sizeof(struct cryptonight_ctx), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, 0, 0);
-	if(ctx == MAP_FAILED) ctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
-	#else
-	struct cryptonight_ctx *ctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
-	#endif
+	if(!persistentctx)
+	{
+		#ifdef __unix__
+		persistentctx = (struct cryptonight_ctx *)mmap(0, sizeof(struct cryptonight_ctx), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, 0, 0);
+		if(persistentctx == MAP_FAILED) persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
+		#else
+		persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
+		#endif
+	}
 	
 	do {
 		*nonceptr = ++n;
-		cryptonight_hash_ctx(hash, pdata, ctx);
+		cryptonight_hash_ctx(hash, pdata, persistentctx);
 		if (unlikely(hash[7] < ptarget[7])) {
 			*hashes_done = n - first_nonce + 1;
 			return true;

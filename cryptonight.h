@@ -41,5 +41,4 @@ void cryptonight_hash_ctx(void* output, const void* input, struct cryptonight_ct
 
 extern void (* const extra_hashes[4])(const void *, size_t, char *);
 
-
 #endif
