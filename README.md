@@ -55,6 +55,7 @@ Build
 #### Architecture-specific notes:
  * CryptoNight works only on x86 and x86-64.
  * If you don't have AES-NI, it's slow. This implementation is deprecated and will not be improved.
+
 Usage instructions
 ==================
 Run "minerd --help" to see options.
