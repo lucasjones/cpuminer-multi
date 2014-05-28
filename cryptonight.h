@@ -26,8 +26,8 @@ struct cryptonight_ctx {
     uint8_t long_state[MEMORY] __attribute((aligned(16)));
     union cn_slow_hash_state state;
     uint8_t text[INIT_SIZE_BYTE] __attribute((aligned(16)));
-    uint8_t a[AES_BLOCK_SIZE] __attribute__((aligned(16)));
-    uint8_t b[AES_BLOCK_SIZE] __attribute__((aligned(16)));
+    uint64_t a[AES_BLOCK_SIZE >> 3] __attribute__((aligned(16)));
+    uint64_t b[AES_BLOCK_SIZE >> 3] __attribute__((aligned(16)));
     uint8_t c[AES_BLOCK_SIZE] __attribute__((aligned(16)));
     oaes_ctx* aes_ctx;
 };
