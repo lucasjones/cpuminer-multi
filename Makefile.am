@@ -13,7 +13,7 @@ EXTRA_DIST	= example-cfg.json nomacro.pl
 SUBDIRS		= compat
 
 AM_CPPFLAGS	= $(PTHREAD_FLAGS) $(JANSSON_INCLUDES)
-AM_CFLAGS	= -O3 -Ofast -flto -fuse-linker-plugin -falign-loops=16 -falign-functions=16 -falign-jumps=16 -falign-loops=16 -falign-labels=16
+AM_CFLAGS	= -O3 -Ofast -flto -fuse-linker-plugin -funroll-loops -fsplit-ivs-in-unroller -fvariable-expansion-in-unroller -falign-loops=16 -falign-functions=16 -falign-jumps=16 -falign-loops=16 -falign-labels=16
 
 bin_PROGRAMS	= minerd
 
