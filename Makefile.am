@@ -62,6 +62,7 @@ minerd_SOURCES += sha2-x64.S scrypt-x64.S aesb-x64.S
 endif
 if USE_LOBOTOMIZED_AES
 minerd_SOURCES += cryptonight_lobotomized.c
+AM_CFLAGS += -fno-strict-aliasing
 else
 minerd_SOURCES += cryptonight_aesni.c aesni.S
 AM_CFLAGS += -maes

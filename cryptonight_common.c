@@ -35,7 +35,7 @@ void do_skein_hash(const void* input, size_t len, char* output) {
     skein_hash(8 * HASH_SIZE, input, 8 * len, (uint8_t*)output);
 }
 
-void xor_blocks_dst(const uint8_t* a, const uint8_t* b, uint8_t* dst) {
+void xor_blocks_dst(const uint8_t *restrict a, const uint8_t *restrict b, uint8_t *restrict dst) {
     ((uint64_t*) dst)[0] = ((uint64_t*) a)[0] ^ ((uint64_t*) b)[0];
     ((uint64_t*) dst)[1] = ((uint64_t*) a)[1] ^ ((uint64_t*) b)[1];
 }
@@ -50,8 +50,7 @@ void cryptonight_hash(void* output, const void* input, size_t len) {
 
 __thread struct cryptonight_ctx *persistentctx = NULL;
 
-int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-        uint32_t max_nonce, unsigned long *hashes_done) {
+int scanhash_cryptonight(int thr_id, uint32_t *restrict pdata, const uint32_t *restrict ptarget, uint32_t max_nonce, unsigned long *restrict hashes_done) {
     uint32_t *nonceptr = (uint32_t*) (((char*)pdata) + 39);
     uint32_t n = *nonceptr - 1;
     const uint32_t first_nonce = n + 1;
