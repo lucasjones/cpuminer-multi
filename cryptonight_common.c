@@ -17,7 +17,7 @@
 
 #if defined __unix__ && (!defined __APPLE__)
 #include <sys/mman.h>
-#else
+#elsif defined _WIN32
 #include <windows.h>
 #endif
 
