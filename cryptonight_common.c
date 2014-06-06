@@ -17,7 +17,7 @@
 
 #if defined __unix__ && (!defined __APPLE__)
 #include <sys/mman.h>
-#elsif defined _WIN32
+#elif defined _WIN32
 #include <windows.h>
 #endif
 
@@ -64,7 +64,7 @@ int scanhash_cryptonight(int thr_id, uint32_t *restrict pdata, const uint32_t *r
 		#if defined __unix__ && (!defined __APPLE__)
 		persistentctx = (struct cryptonight_ctx *)mmap(0, sizeof(struct cryptonight_ctx), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, 0, 0);
 		if(persistentctx == MAP_FAILED) persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
-		#elsif defined _WIN32
+		#elif defined _WIN32
 		persistentctx = VirtualAlloc(NULL, sizeof(struct cryptonight_ctx), MEM_LARGE_PAGES, PAGE_READWRITE);
 		if(!persistentctx) persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
 		#else
