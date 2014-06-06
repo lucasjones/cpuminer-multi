@@ -240,9 +240,14 @@ static inline void xor_blocks(uint8_t *restrict a, const uint8_t *restrict b) {
 }
 
 void cryptonight_hash_ctx(void *restrict output, const void *restrict input, struct cryptonight_ctx *restrict ctx) {
-    hash_process(&ctx->state.hs, (const uint8_t*) input, 76);
+    
     ctx->aes_ctx = (oaes_ctx*) oaes_alloc();
     size_t i, j;
+    __builtin_prefetch(TestTable1, 0, 3);
+    __builtin_prefetch(TestTable2, 0, 3);
+    __builtin_prefetch(TestTable3, 0, 3);
+    __builtin_prefetch(TestTable4, 0, 3);
+    hash_process(&ctx->state.hs, (const uint8_t*) input, 76);
     memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
 
     oaes_key_import_data(ctx->aes_ctx, ctx->state.hs.b, AES_KEY_SIZE);
