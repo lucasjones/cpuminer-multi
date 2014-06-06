@@ -15,7 +15,7 @@
 #include "crypto/hash-ops.h"
 #include "cryptonight.h"
 
-#ifdef __unix__
+#if defined __unix__ && (!defined __APPLE__)
 #include <sys/mman.h>
 #else
 #include <windows.h>
@@ -61,7 +61,7 @@ int scanhash_cryptonight(int thr_id, uint32_t *restrict pdata, const uint32_t *r
 	
 	if(!persistentctx)
 	{
-		#ifdef __unix__
+		#ifdef __unix__ && (!defined __APPLE__)
 		persistentctx = (struct cryptonight_ctx *)mmap(0, sizeof(struct cryptonight_ctx), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, 0, 0);
 		if(persistentctx == MAP_FAILED) persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
 		#else
