@@ -150,84 +150,39 @@ typedef struct _reg_ {
 
 static inline void SubAndShiftAndMixAddRound(uint32_t *restrict out, uint32_t *restrict temp, uint32_t *restrict AesEncKey)
 {
-	register uint32_t a1,a2,a3,a4;
-	uint32_t state = temp[0];
-
-	a1=TestTable1[ (uint8_t)state  ];
-	a4=TestTable2[ (( regs *) &state)->ah ]; 
-	state = state >> 16;
-	a3=TestTable3[ (uint8_t)state  ];
-	a2=TestTable4[ (( regs *) &state)->ah  ];
-
-	state = temp[1];
-	a2^=TestTable1[ (uint8_t)state  ];
-	a1^=TestTable2[ (( regs *) &state)->ah  ];
-	state = state >> 16;
-	a4^=TestTable3[(uint8_t)state  ];
-	a3^=TestTable4[ (( regs *) &state)->ah  ];
-
-	state = temp[2];
-	a3^=TestTable1[ (uint8_t)state ];
-	a2^=TestTable2[ (( regs *) &state)->ah ];
-	state = state >> 16;
-	a1^=TestTable3[ (uint8_t)state ];
-	a4^=TestTable4[ (( regs *) &state)->ah ];
-
-	state = temp[3];
-	a4^=TestTable1[ (uint8_t)state ];
-	a3^=TestTable2[ (( regs *) &state)->ah ];
-	state = state >> 16;
-	a2^=TestTable3[ (uint8_t)state ];
-	a1^=TestTable4[ (( regs *) &state)->ah ];
+	uint8_t *state = &temp[0];
 	
-	out[0]=a1^AesEncKey[0];
-	out[1]=a2^AesEncKey[1];
-	out[2]=a3^AesEncKey[2];
-	out[3]=a4^AesEncKey[3];
+	out[0]= TestTable1[state[0]] ^ TestTable2[state[5]] ^ TestTable3[state[10]] ^ TestTable4[state[15]] ^ AesEncKey[0];
+	out[1]= TestTable4[state[3]] ^ TestTable1[state[4]] ^ TestTable2[state[9]]  ^ TestTable3[state[14]] ^ AesEncKey[1];
+	out[2]= TestTable3[state[2]] ^ TestTable4[state[7]] ^ TestTable1[state[8]]  ^ TestTable2[state[13]] ^ AesEncKey[2];
+	out[3]= TestTable2[state[1]] ^ TestTable3[state[6]] ^ TestTable4[state[11]] ^ TestTable1[state[12]] ^ AesEncKey[3];
 }
 
 static inline void SubAndShiftAndMixAddRoundInPlace(uint32_t *restrict temp, uint32_t *restrict AesEncKey)
 {
-	register uint32_t a1,a2,a3,a4;
-	uint32_t state = temp[0];
+	uint8_t state[16];
+	memcpy(state, temp, 16);
 
-	a1=TestTable1[ (uint8_t)state  ];
-	a4=TestTable2[ (( regs *) &state)->ah ]; 
-	state = state >> 16;
-	a3=TestTable3[ (uint8_t)state  ];
-	a2=TestTable4[ (( regs *) &state)->ah  ];
-
-	state = temp[1];
-	a2^=TestTable1[ (uint8_t)state  ];
-	a1^=TestTable2[ (( regs *) &state)->ah  ];
-	state = state >> 16;
-	a4^=TestTable3[(uint8_t)state  ];
-	a3^=TestTable4[ (( regs *) &state)->ah  ];
-
-	state = temp[2];
-	a3^=TestTable1[ (uint8_t)state ];
-	a2^=TestTable2[ (( regs *) &state)->ah ];
-	state = state >> 16;
-	a1^=TestTable3[ (uint8_t)state ];
-	a4^=TestTable4[ (( regs *) &state)->ah ];
-
-	state = temp[3];
-	a4^=TestTable1[ (uint8_t)state ];
-	a3^=TestTable2[ (( regs *) &state)->ah ];
-	state = state >> 16;
-	a2^=TestTable3[ (uint8_t)state ];
-	a1^=TestTable4[ (( regs *) &state)->ah ];
-	
-	temp[0]=a1^AesEncKey[0];
-	temp[1]=a2^AesEncKey[1];
-	temp[2]=a3^AesEncKey[2];
-	temp[3]=a4^AesEncKey[3];
+	temp[0]= TestTable1[state[0]] ^ TestTable2[state[5]] ^ TestTable3[state[10]] ^ TestTable4[state[15]] ^ AesEncKey[0];
+	temp[1]= TestTable4[state[3]] ^ TestTable1[state[4]] ^ TestTable2[state[9]]  ^ TestTable3[state[14]] ^ AesEncKey[1];
+	temp[2]= TestTable3[state[2]] ^ TestTable4[state[7]] ^ TestTable1[state[8]]  ^ TestTable2[state[13]] ^ AesEncKey[2];
+	temp[3]= TestTable2[state[1]] ^ TestTable3[state[6]] ^ TestTable4[state[11]] ^ TestTable1[state[12]] ^ AesEncKey[3];
 }
 
 static inline void mul_sum_xor_dst(const uint8_t *restrict a, uint8_t *restrict c, uint8_t *restrict dst) {
-    uint64_t hi, lo = mul128(((uint64_t*) a)[0], ((uint64_t*) dst)[0], &hi) + ((uint64_t*) c)[1];
-    hi += ((uint64_t*) c)[0];
-
+    //uint64_t hi, lo = mul128(((uint64_t*) a)[0], ((uint64_t*) dst)[0], &hi) + ((uint64_t*) c)[1];
+    //hi += ((uint64_t*) c)[0];
+	uint64_t hi, lo;
+	
+	__asm__("mulq %3\n\t"
+		  : "=d" (hi),
+		"=a" (lo)
+		  : "%a" (((uint64_t *)a)[0]),
+		"rm" (((uint64_t *)dst)[0])
+		  : "cc" );
+	lo += ((uint64_t *)c)[1];
+	hi += ((uint64_t *)c)[0];
+	
     ((uint64_t*) c)[0] = ((uint64_t*) dst)[0] ^ hi;
     ((uint64_t*) c)[1] = ((uint64_t*) dst)[1] ^ lo;
     ((uint64_t*) dst)[0] = hi;
@@ -243,13 +198,10 @@ void cryptonight_hash_ctx(void *restrict output, const void *restrict input, str
     
     ctx->aes_ctx = (oaes_ctx*) oaes_alloc();
     size_t i, j;
-    __builtin_prefetch(TestTable1, 0, 3);
-    __builtin_prefetch(TestTable2, 0, 3);
-    __builtin_prefetch(TestTable3, 0, 3);
-    __builtin_prefetch(TestTable4, 0, 3);
-    hash_process(&ctx->state.hs, (const uint8_t*) input, 76);
+    //hash_process(&ctx->state.hs, (const uint8_t*) input, 76);
+    keccak1600((const uint8_t *)input, 76, &ctx->state.hs, 200);
     memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
-
+    
     oaes_key_import_data(ctx->aes_ctx, ctx->state.hs.b, AES_KEY_SIZE);
     
     for(i = 0; likely(i < MEMORY); i += INIT_SIZE_BYTE)
