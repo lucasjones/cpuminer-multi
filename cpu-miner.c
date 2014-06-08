@@ -37,23 +37,29 @@
 #include <curl/curl.h>
 #include "compat.h"
 #include "miner.h"
+#include "cryptonight.h"
+
+#if defined __unix__ && (!defined __APPLE__)
+#include <sys/mman.h>
+#elif defined _WIN32
+#include <windows.h>
+#endif
 
 #define PROGRAM_NAME		"minerd"
 #define LP_SCANTIME		60
 #define JSON_BUF_LEN 345
+
+#ifdef __unix__
+#include <sys/mman.h>
+#endif
 
 #ifdef __linux /* Linux specific policy and affinity management */
 #include <sched.h>
 static inline void drop_policy(void) {
     struct sched_param param;
     param.sched_priority = 0;
-
-#ifdef SCHED_IDLE
-    if (unlikely(sched_setscheduler(0, SCHED_IDLE, &param) == -1))
-#endif
-#ifdef SCHED_BATCH
-    sched_setscheduler(0, SCHED_BATCH, &param);
-#endif
+	
+	sched_setscheduler(0, SCHED_OTHER, &param);
 }
 
 static inline void affine_to_cpu(int id, int cpu) {
@@ -85,6 +91,8 @@ static inline void affine_to_cpu(int id, int cpu)
 {
 }
 #endif
+
+#define MAX_THREADS	256
 
 enum workio_commands {
     WC_GET_WORK, WC_SUBMIT_WORK,
@@ -1014,6 +1022,8 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work) {
     }
 }
 
+struct cryptonight_ctx *persistentctxs[MAX_THREADS] = { NULL };
+
 static void *miner_thread(void *userdata) {
     struct thr_info *mythr = userdata;
     int thr_id = mythr->id;
@@ -1023,12 +1033,14 @@ static void *miner_thread(void *userdata) {
     unsigned char *scratchbuf = NULL;
     char s[16];
     int i;
-
+	struct cryptonight_ctx *persistentctx;
+	
     /* Set worker threads to nice 19 and then preferentially to SCHED_IDLE
      * and if that fails, then SCHED_BATCH. No need for this to be an
      * error if it fails */
     if (!opt_benchmark) {
-        setpriority(PRIO_PROCESS, 0, 19);
+        //setpriority(PRIO_PROCESS, 0, 19);
+        if(!geteuid()) setpriority(PRIO_PROCESS, 0, -14);
         drop_policy();
     }
 
@@ -1040,7 +1052,23 @@ static void *miner_thread(void *userdata) {
                     thr_id % num_processors);
         affine_to_cpu(thr_id, thr_id % num_processors);
     }
-
+    
+	persistentctx = persistentctxs[thr_id];
+	if(!persistentctx && opt_algo == ALGO_CRYPTONIGHT)
+	{
+		#if defined __unix__ && (!defined __APPLE__)
+		persistentctx = (struct cryptonight_ctx *)mmap(0, sizeof(struct cryptonight_ctx), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, 0, 0);
+		if(persistentctx == MAP_FAILED) persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
+		madvise(persistentctx, sizeof(struct cryptonight_ctx), MADV_RANDOM | MADV_WILLNEED | MADV_HUGEPAGE);
+		if(!geteuid()) mlock(persistentctx, sizeof(struct cryptonight_ctx));
+		#elif defined _WIN32
+		persistentctx = VirtualAlloc(NULL, sizeof(struct cryptonight_ctx), MEM_LARGE_PAGES, PAGE_READWRITE);
+		if(!persistentctx) persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
+		#else
+		persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
+		#endif
+	}
+	
     if (opt_algo == ALGO_SCRYPT) {
         scratchbuf = scrypt_buffer_alloc();
     }
@@ -1164,7 +1192,7 @@ static void *miner_thread(void *userdata) {
             break;
         case ALGO_CRYPTONIGHT:
             rc = scanhash_cryptonight(thr_id, work.data, work.target,
-                    max_nonce, &hashes_done);
+                    max_nonce, &hashes_done, persistentctx);
             break;
 
         default:
@@ -1218,7 +1246,7 @@ static void *miner_thread(void *userdata) {
     }
 
     out: tq_freeze(mythr->q);
-
+	
     return NULL ;
 }
 
@@ -1738,16 +1766,25 @@ static void parse_cmdline(int argc, char *argv[]) {
 
 #ifndef WIN32
 static void signal_handler(int sig) {
+	int i;
     switch (sig) {
     case SIGHUP:
         applog(LOG_INFO, "SIGHUP received");
         break;
     case SIGINT:
         applog(LOG_INFO, "SIGINT received, exiting");
+        #if defined __unix__ && (!defined __APPLE__)
+		if(opt_algo == ALGO_CRYPTONIGHT)
+			for(i = 0; i < opt_n_threads; i++) munmap(persistentctxs[i], sizeof(struct cryptonight_ctx));
+		#endif
         exit(0);
         break;
     case SIGTERM:
         applog(LOG_INFO, "SIGTERM received, exiting");
+        #if defined __unix__ && (!defined __APPLE__)
+		if(opt_algo == ALGO_CRYPTONIGHT)
+			for(i = 0; i < opt_n_threads; i++) munmap(persistentctxs[i], sizeof(struct cryptonight_ctx));
+		#endif
         exit(0);
         break;
     }
@@ -1758,7 +1795,11 @@ int main(int argc, char *argv[]) {
     struct thr_info *thr;
     long flags;
     int i;
-
+	
+	#ifdef __unix__
+	if(geteuid()) applog(LOG_INFO, "I go faster as root.");
+	#endif
+	
     rpc_user = strdup("");
     rpc_pass = strdup("");
 
@@ -1925,6 +1966,9 @@ int main(int argc, char *argv[]) {
     pthread_join(thr_info[work_thr_id].pth, NULL );
 
     applog(LOG_INFO, "workio thread dead, exiting.");
-
+	#if defined __unix__ && (!defined __APPLE__)
+	if(opt_algo == ALGO_CRYPTONIGHT)
+		for(i = 0; i < opt_n_threads; i++) munmap(persistentctxs[i], sizeof(struct cryptonight_ctx));
+	#endif
     return 0;
 }

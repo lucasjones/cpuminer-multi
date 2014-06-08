@@ -50,44 +50,22 @@ void cryptonight_hash(void* output, const void* input, size_t len) {
     free(ctx);
 }
 
-__thread struct cryptonight_ctx *persistentctx = NULL;
-
-int scanhash_cryptonight(int thr_id, uint32_t *restrict pdata, const uint32_t *restrict ptarget, uint32_t max_nonce, unsigned long *restrict hashes_done) {
+int scanhash_cryptonight(int thr_id, uint32_t *restrict pdata, const uint32_t *restrict ptarget, uint32_t max_nonce, unsigned long *restrict hashes_done, struct cryptonight_ctx *persistentctx) {
     uint32_t *nonceptr = (uint32_t*) (((char*)pdata) + 39);
     uint32_t n = *nonceptr - 1;
     const uint32_t first_nonce = n + 1;
     const uint32_t Htarg = ptarget[7];
     uint32_t hash[HASH_SIZE / 4] __attribute__((aligned(32)));
 	
-	if(!persistentctx)
-	{
-		#if defined __unix__ && (!defined __APPLE__)
-		persistentctx = (struct cryptonight_ctx *)mmap(0, sizeof(struct cryptonight_ctx), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, 0, 0);
-		if(persistentctx == MAP_FAILED) persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
-		madvise(persistentctx, sizeof(struct cryptonight_ctx), MADV_RANDOM | MADV_WILLNEED | MADV_HUGEPAGE);
-		#elif defined _WIN32
-		persistentctx = VirtualAlloc(NULL, sizeof(struct cryptonight_ctx), MEM_LARGE_PAGES, PAGE_READWRITE);
-		if(!persistentctx) persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
-		#else
-		persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
-		#endif
-	}
-	
 	do {
 		*nonceptr = ++n;
 		cryptonight_hash_ctx(hash, pdata, persistentctx);
 		if (unlikely(hash[7] < ptarget[7])) {
 			*hashes_done = n - first_nonce + 1;
-			#if defined __unix__ && (!defined __APPLE__)
-			munmap(persistentctx, sizeof(struct cryptonight_ctx));
-			#endif
 			return true;
 		}
 	} while (likely((n <= max_nonce && !work_restart[thr_id].restart)));
     
     *hashes_done = n - first_nonce + 1;
-    #if defined __unix__ && (!defined __APPLE__)
-	munmap(persistentctx, sizeof(struct cryptonight_ctx));
-	#endif
     return 0;
 }

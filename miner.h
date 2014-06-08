@@ -9,6 +9,7 @@
 #include <pthread.h>
 #include <jansson.h>
 #include <curl/curl.h>
+#include "cryptonight.h"
 
 #ifdef STDC_HEADERS
 # include <stdlib.h>
@@ -184,7 +185,7 @@ extern int scanhash_x11(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 extern void cryptonight_hash(void* output, const void* input, size_t input_len);
 
 extern int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-		uint32_t max_nonce, unsigned long *hashes_done);
+		uint32_t max_nonce, unsigned long *hashes_done, struct cryptonight_ctx *persistentctx);
 
 struct thr_info {
 	int		id;
