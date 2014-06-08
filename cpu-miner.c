@@ -1046,12 +1046,12 @@ static void *miner_thread(void *userdata) {
 
     /* Cpu affinity only makes sense if the number of threads is a multiple
      * of the number of CPUs */
-    if (num_processors > 1 && opt_n_threads % num_processors == 0) {
+    /*if (num_processors > 1 && opt_n_threads % num_processors == 0) {
         if (!opt_quiet)
             applog(LOG_INFO, "Binding thread %d to cpu %d", thr_id,
                     thr_id % num_processors);
         affine_to_cpu(thr_id, thr_id % num_processors);
-    }
+    }*/
     
 	persistentctx = persistentctxs[thr_id];
 	if(!persistentctx && opt_algo == ALGO_CRYPTONIGHT)
