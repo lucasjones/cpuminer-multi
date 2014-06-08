@@ -971,30 +971,30 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work) {
 
     pthread_mutex_lock(&sctx->work_lock);
 
-    if (jsonrpc_2) {
+    //if (jsonrpc_2) {
         free(work->job_id);
         memcpy(work, &sctx->work, sizeof(struct work));
         work->job_id = strdup(sctx->work.job_id);
         pthread_mutex_unlock(&sctx->work_lock);
-    } else {
+    /*} else {
         free(work->job_id);
         work->job_id = strdup(sctx->job.job_id);
         work->xnonce2_len = sctx->xnonce2_size;
         work->xnonce2 = realloc(work->xnonce2, sctx->xnonce2_size);
         memcpy(work->xnonce2, sctx->job.xnonce2, sctx->xnonce2_size);
 
-        /* Generate merkle root */
+        // Generate merkle root
         sha256d(merkle_root, sctx->job.coinbase, sctx->job.coinbase_size);
         for (i = 0; i < sctx->job.merkle_count; i++) {
             memcpy(merkle_root + 32, sctx->job.merkle[i], 32);
             sha256d(merkle_root, merkle_root, 64);
         }
 
-        /* Increment extranonce2 */
+        // Increment extranonce2
         for (i = 0; i < sctx->xnonce2_size && !++sctx->job.xnonce2[i]; i++)
             ;
 
-        /* Assemble block header */
+        // Assemble block header
         memset(work->data, 0, 128);
         work->data[0] = le32dec(sctx->job.version);
         for (i = 0; i < 8; i++)
@@ -1019,7 +1019,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work) {
             diff_to_target(work->target, sctx->job.diff / 65536.0);
         else
             diff_to_target(work->target, sctx->job.diff);
-    }
+    }*/
 }
 
 struct cryptonight_ctx *persistentctxs[MAX_THREADS] = { NULL };
