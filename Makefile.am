@@ -64,7 +64,7 @@ if USE_LOBOTOMIZED_AES
 minerd_SOURCES += cryptonight_lobotomized.c
 AM_CFLAGS += -fno-strict-aliasing
 else
-minerd_SOURCES += cryptonight_aesni.c aesni.S
+minerd_SOURCES += cryptonight_aesni.c
 AM_CFLAGS += -maes
 endif
 
