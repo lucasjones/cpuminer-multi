@@ -180,6 +180,7 @@ static pthread_mutex_t rpc2_login_lock;
 static unsigned long accepted_count = 0L;
 static unsigned long rejected_count = 0L;
 static double *thr_hashrates;
+static double *thr_times;
 
 #ifdef HAVE_GETOPT_LONG
 #include <getopt.h>
@@ -431,7 +432,7 @@ bool rpc2_job_decode(const json_t *job, struct work *work) {
             float hashrate = 0.;
             pthread_mutex_lock(&stats_lock);
             for (size_t i = 0; i < opt_n_threads; i++)
-                hashrate += thr_hashrates[i];
+                hashrate += thr_hashrates[i] / thr_times[i];
             pthread_mutex_unlock(&stats_lock);
             double difficulty = (((double) 0xffffffff) / target);
             applog(LOG_INFO, "Pool set diff to %g", difficulty);
@@ -543,7 +544,7 @@ static void share_result(int result, struct work *work, const char *reason) {
     hashrate = 0.;
     pthread_mutex_lock(&stats_lock);
     for (i = 0; i < opt_n_threads; i++)
-        hashrate += thr_hashrates[i];
+        hashrate += thr_hashrates[i] / thr_times[i];
     result ? accepted_count++ : rejected_count++;
     pthread_mutex_unlock(&stats_lock);
 
@@ -1125,7 +1126,7 @@ static void *miner_thread(void *userdata) {
         else
             max64 = g_work_time + (have_longpoll ? LP_SCANTIME : opt_scantime)
                     - time(NULL );
-        max64 *= thr_hashrates[thr_id];
+        //max64 *= thr_hashrates[thr_id];
         if (max64 <= 0) {
             switch (opt_algo) {
             case ALGO_SCRYPT:
@@ -1205,11 +1206,11 @@ static void *miner_thread(void *userdata) {
         timeval_subtract(&diff, &tv_end, &tv_start);
         if (diff.tv_usec || diff.tv_sec) {
             pthread_mutex_lock(&stats_lock);
-            thr_hashrates[thr_id] = hashes_done
-                    / (diff.tv_sec + 1e-6 * diff.tv_usec);
+            thr_hashrates[thr_id] = hashes_done;
+            thr_times[thr_id] = (diff.tv_sec + 1e-6 * diff.tv_usec);
             pthread_mutex_unlock(&stats_lock);
         }
-        if (!opt_quiet) {
+        /*if (!opt_quiet) {
             switch(opt_algo) {
             case ALGO_CRYPTONIGHT:
                 applog(LOG_INFO, "thread %d: %lu hashes, %.2f H/s", thr_id,
@@ -1238,7 +1239,7 @@ static void *miner_thread(void *userdata) {
                     break;
                 }
             }
-        }
+        }*/
 
         /* if nonce found, submit work */
         if (rc && !opt_benchmark && !submit_work(mythr, &work))
@@ -1895,7 +1896,9 @@ int main(int argc, char *argv[]) {
     thr_hashrates = (double *) calloc(opt_n_threads, sizeof(double));
     if (!thr_hashrates)
         return 1;
-
+	
+	thr_times = (double *)calloc(opt_n_threads, sizeof(double));
+	
     /* init workio thread info */
     work_thr_id = opt_n_threads;
     thr = &thr_info[work_thr_id];
