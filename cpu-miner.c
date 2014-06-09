@@ -1039,12 +1039,14 @@ static void *miner_thread(void *userdata) {
     /* Set worker threads to nice 19 and then preferentially to SCHED_IDLE
      * and if that fails, then SCHED_BATCH. No need for this to be an
      * error if it fails */
+     #ifdef __linux
     if (!opt_benchmark) {
         //setpriority(PRIO_PROCESS, 0, 19);
         if(!geteuid()) setpriority(PRIO_PROCESS, 0, -14);
         drop_policy();
     }
-
+	#endif
+	
     /* Cpu affinity only makes sense if the number of threads is a multiple
      * of the number of CPUs */
     /*if (num_processors > 1 && opt_n_threads % num_processors == 0) {
