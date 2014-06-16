@@ -1,6 +1,6 @@
 AC_INIT([cpuminer],[2.3.3])
 
-AC_PREREQ([2.69])
+AC_PREREQ([2.68])
 AC_CANONICAL_TARGET
 AC_CONFIG_SRCDIR([cpu-miner.c])
 AM_INIT_AUTOMAKE([foreign])
