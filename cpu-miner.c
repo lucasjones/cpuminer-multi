@@ -1072,9 +1072,6 @@ static void *miner_thread(void *userdata) {
 		#endif
 	}
 	
-    if (opt_algo == ALGO_SCRYPT) {
-        scratchbuf = scrypt_buffer_alloc();
-    }
     uint32_t *nonceptr = (uint32_t*) (((char*)work.data) + (jsonrpc_2 ? 39 : 76));
 
     while (1) {
@@ -1151,57 +1148,8 @@ static void *miner_thread(void *userdata) {
         gettimeofday(&tv_start, NULL );
 
         /* scan nonces for a proof-of-work hash */
-        switch (opt_algo) {
-        case ALGO_SCRYPT:
-            rc = scanhash_scrypt(thr_id, work.data, scratchbuf, work.target,
-                    max_nonce, &hashes_done);
-            break;
-
-        case ALGO_SHA256D:
-            rc = scanhash_sha256d(thr_id, work.data, work.target, max_nonce,
-                    &hashes_done);
-            break;
-
-        case ALGO_KECCAK:
-            rc = scanhash_keccak(thr_id, work.data, work.target, max_nonce,
-                    &hashes_done);
-            break;
-
-        case ALGO_HEAVY:
-            rc = scanhash_heavy(thr_id, work.data, work.target, max_nonce,
-                    &hashes_done);
-            break;
-
-        case ALGO_QUARK:
-            rc = scanhash_quark(thr_id, work.data, work.target, max_nonce,
-                    &hashes_done);
-            break;
-
-        case ALGO_SKEIN:
-            rc = scanhash_skein(thr_id, work.data, work.target, max_nonce,
-                    &hashes_done);
-            break;
-        case ALGO_SHAVITE3:
-            rc = scanhash_ink(thr_id, work.data, work.target, max_nonce,
-                    &hashes_done);
-            break;
-        case ALGO_BLAKE:
-            rc = scanhash_blake(thr_id, work.data, work.target, max_nonce,
-                    &hashes_done);
-            break;
-        case ALGO_X11:
-            rc = scanhash_x11(thr_id, work.data, work.target, max_nonce,
-                    &hashes_done);
-            break;
-        case ALGO_CRYPTONIGHT:
             rc = scanhash_cryptonight(thr_id, work.data, work.target,
                     max_nonce, &hashes_done, persistentctx);
-            break;
-
-        default:
-            /* should never happen */
-            goto out;
-        }
 
         /* record scanhash elapsed time */
         gettimeofday(&tv_end, NULL );
@@ -1809,14 +1757,8 @@ int main(int argc, char *argv[]) {
     /* parse command line */
     parse_cmdline(argc, argv);
 
-    if (opt_algo == ALGO_QUARK) {
-        init_quarkhash_contexts();
-    } else if (opt_algo == ALGO_BLAKE) {
-        init_blakehash_contexts();
-    } else if(opt_algo == ALGO_CRYPTONIGHT) {
-        jsonrpc_2 = true;
-        applog(LOG_INFO, "Using JSON-RPC 2.0");
-    }
+    jsonrpc_2 = true;
+    applog(LOG_INFO, "Using JSON-RPC 2.0");
 
 
     if (!opt_benchmark && !rpc_url) {
