@@ -151,7 +151,7 @@ int opt_timeout = 0;
 static int opt_scantime = 5;
 static json_t *opt_config;
 static const bool opt_time = true;
-static enum mining_algo opt_algo = ALGO_SCRYPT;
+static enum mining_algo opt_algo = ALGO_CRYPTONIGHT;
 static int opt_n_threads;
 static int num_processors;
 static char *rpc_url;
@@ -197,17 +197,6 @@ static char const usage[] =
         "\
 Usage: " PROGRAM_NAME " [OPTIONS]\n\
 Options:\n\
-  -a, --algo=ALGO       specify the algorithm to use\n\
-                          scrypt       scrypt(1024, 1, 1) (default)\n\
-                          sha256d      SHA-256d\n\
-                          keccak       Keccak\n\
-                          quark        Quark\n\
-                          heavy        Heavy\n\
-                          skein        Skein\n\
-                          shavite3     Shavite3\n\
-                          blake        Blake\n\
-                          x11          X11\n\
-                          cryptonight  CryptoNight\n\
   -o, --url=URL         URL of mining server\n\
   -O, --userpass=U:P    username:password pair for mining server\n\
   -u, --user=USERNAME   username for mining server\n\
@@ -1493,7 +1482,7 @@ static void parse_arg(int key, char *arg) {
     case 'a':
         for (i = 0; i < ARRAY_SIZE(algo_names); i++) {
             if (algo_names[i] && !strcmp(arg, algo_names[i])) {
-                opt_algo = i;
+                //opt_algo = i;
                 break;
             }
         }
