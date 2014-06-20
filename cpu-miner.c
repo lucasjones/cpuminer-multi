@@ -35,6 +35,9 @@
 #endif
 #include <jansson.h>
 #include <curl/curl.h>
+#ifndef USE_LOBOTOMIZED_AES
+#include <cpuid.h>
+#endif
 #include "compat.h"
 #include "miner.h"
 #include "cryptonight.h"
@@ -1733,8 +1736,32 @@ static void signal_handler(int sig) {
 
 int main(int argc, char *argv[]) {
     struct thr_info *thr;
+    unsigned int tmp1, tmp2, tmp3, tmp4;
     long flags;
     int i;
+	
+	#ifndef USE_LOBOTOMIZED_AES
+	// If the CPU doesn't support CPUID feature
+	// flags, it's WAY too old to have AES-NI
+	if(__get_cpuid_max(0, &tmp1) < 1)
+	{
+		applog(LOG_ERR, "CPU does not have AES-NI, which is required.");
+		return(0);
+	}
+	
+	// We already checked the max supported
+	// function, so we don't need to check
+	// this for error.
+	__get_cpuid(1, &tmp1, &tmp2, &tmp3, &tmp4);
+	
+	// Mask out all bits but bit 25; if it's
+	// set, we have AES-NI, if not, nope.
+	if(!(tmp3 & 0x2000000))
+	{
+		applog(LOG_ERR, "CPU does not have AES-NI, which is required.");
+		return(0);
+	}
+	#endif
 	
 	#ifdef __unix__
 	if(geteuid()) applog(LOG_INFO, "I go faster as root.");
