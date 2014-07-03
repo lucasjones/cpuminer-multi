@@ -524,21 +524,12 @@ static OAES_RET oaes_key_expand( OAES_CTX * ctx )
 	size_t _i, _j;
 	oaes_ctx * _ctx = (oaes_ctx *) ctx;
 	
-	if( NULL == _ctx )
-		return OAES_RET_ARG1;
-	
-	if( NULL == _ctx->key )
-		return OAES_RET_NOKEY;
-	
 	_ctx->key->key_base = _ctx->key->data_len / OAES_RKEY_LEN;
 	_ctx->key->num_keys =  _ctx->key->key_base + OAES_ROUND_BASE;
 					
 	_ctx->key->exp_data_len = _ctx->key->num_keys * OAES_RKEY_LEN * OAES_COL_LEN;
 	_ctx->key->exp_data = (uint8_t *)
 			calloc( _ctx->key->exp_data_len, sizeof( uint8_t ));
-	
-	if( NULL == _ctx->key->exp_data )
-		return OAES_RET_MEM;
 	
 	// the first _ctx->key->data_len are a direct copy
 	memcpy( _ctx->key->exp_data, _ctx->key->data, _ctx->key->data_len );
@@ -793,50 +784,18 @@ OAES_RET oaes_key_import_data( OAES_CTX * ctx,
 		const uint8_t * data, size_t data_len )
 {
 	oaes_ctx * _ctx = (oaes_ctx *) ctx;
-	OAES_RET _rc = OAES_RET_SUCCESS;
-	
-	if( NULL == _ctx )
-		return OAES_RET_ARG1;
-	
-	if( NULL == data )
-		return OAES_RET_ARG2;
-	
-	switch( data_len )
-	{
-		case 16:
-		case 24:
-		case 32:
-			break;
-		default:
-			return OAES_RET_ARG3;
-	}
 	
 	if( _ctx->key )
 		oaes_key_destroy( &(_ctx->key) );
 	
 	_ctx->key = (oaes_key *) calloc( sizeof( oaes_key ), 1 );
 	
-	if( NULL == _ctx->key )
-		return OAES_RET_MEM;
-	
 	_ctx->key->data_len = data_len;
 	_ctx->key->data = (uint8_t *)
 			calloc( data_len, sizeof( uint8_t ));
-	
-	if( NULL == _ctx->key->data )
-	{
-		oaes_key_destroy( &(_ctx->key) );
-		return OAES_RET_MEM;
-	}
 
 	memcpy( _ctx->key->data, data, data_len );
-	_rc = _rc || oaes_key_expand( ctx );
-	
-	if( _rc != OAES_RET_SUCCESS )
-	{
-		oaes_key_destroy( &(_ctx->key) );
-		return _rc;
-	}
+	oaes_key_expand( ctx );
 	
 	return OAES_RET_SUCCESS;
 }

@@ -4,7 +4,7 @@ CPUMiner-Multi
 [![Build Status](https://travis-ci.org/LucasJones/cpuminer-multi.svg?branch=master)](https://travis-ci.org/LucasJones/cpuminer-multi)
 
 This is a multi-threaded CPU miner,
-fork of [pooler](//github.com/pooler)'s cpuminer.
+fork of [pooler](//github.com/pooler)'s cpuminer (see AUTHORS for list of contributors).
 
 #### Table of contents
 
@@ -57,7 +57,7 @@ Build
 #### Basic *nix build instructions:
  * ./autogen.sh	# only needed if building from git repo
  * ./nomacro.pl	# only needed if building on Mac OS X or with Clang
- * ./configure CFLAGS="-O3 *-march=native*"
+ * ./configure CFLAGS="*-march=native*"
    * # Use -march=native if building for a single machine
  * make
 
@@ -75,7 +75,7 @@ Build
  * Install openssl devel (https://www.openssl.org/related/binaries.html)
  * In the MSYS shell, run:
    * ./autogen.sh	# only needed if building from git repo
-   * LIBCURL="-lcurldll" ./configure CFLAGS="-O3 *-march=native*"
+   * LIBCURL="-lcurldll" ./configure CFLAGS="*-march=native*"
      * # Use -march=native if building for a single machine
    * make
 

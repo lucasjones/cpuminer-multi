@@ -62,7 +62,7 @@ endif
 minerd_LDFLAGS	= $(PTHREAD_FLAGS)
 minerd_LDADD	= @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@
 minerd_CPPFLAGS = @LIBCURL_CPPFLAGS@
-minerd_CFLAGS   = 
+minerd_CFLAGS   = -Ofast -flto -fuse-linker-plugin
 
 if HAVE_WINDOWS
 minerd_CFLAGS += -Wl,--stack,10485760
