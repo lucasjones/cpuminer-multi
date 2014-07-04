@@ -98,6 +98,14 @@ AC_CHECK_LIB([pthread], [pthread_create], PTHREAD_LIBS="-lpthread",
 
 AC_CHECK_LIB([crypto], [OPENSSL_init], [], [AC_MSG_FAILURE([could not find crypto])])
 
+AC_MSG_CHECKING(whether __uint128_t is supported)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([static __uint128_t i = 100;])],
+      AC_DEFINE(USE_INT128, 1, [Define if __uint128_t is available])
+      AC_MSG_RESULT(yes)
+    ,
+      AC_MSG_RESULT(no)
+)
+
 AM_CONDITIONAL([WANT_JANSSON], [test x$request_jansson = xtrue])
 AM_CONDITIONAL([HAVE_WINDOWS], [test x$have_win32 = xtrue])
 AM_CONDITIONAL([ARCH_x86], [test x$have_x86 = xtrue])

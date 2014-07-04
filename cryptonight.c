@@ -15,6 +15,16 @@
 #include "crypto/int-util.h"
 #include "crypto/hash-ops.h"
 
+#if USE_INT128
+
+#if __GNUC__ == 4 && __GNUC_MINOR__ >= 4 && __GNUC_MINOR__ < 6
+typedef unsigned int uint128_t __attribute__ ((__mode__ (TI)));
+#else
+typedef __uint128_t uint128_t;
+#endif
+
+#endif
+
 #define MEMORY         (1 << 21) /* 2 MiB */
 #define ITER           (1 << 20)
 #define AES_BLOCK_SIZE  16
@@ -64,25 +74,6 @@ static inline size_t e2i(const uint8_t* a) {
 	return ((uint32_t *)a)[0] & 0x1FFFF0;
 }
 
-static void mul(const uint8_t* a, const uint8_t* b, uint8_t* res) {
-	((uint64_t*) res)[1] = mul128(((uint64_t*) a)[0], ((uint64_t*) b)[0], (uint64_t*) res);
-}
-
-static void sum_half_blocks(uint8_t* a, const uint8_t* b) {
-	((uint64_t*) a)[0] += ((uint64_t*) b)[0];
-	((uint64_t*) a)[1] += ((uint64_t*) b)[1];
-}
-
-static void sum_half_blocks_dst(const uint8_t* a, const uint8_t* b, uint8_t* dst) {
-	((uint64_t*) dst)[0] = ((uint64_t*) a)[0] + ((uint64_t*) b)[0];
-	((uint64_t*) dst)[1] = ((uint64_t*) a)[1] + ((uint64_t*) b)[1];
-}
-
-static void mul_sum_dst(const uint8_t* a, const uint8_t* b, const uint8_t* c, uint8_t* dst) {
-	((uint64_t*) dst)[1] = mul128(((uint64_t*) a)[0], ((uint64_t*) b)[0], (uint64_t*) dst) + ((uint64_t*) c)[1];
-	((uint64_t*) dst)[0] += ((uint64_t*) c)[0];
-}
-
 static inline void mul_sum_xor_dst(const uint8_t* a, uint8_t* c, uint8_t* dst) {
 	uint64_t hi, lo = mul128(((uint64_t*) a)[0], ((uint64_t*) dst)[0], &hi) + ((uint64_t*) c)[1];
 	hi += ((uint64_t*) c)[0];
@@ -94,13 +85,21 @@ static inline void mul_sum_xor_dst(const uint8_t* a, uint8_t* c, uint8_t* dst) {
 }
 
 static inline void xor_blocks(uint8_t* a, const uint8_t* b) {
+#if USE_INT128
+	*((uint128_t*) a) ^= *((uint128_t*) b);
+#else
 	((uint64_t*) a)[0] ^= ((uint64_t*) b)[0];
 	((uint64_t*) a)[1] ^= ((uint64_t*) b)[1];
+#endif
 }
 
 static inline void xor_blocks_dst(const uint8_t* a, const uint8_t* b, uint8_t* dst) {
+#if USE_INT128
+	*((uint128_t*) dst) = *((uint128_t*) a) ^ *((uint128_t*) b);
+#else
 	((uint64_t*) dst)[0] = ((uint64_t*) a)[0] ^ ((uint64_t*) b)[0];
 	((uint64_t*) dst)[1] = ((uint64_t*) a)[1] ^ ((uint64_t*) b)[1];
+#endif
 }
 
 struct cryptonight_ctx {
