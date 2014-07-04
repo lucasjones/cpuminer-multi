@@ -55,19 +55,6 @@ extern int aesb_single_round(const uint8_t *in, uint8_t*out, const uint8_t *expa
 extern int aesb_pseudo_round_mut(uint8_t *val, uint8_t *expandedKey);
 extern int fast_aesb_pseudo_round_mut(uint8_t *val, uint8_t *expandedKey);
 
-static inline int cpuid(int code, uint32_t where[4]) {
-	asm volatile("cpuid":"=a"(*where),"=b"(*(where+1)),
-			"=c"(*(where+2)),"=d"(*(where+3)):"a"(code));
-	return (int)where[0];
-}
-
-static bool has_aes_ni()
-{
-	uint32_t cpu_info[4];
-	cpuid(1, cpu_info);
-	return cpu_info[2] & (1 << 25);
-}
-
 static void (* const extra_hashes[4])(const void *, size_t, char *) = {
 		do_blake_hash, do_groestl_hash, do_jh_hash, do_skein_hash
 };
@@ -270,7 +257,6 @@ void cryptonight_hash_ctx_aes_ni(void* output, const void* input, size_t len, st
 
 int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 		uint32_t max_nonce, unsigned long *hashes_done) {
-	bool aes_ni = has_aes_ni();
 	uint32_t *nonceptr = (uint32_t*) (((char*)pdata) + 39);
 	uint32_t n = *nonceptr - 1;
 	const uint32_t first_nonce = n + 1;
@@ -279,7 +265,7 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 
 	struct cryptonight_ctx *ctx = (struct cryptonight_ctx*)malloc(sizeof(struct cryptonight_ctx));
 
-	if (aes_ni) {
+	if (aes_ni_supported) {
 		do {
 			*nonceptr = ++n;
 			cryptonight_hash_ctx_aes_ni(hash, pdata, 76, ctx);

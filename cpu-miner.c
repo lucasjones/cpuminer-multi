@@ -164,6 +164,7 @@ static char *rpc2_blob = NULL;
 static int rpc2_bloblen = 0;
 static uint32_t rpc2_target = 0;
 static char *rpc2_job_id = NULL;
+bool aes_ni_supported = false;
 
 pthread_mutex_t applog_lock;
 static pthread_mutex_t stats_lock;
@@ -1758,6 +1759,19 @@ static void signal_handler(int sig) {
 }
 #endif
 
+static inline int cpuid(int code, uint32_t where[4]) {
+	asm volatile("cpuid":"=a"(*where),"=b"(*(where+1)),
+			"=c"(*(where+2)),"=d"(*(where+3)):"a"(code));
+	return (int)where[0];
+}
+
+static bool has_aes_ni()
+{
+	uint32_t cpu_info[4];
+	cpuid(1, cpu_info);
+	return cpu_info[2] & (1 << 25);
+}
+
 int main(int argc, char *argv[]) {
 	struct thr_info *thr;
 	long flags;
@@ -1775,7 +1789,9 @@ int main(int argc, char *argv[]) {
 		init_blakehash_contexts();
 	} else if(opt_algo == ALGO_CRYPTONIGHT) {
 		jsonrpc_2 = true;
+		aes_ni_supported = has_aes_ni();
 		applog(LOG_INFO, "Using JSON-RPC 2.0");
+		applog(LOG_INFO, "CPU Supports AES-NI: %s", aes_ni_supported ? "YES" : "NO");
 	}
 
 
