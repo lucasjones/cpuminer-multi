@@ -148,7 +148,7 @@ typedef struct _reg_ {
 	uint8_t eah;
 } regs;
 
-static inline void SubAndShiftAndMixAddRound(uint32_t *restrict out, uint32_t *restrict temp, uint32_t *restrict AesEncKey)
+static inline void SubAndShiftAndMixAddRound(uint32_t *restrict out, uint32_t *temp, uint32_t *restrict AesEncKey)
 {
 	uint8_t *state = &temp[0];
 	
@@ -169,24 +169,42 @@ static inline void SubAndShiftAndMixAddRoundInPlace(uint32_t *restrict temp, uin
 	temp[3]= TestTable2[state[1]] ^ TestTable3[state[6]] ^ TestTable4[state[11]] ^ TestTable1[state[12]] ^ AesEncKey[3];
 }
 
-static inline void mul_sum_xor_dst(const uint8_t *restrict a, uint8_t *restrict c, uint8_t *restrict dst) {
-    //uint64_t hi, lo = mul128(((uint64_t*) a)[0], ((uint64_t*) dst)[0], &hi) + ((uint64_t*) c)[1];
-    //hi += ((uint64_t*) c)[0];
-	uint64_t hi, lo;
-	
-	__asm__("mulq %3\n\t"
-		  : "=d" (hi),
-		"=a" (lo)
-		  : "%a" (((uint64_t *)a)[0]),
-		"rm" (((uint64_t *)dst)[0])
-		  : "cc" );
-	lo += ((uint64_t *)c)[1];
+static inline uint64_t mul128(uint64_t multiplier, uint64_t multiplicand, uint64_t *product_hi)
+{
+  // multiplier   = ab = a * 2^32 + b
+  // multiplicand = cd = c * 2^32 + d
+  // ab * cd = a * c * 2^64 + (a * d + b * c) * 2^32 + b * d
+  uint64_t a = multiplier >> 32;
+  uint64_t b = multiplier & 0xFFFFFFFF;
+  uint64_t c = multiplicand >> 32;
+  uint64_t d = multiplicand & 0xFFFFFFFF;
+
+  //uint64_t ac = a * c;
+  uint64_t ad = a * d;
+  //uint64_t bc = b * c;
+  uint64_t bd = b * d;
+
+  uint64_t adbc = ad + (b * c);
+  uint64_t adbc_carry = adbc < ad ? 1 : 0;
+
+  // multiplier * multiplicand = product_hi * 2^64 + product_lo
+  uint64_t product_lo = bd + (adbc << 32);
+  uint64_t product_lo_carry = product_lo < bd ? 1 : 0;
+  *product_hi = (a * c) + (adbc >> 32) + (adbc_carry << 32) + product_lo_carry;
+  //assert(ac <= *product_hi);
+
+  return product_lo;
+}
+
+static inline void mul_sum_xor_dst(const uint8_t *a, uint8_t *c, uint8_t *dst)
+{
+    uint64_t hi, lo = mul128(((uint64_t *)a)[0], ((uint64_t *)dst)[0], &hi) + ((uint64_t *)c)[1];
 	hi += ((uint64_t *)c)[0];
 	
-    ((uint64_t*) c)[0] = ((uint64_t*) dst)[0] ^ hi;
-    ((uint64_t*) c)[1] = ((uint64_t*) dst)[1] ^ lo;
-    ((uint64_t*) dst)[0] = hi;
-    ((uint64_t*) dst)[1] = lo;
+    ((uint64_t *)c)[0] = ((uint64_t*) dst)[0] ^ hi;
+    ((uint64_t *)c)[1] = ((uint64_t*) dst)[1] ^ lo;
+    ((uint64_t *)dst)[0] = hi;
+    ((uint64_t *)dst)[1] = lo;
 }
 
 static inline void xor_blocks(uint8_t *restrict a, const uint8_t *restrict b) {
