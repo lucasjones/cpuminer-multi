@@ -87,7 +87,7 @@ static inline void ExpandAESKey256(char *keybuf)
 
 void cryptonight_hash_ctx(void *restrict output, const void *restrict input, struct cryptonight_ctx *restrict ctx)
 {
-    hash_process(&ctx->state.hs, (const uint8_t*) input, 76);
+	keccak((const uint8_t *)input, 76, &ctx->state.hs, 200);
     uint8_t ExpandedKey[256];
     size_t i, j;
     
@@ -212,6 +212,6 @@ void cryptonight_hash_ctx(void *restrict output, const void *restrict input, str
 	}
         
     memcpy(ctx->state.init, ctx->text, INIT_SIZE_BYTE);
-    hash_permutation(&ctx->state.hs);
+	keccakf(&ctx->state.hs, 24);
     extra_hashes[ctx->state.hs.b[0] & 3](&ctx->state, 200, output);
 }

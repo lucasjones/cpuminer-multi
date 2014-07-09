@@ -1,7 +1,7 @@
 #ifndef __CRYPTONIGHT_H_INCLUDED
 #define __CRYPTONIGHT_H_INCLUDED
 
-#include "crypto/hash-ops.h"
+#include <stddef.h>
 #include "crypto/oaes_lib.h"
 #include "miner.h"
 
@@ -11,6 +11,13 @@
 #define AES_KEY_SIZE    32 /*16*/
 #define INIT_SIZE_BLK   8
 #define INIT_SIZE_BYTE (INIT_SIZE_BLK * AES_BLOCK_SIZE)	// 128
+
+#pragma pack(push, 1)
+union hash_state {
+  uint8_t b[200];
+  uint64_t w[25];
+};
+#pragma pack(pop)
 
 #pragma pack(push, 1)
 union cn_slow_hash_state {
@@ -54,7 +61,8 @@ void do_jh_hash(const void* input, size_t len, char* output);
 void do_skein_hash(const void* input, size_t len, char* output);
 void xor_blocks_dst(const uint8_t *restrict a, const uint8_t *restrict b, uint8_t *restrict dst);
 void cryptonight_hash_ctx(void* output, const void* input, struct cryptonight_ctx* ctx);
-
+void keccak(const uint8_t *in, int inlen, uint8_t *md, int mdlen);
+void keccakf(uint64_t st[25], int rounds);
 extern void (* const extra_hashes[4])(const void *, size_t, char *);
 
 #endif

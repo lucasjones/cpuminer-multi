@@ -6,13 +6,10 @@
 
 #include "cpuminer-config.h"
 #include "miner.h"
-#include "crypto/c_keccak.h"
 #include "crypto/c_groestl.h"
 #include "crypto/c_blake256.h"
 #include "crypto/c_jh.h"
 #include "crypto/c_skein.h"
-#include "crypto/int-util.h"
-#include "crypto/hash-ops.h"
 #include "cryptonight.h"
 
 #if defined __unix__ && (!defined __APPLE__)
@@ -30,11 +27,11 @@ void do_groestl_hash(const void* input, size_t len, char* output) {
 }
 
 void do_jh_hash(const void* input, size_t len, char* output) {
-    jh_hash(HASH_SIZE * 8, input, 8 * len, (uint8_t*)output);
+    jh_hash(32 * 8, input, 8 * len, (uint8_t*)output);
 }
 
 void do_skein_hash(const void* input, size_t len, char* output) {
-    skein_hash(8 * HASH_SIZE, input, 8 * len, (uint8_t*)output);
+    skein_hash(8 * 32, input, 8 * len, (uint8_t*)output);
 }
 
 void xor_blocks_dst(const uint8_t *restrict a, const uint8_t *restrict b, uint8_t *restrict dst) {
@@ -55,7 +52,7 @@ int scanhash_cryptonight(int thr_id, uint32_t *restrict pdata, const uint32_t *r
     uint32_t n = *nonceptr - 1;
     const uint32_t first_nonce = n + 1;
     const uint32_t Htarg = ptarget[7];
-    uint32_t hash[HASH_SIZE / 4] __attribute__((aligned(32)));
+    uint32_t hash[32 / 4] __attribute__((aligned(32)));
 	
 	do {
 		*nonceptr = ++n;

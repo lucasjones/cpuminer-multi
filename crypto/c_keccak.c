@@ -2,8 +2,14 @@
 // 19-Nov-11  Markku-Juhani O. Saarinen <mjos@iki.fi>
 // A baseline Keccak (3rd round) implementation.
 
-#include "hash-ops.h"
-#include "c_keccak.h"
+#include <stdint.h>
+
+#define HASH_DATA_AREA 136
+#define KECCAK_ROUNDS 24
+
+#ifndef ROTL64
+#define ROTL64(x, y) (((x) << (y)) | ((x) >> (64 - (y))))
+#endif
 
 const uint64_t keccakf_rndc[24] = 
 {
@@ -84,7 +90,7 @@ void keccakf(uint64_t st[25], int rounds)
 // compute a keccak hash (md) of given byte length from "in"
 typedef uint64_t state_t[25];
 
-int keccak(const uint8_t *in, int inlen, uint8_t *md, int mdlen)
+void keccak(const uint8_t *in, int inlen, uint8_t *md, int mdlen)
 {
     state_t st;
     uint8_t temp[144];
@@ -113,11 +119,4 @@ int keccak(const uint8_t *in, int inlen, uint8_t *md, int mdlen)
     keccakf(st, KECCAK_ROUNDS);
 
     memcpy(md, st, mdlen);
-
-    return 0;
-}
-
-void keccak1600(const uint8_t *in, int inlen, uint8_t *md)
-{
-    keccak(in, inlen, md, sizeof(state_t));
 }

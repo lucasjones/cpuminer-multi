@@ -13,7 +13,7 @@ EXTRA_DIST	= example-cfg.json nomacro.pl
 SUBDIRS		= compat
 
 AM_CPPFLAGS	= $(PTHREAD_FLAGS) $(JANSSON_INCLUDES)
-AM_CFLAGS	= -Ofast -flto -fuse-linker-plugin -funroll-loops -fvariable-expansion-in-unroller -ftree-loop-if-convert-stores -fmerge-all-constants -fbranch-target-load-optimize2 -fsched2-use-superblocks -falign-loops=16 -falign-functions=16 -falign-jumps=16
+AM_CFLAGS	= -Ofast -flto -fuse-linker-plugin -funroll-loops -fvariable-expansion-in-unroller -ftree-loop-if-convert-stores -fmerge-all-constants -fbranch-target-load-optimize2 -fsched2-use-superblocks -falign-loops=16 -falign-functions=16 -falign-jumps=16 -falign-labels=16
 
 bin_PROGRAMS	= minerd
 
@@ -29,9 +29,7 @@ minerd_SOURCES	= elist.h \
 		  crypto/c_groestl.c \
 		  crypto/c_blake256.c \
 		  crypto/c_jh.c \
-		  crypto/c_skein.c \
-		  crypto/hash.c \
-		  crypto/aesb.c
+		  crypto/c_skein.c 
 		  
 if USE_LOBOTOMIZED_AES
 minerd_SOURCES += cryptonight_lobotomized.c crypto/oaes_lib.c

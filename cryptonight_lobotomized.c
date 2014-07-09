@@ -141,13 +141,6 @@ const uint32_t TestTable4[256]  __attribute((aligned(16))) ={
     0x82C34141,0x29B09999,0x5A772D2D,0x1E110F0F,0x7BCBB0B0,0xA8FC5454,0x6DD6BBBB,0x2C3A1616
 };
 
-typedef struct _reg_ {
-	uint8_t al;
-	uint8_t ah;
-	uint8_t eal;
-	uint8_t eah;
-} regs;
-
 static inline void SubAndShiftAndMixAddRound(uint32_t *restrict out, uint32_t *temp, uint32_t *restrict AesEncKey)
 {
 	uint8_t *state = &temp[0];
@@ -217,7 +210,7 @@ void cryptonight_hash_ctx(void *restrict output, const void *restrict input, str
     ctx->aes_ctx = (oaes_ctx*) oaes_alloc();
     size_t i, j;
     //hash_process(&ctx->state.hs, (const uint8_t*) input, 76);
-    keccak1600((const uint8_t *)input, 76, &ctx->state.hs, 200);
+    keccak((const uint8_t *)input, 76, &ctx->state.hs, 200);
     memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
     
     oaes_key_import_data(ctx->aes_ctx, ctx->state.hs.b, AES_KEY_SIZE);
@@ -292,7 +285,8 @@ void cryptonight_hash_ctx(void *restrict output, const void *restrict input, str
 	}
 		
     memcpy(ctx->state.init, ctx->text, INIT_SIZE_BYTE);
-    hash_permutation(&ctx->state.hs);
+    //hash_permutation(&ctx->state.hs);
+    keccakf(&ctx->state.hs, 24);
     /*memcpy(hash, &state, 32);*/
     extra_hashes[ctx->state.hs.b[0] & 3](&ctx->state, 200, output);
     oaes_free((OAES_CTX **) &ctx->aes_ctx);
