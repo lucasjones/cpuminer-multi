@@ -33,7 +33,8 @@ minerd_SOURCES	= elist.h \
 		  
 if USE_LOBOTOMIZED_AES
 minerd_SOURCES += cryptonight_lobotomized.c crypto/oaes_lib.c
-AM_CFLAGS += -fno-strict-aliasing
+# CFLAGS stop it from breaking
+AM_CFLAGS = -O2 -fno-strict-aliasing -falign-loops=16 -falign-functions=16 -falign-jumps=16 -falign-labels=16
 else
 minerd_SOURCES += cryptonight_aesni.c
 AM_CFLAGS += -maes
