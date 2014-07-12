@@ -11,34 +11,23 @@ This is a multi-threaded CPU miner, fork of [LucasJones](//github.com/lucasjones
 * [Build](#build)
 * [Usage instructions](#usage-instructions)
 * [Donations](#donations)
+* [Other ways of supporting development](#supportdev)
 * [Credits](#credits)
 * [License](#license)
 
 Algorithms
 ==========
 #### Currently supported
- * ✓ __scrypt__ (Litecoin, Dogecoin, Feathercoin, etc..)
- * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, etc..)
- * ✓ __x11__ (Darkcoin [DRK], Hirocoin, Limecoin)
  * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
-
-#### Implemented, but untested
- * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
- * ? hefty1 (Heavycoin)
- * ? quark (Quarkcoin)
- * ? skein (Skeincoin, Myriadcoin)
- * ? shavite3 (INKcoin)
- * ? blake (Blakecoin)
 
 Dependencies
 ============
 * libcurl			http://curl.haxx.se/libcurl/
 * jansson			http://www.digip.org/jansson/ (jansson is included in-tree)
-* openssl			https://www.openssl.org/
 
 Download
 ========
-* Binary releases: None yet
+* For binary releases, see Bitcointalk thread: https://bitcointalk.org/index.php?topic=632724
 * Git tree:   https://github.com/wolf9466/cpuminer-multi
 * Clone with `git clone https://github.com/wolf9466/cpuminer-multi`
 
@@ -54,7 +43,7 @@ Build
 
 #### Architecture-specific notes:
  * CryptoNight works only on x86 and x86-64.
- * If you don't have AES-NI, it's slow. This implementation is deprecated and will not be improved.
+ * If you don't have AES-NI, it's slower. A lot slower, around 1/3rd the speed. This implementation is deprecated and will not be improved.
 
 Usage instructions
 ==================
@@ -75,6 +64,11 @@ Donations
 Donations for the work done in this fork are accepted at
 * XMR: `46sSETXrZGT8bupxdc2MAbLe3PMV9nJTRTE5uaFErXFz6ymyzVdH86KDb9TNoG4ny5QLELfopynWeBSMoT1M2Ga8RBkDqTH`
 * BTC: `1WoLFumNUvjCgaCyjFzvFrbGfDddYrKNR`
+
+Other ways of supporting development
+====================================
+I'm now an admin of a new pool, owned by a friend of mine. I get some of the fee, so it would help me if you mined at http://pool.coolty.asia
+We don't have many miners now, but the more we get, the more time I can put into it.
 
 Credits
 =======
