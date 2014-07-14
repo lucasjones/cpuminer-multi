@@ -101,6 +101,12 @@ if test "$use_hwaes" != "yes"; then
   AC_DEFINE(USE_LOBOTOMIZED_AES, 1, [Set to one if we have to use the slow version])
 fi
 
+AC_ARG_ENABLE(linux-hugepages, AS_HELP_STRING([--disable-linux-hugepages], [disables hugepage support on linux because CentOS is shit and needs it]), use_linux_hugepages=$enableval, use_linux_hugepages=yes)
+
+if test "$use_linux_hugepages" != "yes"; then
+  AC_DEFINE(DISABLE_LINUX_HUGEPAGES, 1, [Set to one if on a broken linux OS])
+fi
+
 AC_CHECK_LIB(jansson, json_loads, request_jansson=false, request_jansson=true)
 AC_CHECK_LIB([pthread], [pthread_create], PTHREAD_LIBS="-lpthread",
   AC_CHECK_LIB([pthreadGC2], [pthread_create], PTHREAD_LIBS="-lpthreadGC2",
@@ -114,6 +120,7 @@ AM_CONDITIONAL([ARCH_x86], [test x$have_x86 = xtrue])
 AM_CONDITIONAL([ARCH_x86_64], [test x$have_x86_64 = xtrue])
 AM_CONDITIONAL([ARCH_ARM], [test x$have_arm = xtrue])
 AM_CONDITIONAL([USE_LOBOTOMIZED_AES], test "$use_hwaes" = "no")
+AM_CONDITIONAL([DISABLE_LINUX_HUGEPAGES], test "$use_linux_hugepages" = "no")
 
 if test x$request_jansson = xtrue
 then

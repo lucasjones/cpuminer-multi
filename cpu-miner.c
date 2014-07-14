@@ -42,7 +42,7 @@
 #include "miner.h"
 #include "cryptonight.h"
 
-#if defined __unix__ && (!defined __APPLE__)
+#if defined __unix__ && (!defined __APPLE__) && (!defined DISABLE_LINUX_HUGEPAGES)
 #include <sys/mman.h>
 #elif defined _WIN32
 #include <windows.h>
@@ -1051,7 +1051,7 @@ static void *miner_thread(void *userdata) {
 	persistentctx = persistentctxs[thr_id];
 	if(!persistentctx && opt_algo == ALGO_CRYPTONIGHT)
 	{
-		#if defined __unix__ && (!defined __APPLE__)
+		#if defined __unix__ && (!defined __APPLE__) && (!defined DISABLE_LINUX_HUGEPAGES)
 		persistentctx = (struct cryptonight_ctx *)mmap(0, sizeof(struct cryptonight_ctx), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, 0, 0);
 		if(persistentctx == MAP_FAILED) persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
 		madvise(persistentctx, sizeof(struct cryptonight_ctx), MADV_RANDOM | MADV_WILLNEED | MADV_HUGEPAGE);
@@ -1124,6 +1124,7 @@ static void *miner_thread(void *userdata) {
                 max64 = 0xfffLL;
                 break;
             case ALGO_CRYPTONIGHT:
+
                 max64 = 0x40LL;
                 break;
             default:
