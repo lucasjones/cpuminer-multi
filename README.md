@@ -11,7 +11,6 @@ This is a multi-threaded CPU miner, fork of [LucasJones](//github.com/lucasjones
 * [Build](#build)
 * [Usage instructions](#usage-instructions)
 * [Donations](#donations)
-* [Other ways of supporting development](#supportdev)
 * [Credits](#credits)
 * [License](#license)
 
@@ -64,11 +63,6 @@ Donations
 Donations for the work done in this fork are accepted at
 * XMR: `46sSETXrZGT8bupxdc2MAbLe3PMV9nJTRTE5uaFErXFz6ymyzVdH86KDb9TNoG4ny5QLELfopynWeBSMoT1M2Ga8RBkDqTH`
 * BTC: `1WoLFumNUvjCgaCyjFzvFrbGfDddYrKNR`
-
-Other ways of supporting development
-====================================
-I'm now an admin of a new pool, owned by a friend of mine. I get some of the fee, so it would help me if you mined at http://pool.coolty.asia
-We don't have many miners now, but the more we get, the more time I can put into it.
 
 Credits
 =======
