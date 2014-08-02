@@ -22,7 +22,7 @@ typedef struct {
 	sph_keccak512_context	keccak1, keccak2;
 } quarkhash_context_holder;
 
-quarkhash_context_holder base_contexts;
+static quarkhash_context_holder base_contexts;
 
 void init_quarkhash_contexts()
 {

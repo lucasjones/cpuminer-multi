@@ -11,7 +11,7 @@ typedef struct {
 	sph_blake256_context 	blake1;
 } blakehash_context_holder;
 
-blakehash_context_holder base_contexts;
+static blakehash_context_holder base_contexts;
 
 void init_blakehash_contexts()
 {
