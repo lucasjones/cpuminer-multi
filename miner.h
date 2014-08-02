@@ -149,43 +149,43 @@ void sha256_transform_8way(uint32_t *state, const uint32_t *block, int swap);
 #endif
 #endif
 
-extern int scanhash_sha256d(int thr_id, uint32_t *pdata,
-	const uint32_t *ptarget, uint32_t max_nonce, unsigned long *hashes_done);
+extern int scanhash_sha256d(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
 
 extern unsigned char *scrypt_buffer_alloc(int N);
 extern int scanhash_scrypt(int thr_id, uint32_t *pdata,
-	unsigned char *scratchbuf, const uint32_t *ptarget,
-	uint32_t max_nonce, unsigned long *hashes_done, int N);
+                            unsigned char *scratchbuf, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done, int N);
 
-extern int scanhash_keccak(int thr_id, uint32_t *pdata,
-    const uint32_t *ptarget, uint32_t max_nonce, unsigned long *hashes_done);
+extern int scanhash_keccak(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
 
 extern int scanhash_heavy(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-                          	uint32_t max_nonce, unsigned long *hashes_done);
+                            uint32_t max_nonce, uint64_t *hashes_done);
 
 extern int scanhash_quark(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-                        	uint32_t max_nonce, unsigned long *hashes_done);
+                            uint32_t max_nonce, uint64_t *hashes_done);
 
 extern void init_quarkhash_contexts();
 
 extern int scanhash_skein(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-       	uint32_t max_nonce, unsigned long *hashes_done);
+                            uint32_t max_nonce, uint64_t *hashes_done);
 
 extern int scanhash_ink(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-       	uint32_t max_nonce, unsigned long *hashes_done);
+                            uint32_t max_nonce, uint64_t *hashes_done);
 
 extern void init_blakehash_contexts();
 
 extern int scanhash_blake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-	uint32_t max_nonce, unsigned long *hashes_done);
+                            uint32_t max_nonce, uint64_t *hashes_done);
 
 extern int scanhash_x11(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-	uint32_t max_nonce, unsigned long *hashes_done);
+                            uint32_t max_nonce, uint64_t *hashes_done);
 
 extern void cryptonight_hash(void* output, const void* input, size_t input_len);
 
 extern int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-		uint32_t max_nonce, unsigned long *hashes_done);
+                            uint32_t max_nonce, uint64_t *hashes_done);
 
 struct thr_info {
 	int		id;

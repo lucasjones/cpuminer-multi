@@ -1059,7 +1059,7 @@ static void *miner_thread(void *userdata) {
     uint32_t *nonceptr = (uint32_t*) (((char*)work.data) + (jsonrpc_2 ? 39 : 76));
 
     while (1) {
-        unsigned long hashes_done;
+        uint64_t hashes_done;
         struct timeval tv_start, tv_end, diff;
         int64_t max64;
         int rc;
@@ -1185,12 +1185,12 @@ static void *miner_thread(void *userdata) {
         }
 
         /* record scanhash elapsed time */
-        gettimeofday(&tv_end, NULL );
+        gettimeofday(&tv_end, NULL);
         timeval_subtract(&diff, &tv_end, &tv_start);
         if (diff.tv_usec || diff.tv_sec) {
             pthread_mutex_lock(&stats_lock);
-            thr_hashrates[thr_id] = hashes_done
-                    / (diff.tv_sec + 1e-6 * diff.tv_usec);
+            thr_hashrates[thr_id] = 
+                hashes_done / (diff.tv_sec + diff.tv_usec * 1e-6);
             pthread_mutex_unlock(&stats_lock);
         }
         if (!opt_quiet) {
@@ -1201,8 +1201,8 @@ static void *miner_thread(void *userdata) {
                 break;
             default:
                 sprintf(s, thr_hashrates[thr_id] >= 1e6 ? "%.0f" : "%.2f",
-                        1e-3 * thr_hashrates[thr_id]);
-                applog(LOG_INFO, "thread %d: %lu hashes, %.2f khash/s", thr_id,
+                        thr_hashrates[thr_id] / 1e3);
+                applog(LOG_INFO, "thread %d: %llu hashes, %s khash/s", thr_id,
                         hashes_done, s);
                 break;
             }
@@ -1217,7 +1217,7 @@ static void *miner_thread(void *userdata) {
                     applog(LOG_INFO, "Total: %s H/s", hashrate);
                     break;
                 default:
-                    sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", 1e-3 * hashrate);
+                    sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate / 1000);
                     applog(LOG_INFO, "Total: %s khash/s", s);
                     break;
                 }

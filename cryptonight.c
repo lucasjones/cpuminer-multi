@@ -255,7 +255,7 @@ void cryptonight_hash_ctx_aes_ni(void* output, const void* input, size_t len, st
 }
 
 int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-		uint32_t max_nonce, unsigned long *hashes_done) {
+		uint32_t max_nonce, uint64_t *hashes_done) {
 	uint32_t *nonceptr = (uint32_t*) (((char*)pdata) + 39);
 	uint32_t n = *nonceptr - 1;
 	const uint32_t first_nonce = n + 1;
