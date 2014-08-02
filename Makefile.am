@@ -30,6 +30,9 @@ minerd_SOURCES	= elist.h \
 		  blake.c \
 		  cryptonight.c \
 		  x11.c \
+		  x13.c \
+		  x14.c \
+		  x15.c \
 		  sha3/sph_keccak.c \
 		  sha3/sph_hefty1.c \
 		  sha3/sph_groestl.c \
@@ -42,6 +45,10 @@ minerd_SOURCES	= elist.h \
 		  sha3/sph_cubehash.c \
 		  sha3/sph_simd.c \
 		  sha3/sph_echo.c \
+		  sha3/sph_hamsi.c \
+		  sha3/sph_fugue.c \
+		  sha3/sph_shabal.c \
+		  sha3/sph_whirlpool.c \
 		  crypto/oaes_lib.c \
 		  crypto/c_keccak.c \
 		  crypto/c_groestl.c \

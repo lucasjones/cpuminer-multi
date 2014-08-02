@@ -182,6 +182,15 @@ extern int scanhash_blake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 extern int scanhash_x11(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
+extern int scanhash_x13(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
+
+extern int scanhash_x14(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
+
+extern int scanhash_x15(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
+
 extern void cryptonight_hash(void* output, const void* input, size_t input_len);
 
 extern int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
