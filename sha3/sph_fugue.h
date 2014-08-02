@@ -76,6 +76,6 @@ void sph_fugue512_addbits_and_close(
 
 #ifdef __cplusplus
 }
-#endif	
-	
+#endif
+
 #endif

@@ -30,6 +30,9 @@ minerd_SOURCES	= elist.h \
 		  blake.c \
 		  cryptonight.c \
 		  x11.c \
+		  x13.c \
+		  x14.c \
+		  x15.c \
 		  sha3/sph_keccak.c \
 		  sha3/sph_hefty1.c \
 		  sha3/sph_groestl.c \
@@ -42,6 +45,10 @@ minerd_SOURCES	= elist.h \
 		  sha3/sph_cubehash.c \
 		  sha3/sph_simd.c \
 		  sha3/sph_echo.c \
+		  sha3/sph_hamsi.c \
+		  sha3/sph_fugue.c \
+		  sha3/sph_shabal.c \
+		  sha3/sph_whirlpool.c \
 		  crypto/oaes_lib.c \
 		  crypto/c_keccak.c \
 		  crypto/c_groestl.c \
@@ -50,6 +57,7 @@ minerd_SOURCES	= elist.h \
 		  crypto/c_skein.c \
 		  crypto/hash.c \
 		  crypto/aesb.c
+if USE_ASM
 if ARCH_x86
 minerd_SOURCES += sha2-x86.S scrypt-x86.S aesb-x86.S crypto/aesb-x86-impl.c
 endif
@@ -59,6 +67,8 @@ endif
 if ARCH_ARM
 minerd_SOURCES += sha2-arm.S scrypt-arm.S
 endif
+endif
+
 minerd_LDFLAGS	= $(PTHREAD_FLAGS)
 minerd_LDADD	= @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@
 minerd_CPPFLAGS = @LIBCURL_CPPFLAGS@

@@ -99,7 +99,7 @@ struct workio_cmd {
     } u;
 };
 
-enum mining_algo {
+enum algos {
     ALGO_SCRYPT,      /* scrypt(1024,1,1) */
     ALGO_SHA256D,     /* SHA-256d */
     ALGO_KECCAK,      /* Keccak */
@@ -109,6 +109,9 @@ enum mining_algo {
     ALGO_SHAVITE3,    /* Shavite3 */
     ALGO_BLAKE,       /* Blake */
     ALGO_X11,         /* X11 */
+    ALGO_X13,         /* X13 */
+    ALGO_X14,         /* X14 */
+    ALGO_X15,         /* X15 Whirlpool */
     ALGO_CRYPTONIGHT, /* CryptoNight */
 };
 
@@ -122,6 +125,9 @@ static const char *algo_names[] = {
     [ALGO_SHAVITE3] =    "shavite3",
     [ALGO_BLAKE] =       "blake",
     [ALGO_X11] =         "x11",
+    [ALGO_X13] =         "x13",
+    [ALGO_X14] =         "x14",
+    [ALGO_X15] =         "x15",
     [ALGO_CRYPTONIGHT] = "cryptonight",
 };
 
@@ -144,7 +150,8 @@ int opt_timeout = 0;
 static int opt_scantime = 5;
 static json_t *opt_config;
 static const bool opt_time = true;
-static enum mining_algo opt_algo = ALGO_SCRYPT;
+static enum algos opt_algo = ALGO_SCRYPT;
+static int opt_scrypt_n = 1024;
 static int opt_n_threads;
 static int num_processors;
 static char *rpc_url;
@@ -192,6 +199,7 @@ Usage: " PROGRAM_NAME " [OPTIONS]\n\
 Options:\n\
   -a, --algo=ALGO       specify the algorithm to use\n\
                           scrypt       scrypt(1024, 1, 1) (default)\n\
+                          scrypt:N     scrypt(N, 1, 1)\n\
                           sha256d      SHA-256d\n\
                           keccak       Keccak\n\
                           quark        Quark\n\
@@ -200,6 +208,9 @@ Options:\n\
                           shavite3     Shavite3\n\
                           blake        Blake\n\
                           x11          X11\n\
+                          x13          X13\n\
+                          x14          X14\n\
+                          x15          X15\n\
                           cryptonight  CryptoNight\n\
   -o, --url=URL         URL of mining server\n\
   -O, --userpass=U:P    username:password pair for mining server\n\
@@ -1047,12 +1058,17 @@ static void *miner_thread(void *userdata) {
     }
 
     if (opt_algo == ALGO_SCRYPT) {
-        scratchbuf = scrypt_buffer_alloc();
+        scratchbuf = scrypt_buffer_alloc(opt_scrypt_n);
+        if (!scratchbuf) {
+            applog(LOG_ERR, "scrypt buffer allocation failed");
+            pthread_mutex_lock(&applog_lock);
+            exit(1);
+        }
     }
     uint32_t *nonceptr = (uint32_t*) (((char*)work.data) + (jsonrpc_2 ? 39 : 76));
 
     while (1) {
-        unsigned long hashes_done;
+        uint64_t hashes_done;
         struct timeval tv_start, tv_end, diff;
         int64_t max64;
         int rc;
@@ -1106,10 +1122,19 @@ static void *miner_thread(void *userdata) {
         if (max64 <= 0) {
             switch (opt_algo) {
             case ALGO_SCRYPT:
-                max64 = 0xfffLL;
+                max64 = opt_scrypt_n < 16 ? 0x3ffff : 0x3fffff / opt_scrypt_n;
                 break;
             case ALGO_CRYPTONIGHT:
                 max64 = 0x40LL;
+                break;
+            case ALGO_X13:
+                max64 = 0x1ffff;
+                break;
+            case ALGO_X14:
+                max64 = 0x3ffff;
+                break;
+            case ALGO_X15:
+                max64 = 0x1ffff;
                 break;
             default:
                 max64 = 0x1fffffLL;
@@ -1128,7 +1153,7 @@ static void *miner_thread(void *userdata) {
         switch (opt_algo) {
         case ALGO_SCRYPT:
             rc = scanhash_scrypt(thr_id, work.data, scratchbuf, work.target,
-                    max_nonce, &hashes_done);
+                    max_nonce, &hashes_done, opt_scrypt_n);
             break;
 
         case ALGO_SHA256D:
@@ -1167,6 +1192,18 @@ static void *miner_thread(void *userdata) {
             rc = scanhash_x11(thr_id, work.data, work.target, max_nonce,
                     &hashes_done);
             break;
+        case ALGO_X13:
+            rc = scanhash_x13(thr_id, work.data, work.target, max_nonce,
+                    &hashes_done);
+            break;
+        case ALGO_X14:
+            rc = scanhash_x14(thr_id, work.data, work.target, max_nonce,
+                    &hashes_done);
+            break;
+        case ALGO_X15:
+            rc = scanhash_x15(thr_id, work.data, work.target, max_nonce,
+                    &hashes_done);
+            break;
         case ALGO_CRYPTONIGHT:
             rc = scanhash_cryptonight(thr_id, work.data, work.target,
                     max_nonce, &hashes_done);
@@ -1178,12 +1215,12 @@ static void *miner_thread(void *userdata) {
         }
 
         /* record scanhash elapsed time */
-        gettimeofday(&tv_end, NULL );
+        gettimeofday(&tv_end, NULL);
         timeval_subtract(&diff, &tv_end, &tv_start);
         if (diff.tv_usec || diff.tv_sec) {
             pthread_mutex_lock(&stats_lock);
-            thr_hashrates[thr_id] = hashes_done
-                    / (diff.tv_sec + 1e-6 * diff.tv_usec);
+            thr_hashrates[thr_id] = 
+                hashes_done / (diff.tv_sec + diff.tv_usec * 1e-6);
             pthread_mutex_unlock(&stats_lock);
         }
         if (!opt_quiet) {
@@ -1194,8 +1231,8 @@ static void *miner_thread(void *userdata) {
                 break;
             default:
                 sprintf(s, thr_hashrates[thr_id] >= 1e6 ? "%.0f" : "%.2f",
-                        1e-3 * thr_hashrates[thr_id]);
-                applog(LOG_INFO, "thread %d: %lu hashes, %.2f khash/s", thr_id,
+                        thr_hashrates[thr_id] / 1e3);
+                applog(LOG_INFO, "thread %d: %llu hashes, %s khash/s", thr_id,
                         hashes_done, s);
                 break;
             }
@@ -1210,7 +1247,7 @@ static void *miner_thread(void *userdata) {
                     applog(LOG_INFO, "Total: %s H/s", hashrate);
                     break;
                 default:
-                    sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", 1e-3 * hashrate);
+                    sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate / 1000);
                     applog(LOG_INFO, "Total: %s khash/s", s);
                     break;
                 }
@@ -1459,13 +1496,13 @@ static void *stratum_thread(void *userdata) {
 
 static void show_version_and_exit(void) {
     printf(PACKAGE_STRING "\n built on " __DATE__ "\n features:"
-#if defined(__i386__)
+#if defined(USE_ASM) && defined(__i386__)
             " i386"
 #endif
-#if defined(__x86_64__)
+#if defined(USE_ASM) && defined(__x86_64__)
             " x86_64"
 #endif
-#if defined(__i386__) || defined(__x86_64__)
+#if defined(USE_ASM) && defined(__i386__) || defined(__x86_64__)
             " SSE2"
 #endif
 #if defined(__x86_64__) && defined(USE_AVX)
@@ -1477,7 +1514,7 @@ static void show_version_and_exit(void) {
 #if defined(__x86_64__) && defined(USE_XOP)
             " XOP"
 #endif
-#if defined(__arm__) && defined(__APCS_32__)
+#if defined(USE_ASM) && defined(__arm__) && defined(__APCS_32__)
             " ARM"
 #if defined(__ARM_ARCH_5E__) || defined(__ARM_ARCH_5TE__) || \
 	defined(__ARM_ARCH_5TEJ__) || defined(__ARM_ARCH_6__) || \
@@ -1518,9 +1555,21 @@ static void parse_arg(int key, char *arg) {
     switch (key) {
     case 'a':
         for (i = 0; i < ARRAY_SIZE(algo_names); i++) {
-            if (algo_names[i] && !strcmp(arg, algo_names[i])) {
-                opt_algo = i;
-                break;
+            v = strlen(algo_names[i]);
+            if (!strncmp(arg, algo_names[i], v)) {
+                if (arg[v] == '\0') {
+                    opt_algo = i;
+                    break;
+                }
+                if (arg[v] == ':' && i == ALGO_SCRYPT) {
+                    char *ep;
+                    v = strtol(arg+v+1, &ep, 10);
+                    if (*ep || v & (v-1) || v < 2)
+                        continue;
+                    opt_algo = i;
+                    opt_scrypt_n = v;
+                    break;
+                }
             }
         }
         if (i == ARRAY_SIZE(algo_names))
