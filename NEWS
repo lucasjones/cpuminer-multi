@@ -1,3 +1,24 @@
+Version multi 1.0.4 (Tanguy Pruvot)
+
+- Add x13 x14 and x15 algos (Sherlockcoin, X14Coin, Webcoin..)
+- Add scrypt:N variants (Vertcoin)
+- Fix thread khashes/s value output
+- Add a configure option --disable-assembly
+
+Version multi 1.0.3 (Lucas Jones)
+
+- Add new algos :
+  x11 (Darkcoin [DRK], Hirocoin, Limecoin)
+  cryptonight (Bytecoin [BCN], Monero)
+  keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
+  hefty1 (Heavycoin)
+  quark (Quarkcoin)
+  skein (Skeincoin, Myriadcoin)
+  shavite3 (INKcoin)
+  blake (Blakecoin)
+
+- See README.md
+
 Version 2.3.3 - Feb 27, 2014
 
 - The --url option is now mandatory

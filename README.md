@@ -24,6 +24,9 @@ Algorithms
  * ✓ __scrypt:N__ (Vertcoin [VTC])
  * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, etc..)
  * ✓ __x11__ (Darkcoin [DRK], Hirocoin, Limecoin)
+ * ✓ __x13__ (Sherlockcoin, [ACE], [B2B], [GRC], [XHC], etc..)
+ * ✓ __x14__ (X14, Webcoin [WEB])
+ * ✓ __x14__ (RadianceCoin [RCE])
  * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
 
 #### Implemented, but untested
