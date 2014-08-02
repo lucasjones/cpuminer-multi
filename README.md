@@ -26,8 +26,9 @@ Algorithms
  * ✓ __x11__ (Darkcoin [DRK], Hirocoin, Limecoin)
  * ✓ __x13__ (Sherlockcoin, [ACE], [B2B], [GRC], [XHC], etc..)
  * ✓ __x14__ (X14, Webcoin [WEB])
- * ✓ __x14__ (RadianceCoin [RCE])
+ * ✓ __x15__ (RadianceCoin [RCE])
  * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
+ * ✓ __fresh__ (FreshCoin)
 
 #### Implemented, but untested
  * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
@@ -119,7 +120,8 @@ Donations for the work done in this fork are accepted at
 Credits
 =======
 CPUMiner-multi was forked from pooler's CPUMiner, and has been developed by Lucas Jones.
-* [Wolf9466](https://github.com/wolf9466) Helped with Intel AES-NI support for CryptoNight
+* [tpruvot](https://github.com/tpruvot) added some features and recent SHA3 based algorythmns
+* [Wolf9466](https://github.com/wolf9466) helped with Intel AES-NI support for CryptoNight
 
 License
 =======

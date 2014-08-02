@@ -2,6 +2,7 @@ Version multi 1.0.4 (Tanguy Pruvot)
 
 - Add x13 x14 and x15 algos (Sherlockcoin, X14Coin, Webcoin..)
 - Add scrypt:N variants (Vertcoin)
+- Add fresh algo
 - Fix thread khashes/s value output
 - Add a configure option --disable-assembly
 

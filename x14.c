@@ -20,7 +20,9 @@
 #include "sha3/sph_fugue.h"
 #include "sha3/sph_shabal.h"
 
-inline void x14hash(void *output, const void *input)
+//#define DEBUG_ALGO
+
+static void x14hash(void *output, const void *input)
 {
 	unsigned char hash[128]; // uint32_t hashA[16], hashB[16];
 	#define hashB hash+64
@@ -100,8 +102,6 @@ inline void x14hash(void *output, const void *input)
 
 	memcpy(output, hash, 32);
 }
-
-//#define DEBUG_ALGO
 
 int scanhash_x14(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 					uint32_t max_nonce, uint64_t *hashes_done)

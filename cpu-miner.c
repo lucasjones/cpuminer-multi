@@ -108,6 +108,7 @@ enum algos {
     ALGO_SKEIN,       /* Skein */
     ALGO_SHAVITE3,    /* Shavite3 */
     ALGO_BLAKE,       /* Blake */
+    ALGO_FRESH,       /* Fresh */
     ALGO_X11,         /* X11 */
     ALGO_X13,         /* X13 */
     ALGO_X14,         /* X14 */
@@ -124,6 +125,7 @@ static const char *algo_names[] = {
     [ALGO_SKEIN] =       "skein",
     [ALGO_SHAVITE3] =    "shavite3",
     [ALGO_BLAKE] =       "blake",
+    [ALGO_FRESH] =       "fresh",
     [ALGO_X11] =         "x11",
     [ALGO_X13] =         "x13",
     [ALGO_X14] =         "x14",
@@ -207,6 +209,7 @@ Options:\n\
                           skein        Skein\n\
                           shavite3     Shavite3\n\
                           blake        Blake\n\
+                          fresh        Fresh\n\
                           x11          X11\n\
                           x13          X13\n\
                           x14          X14\n\
@@ -1127,6 +1130,9 @@ static void *miner_thread(void *userdata) {
             case ALGO_CRYPTONIGHT:
                 max64 = 0x40LL;
                 break;
+            case ALGO_FRESH:
+                max64 = 0x3ffff;
+                break;
             case ALGO_X13:
                 max64 = 0x1ffff;
                 break;
@@ -1186,6 +1192,10 @@ static void *miner_thread(void *userdata) {
             break;
         case ALGO_BLAKE:
             rc = scanhash_blake(thr_id, work.data, work.target, max_nonce,
+                    &hashes_done);
+            break;
+        case ALGO_FRESH:
+            rc = scanhash_fresh(thr_id, work.data, work.target, max_nonce,
                     &hashes_done);
             break;
         case ALGO_X11:

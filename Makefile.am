@@ -29,6 +29,7 @@ minerd_SOURCES	= elist.h \
 		  ink.c \
 		  blake.c \
 		  cryptonight.c \
+		  fresh.c \
 		  x11.c \
 		  x13.c \
 		  x14.c \
