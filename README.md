@@ -37,6 +37,7 @@ Algorithms
  * ? skein (Skeincoin, Myriadcoin)
  * ? shavite3 (INKcoin)
  * ? blake (Blakecoin)
+ * ? pentablake
 
 #### Planned support for
  * *scrypt-jane* (YaCoin, CopperBars, Pennies, Tickets, etc..)

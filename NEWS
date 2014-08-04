@@ -1,3 +1,10 @@
+Version multi 1.0.5 (Tanguy Pruvot)
+
+- Merge remaining v2.4 cpu-miner changes
+- Add colored output option (--color)
+- Add --cputest parameter (debug)
+- Add pentablake (from bitbandi)
+
 Version multi 1.0.4 (Tanguy Pruvot)
 
 - Add x13 x14 and x15 algos (Sherlockcoin, X14Coin, Webcoin..)
@@ -19,6 +26,16 @@ Version multi 1.0.3 (Lucas Jones)
   blake (Blakecoin)
 
 - See README.md
+
+Version 2.4 - May 20, 2014
+
+- Add support for the getblocktemplate RPC method (BIP 22)
+- Allow tunnelling Stratum through HTTP proxies
+- Add a --no-redirect option to ignore redirection requests
+- Timeout for long polling is now disabled by default
+- Fix CPU affinity on Linux (kiyominer)
+- Add support for building under 64-bit Cygwin
+- Expand version information with build details
 
 Version 2.3.3 - Feb 27, 2014
 
