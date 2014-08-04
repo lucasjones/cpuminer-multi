@@ -2,6 +2,7 @@
  * Copyright 2010 Jeff Garzik
  * Copyright 2012-2014 pooler
  * Copyright 2014 Lucas Jones
+ * Copyright 2014 Tanguy Pruvot
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -45,7 +46,9 @@
 
 #ifdef __linux /* Linux specific policy and affinity management */
 #include <sched.h>
-static inline void drop_policy(void) {
+
+static inline void drop_policy(void)
+{
 	struct sched_param param;
 	param.sched_priority = 0;
 
@@ -53,11 +56,12 @@ static inline void drop_policy(void) {
 	if (unlikely(sched_setscheduler(0, SCHED_IDLE, &param) == -1))
 #endif
 #ifdef SCHED_BATCH
-	sched_setscheduler(0, SCHED_BATCH, &param);
+		sched_setscheduler(0, SCHED_BATCH, &param);
 #endif
 }
 
-static inline void affine_to_cpu(int id, int cpu) {
+static inline void affine_to_cpu(int id, int cpu)
+{
 	cpu_set_t set;
 
 	CPU_ZERO(&set);
@@ -65,6 +69,7 @@ static inline void affine_to_cpu(int id, int cpu) {
 	sched_setaffinity(0, sizeof(set), &set);
 }
 #elif defined(__FreeBSD__) /* FreeBSD specific policy and affinity management */
+
 #include <sys/cpuset.h>
 static inline void drop_policy(void)
 {
@@ -88,7 +93,8 @@ static inline void affine_to_cpu(int id, int cpu)
 #endif
 
 enum workio_commands {
-	WC_GET_WORK, WC_SUBMIT_WORK,
+	WC_GET_WORK,
+	WC_SUBMIT_WORK,
 };
 
 struct workio_cmd {
@@ -151,7 +157,6 @@ static bool opt_background = false;
 static bool opt_quiet = false;
 static int opt_retries = -1;
 static int opt_fail_pause = 10;
-bool jsonrpc_2 = false;
 int opt_timeout = 0;
 static int opt_scantime = 5;
 static json_t *opt_config;
@@ -174,17 +179,18 @@ int longpoll_thr_id = -1;
 int stratum_thr_id = -1;
 struct work_restart *work_restart = NULL;
 static struct stratum_ctx stratum;
+bool jsonrpc_2 = false;
 static char rpc2_id[64] = "";
 static char *rpc2_blob = NULL;
 static int rpc2_bloblen = 0;
 static uint32_t rpc2_target = 0;
 static char *rpc2_job_id = NULL;
 bool aes_ni_supported = false;
+static pthread_mutex_t rpc2_job_lock;
+static pthread_mutex_t rpc2_login_lock;
 
 pthread_mutex_t applog_lock;
 static pthread_mutex_t stats_lock;
-static pthread_mutex_t rpc2_job_lock;
-static pthread_mutex_t rpc2_login_lock;
 
 static unsigned long accepted_count = 0L;
 static unsigned long rejected_count = 0L;
@@ -201,8 +207,7 @@ struct option {
 };
 #endif
 
-static char const usage[] =
-	"\
+static char const usage[] = "\
 Usage: " PROGRAM_NAME " [OPTIONS]\n\
 Options:\n\
   -a, --algo=ALGO       specify the algorithm to use\n\
@@ -245,19 +250,20 @@ Options:\n\
   -D, --debug           enable debug output\n\
   -P, --protocol-dump   verbose dump of protocol-level activities\n"
 #ifdef HAVE_SYSLOG_H
-	"\
+"\
   -S, --syslog          use system log for output messages\n"
 #endif
 #ifndef WIN32
-	"\
+"\
   -B, --background      run the miner in the background\n"
 #endif
-        "\
+"\
       --benchmark       run in offline benchmark mode\n\
   -c, --config=FILE     load a JSON-format configuration file\n\
   -V, --version         display version information and exit\n\
   -h, --help            display this help text and exit\n\
 ";
+
 
 static char const short_options[] =
 #ifndef WIN32
@@ -312,7 +318,8 @@ static void workio_cmd_free(struct workio_cmd *wc);
 
 json_t *json_rpc2_call_recur(CURL *curl, const char *url,
 		const char *userpass, json_t *rpc_req,
-		int *curl_err, int flags, int recur) {
+		int *curl_err, int flags, int recur)
+{
 	if(recur >= 5) {
 		if(opt_debug)
 			applog(LOG_DEBUG, "Failed to call rpc command after %i tries", recur);
@@ -365,7 +372,8 @@ json_t *json_rpc2_call_recur(CURL *curl, const char *url,
 
 json_t *json_rpc2_call(CURL *curl, const char *url,
 		const char *userpass, const char *rpc_req,
-		int *curl_err, int flags) {
+		int *curl_err, int flags)
+{
 	json_t* req_json = JSON_LOADS(rpc_req, NULL);
 	json_t* res = json_rpc2_call_recur(curl, url, userpass, req_json,
 			curl_err, flags, 0);
@@ -373,14 +381,16 @@ json_t *json_rpc2_call(CURL *curl, const char *url,
 	return res;
 }
 
-static inline void work_free(struct work *w) {
+static inline void work_free(struct work *w)
+{
 	free(w->txs);
 	free(w->workid);
 	free(w->job_id);
 	free(w->xnonce2);
 }
 
-static inline void work_copy(struct work *dest, const struct work *src) {
+static inline void work_copy(struct work *dest, const struct work *src)
+{
 	memcpy(dest, src, sizeof(struct work));
 	if (src->txs)
 		dest->txs = strdup(src->txs);
@@ -394,8 +404,9 @@ static inline void work_copy(struct work *dest, const struct work *src) {
 	}
 }
 
-static bool jobj_binary(const json_t *obj, const char *key, void *buf,
-		size_t buflen) {
+static bool jobj_binary(const json_t *obj, const char *key,
+			void *buf, size_t buflen)
+{
 	const char *hexstr;
 	json_t *tmp;
 
@@ -415,7 +426,8 @@ static bool jobj_binary(const json_t *obj, const char *key, void *buf,
 	return true;
 }
 
-bool rpc2_job_decode(const json_t *job, struct work *work) {
+bool rpc2_job_decode(const json_t *job, struct work *work)
+{
 	if (!jsonrpc_2) {
 		applog(LOG_ERR, "Tried to decode job without JSON-RPC 2.0");
 		return false;
@@ -488,11 +500,12 @@ bool rpc2_job_decode(const json_t *job, struct work *work) {
 	}
 	return true;
 
-	err_out:
+err_out:
 	return false;
 }
 
-static bool work_decode(const json_t *val, struct work *work) {
+static bool work_decode(const json_t *val, struct work *work)
+{
 	int i;
 
 	if(jsonrpc_2) {
@@ -515,10 +528,12 @@ static bool work_decode(const json_t *val, struct work *work) {
 
 	return true;
 
-	err_out: return false;
+err_out:
+	return false;
 }
 
-bool rpc2_login_decode(const json_t *val) {
+bool rpc2_login_decode(const json_t *val)
+{
 	const char *id;
 	const char *s;
 
@@ -562,7 +577,8 @@ bool rpc2_login_decode(const json_t *val) {
 
 	return true;
 
-	err_out: return false;
+err_out:
+	return false;
 }
 
 static bool gbt_work_decode(const json_t *val, struct work *work)
@@ -679,7 +695,6 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 				}
 				iter = json_object_iter_next(tmp, iter);
 			}
-
 		}
 		cbtx[41] = cbtx_size - 42; /* txin-script length */
 		le32enc((uint32_t *)(cbtx+cbtx_size), 0xffffffff); /* sequence */
@@ -763,7 +778,8 @@ out:
 	return rc;
 }
 
-static void share_result(int result, struct work *work, const char *reason) {
+static void share_result(int result, struct work *work, const char *reason)
+{
 	char s[345];
 	double hashrate;
 	int i;
@@ -796,7 +812,8 @@ static void share_result(int result, struct work *work, const char *reason) {
 		applog(LOG_DEBUG, "DEBUG: reject reason: %s", reason);
 }
 
-static bool submit_upstream_work(CURL *curl, struct work *work) {
+static bool submit_upstream_work(CURL *curl, struct work *work)
+{
 	json_t *val, *res, *reason;
 	char data_str[2 * sizeof(work->data) + 1];
 	char s[JSON_BUF_LEN];
@@ -815,8 +832,9 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
 		char ntimestr[9], noncestr[9];
 
 		if (jsonrpc_2) {
-			bin2hex(noncestr, (const unsigned char *)work->data + 39, 4);
 			char hash[32];
+
+			bin2hex(noncestr, (const unsigned char *)work->data + 39, 4);
 			switch(opt_algo) {
 			case ALGO_CRYPTONIGHT:
 			default:
@@ -844,7 +862,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
 			applog(LOG_ERR, "submit_upstream_work stratum_send_line failed");
 			goto out;
 		}
-	 } else if (work->txs) {
+	} else if (work->txs) {
 		char *req;
 
 		for (i = 0; i < ARRAY_SIZE(work->data); i++)
@@ -894,7 +912,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
 
 		json_decref(val);
 	} else {
-		/* build JSON-RPC request */
+
 		if (jsonrpc_2) {
 			char noncestr[9];
 			char hash[32];
@@ -923,18 +941,18 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
 			json_t *status = json_object_get(res, "status");
 			reason = json_object_get(res, "reject-reason");
 			share_result(!strcmp(status ? json_string_value(status) : "", "OK"), work,
-					reason ? json_string_value(reason) : NULL );
+					reason ? json_string_value(reason) : NULL);
 		} else {
 			/* build hex string */
-			for (i = 0; i < 76; i++)
-				le32enc(((char*)work->data) + i, *((uint32_t*) (((char*)work->data) + i)));
+			for (i = 0; i < ARRAY_SIZE(work->data); i++)
+				le32enc(work->data + i, work->data[i]);
 
 			bin2hex(data_str, (unsigned char *)work->data, sizeof(work->data));
 
 			/* build JSON-RPC request */
 			snprintf(s, JSON_BUF_LEN,
-					"{\"method\": \"getwork\", \"params\": [ \"%s\" ], \"id\":1}\r\n",
-					data_str);
+				"{\"method\": \"getwork\", \"params\": [ \"%s\" ], \"id\":1}\r\n",
+				data_str);
 
 			/* issue JSON-RPC request */
 			val = json_rpc_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
@@ -944,8 +962,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
 			}
 			res = json_object_get(val, "result");
 			reason = json_object_get(val, "reject-reason");
-			share_result(json_is_true(res), work,
-					reason ? json_string_value(reason) : NULL );
+			share_result(json_is_true(res), work, reason ? json_string_value(reason) : NULL);
 		}
 
 		json_decref(val);
@@ -958,31 +975,32 @@ out:
 }
 
 static const char *getwork_req =
-		"{\"method\": \"getwork\", \"params\": [], \"id\":0}\r\n";
+	"{\"method\": \"getwork\", \"params\": [], \"id\":0}\r\n";
 
 static const char *gbt_req =
-		"{\"method\": \"getblocktemplate\", \"params\": [{\"capabilities\":"
-		" [\"coinbasetxn\", \"coinbasevalue\", \"workid\"]}], \"id\":0}\r\n";
+	"{\"method\": \"getblocktemplate\", \"params\": [{\"capabilities\":"
+	" [\"coinbasetxn\", \"coinbasevalue\", \"workid\"]}], \"id\":0}\r\n";
 
-static bool get_upstream_work(CURL *curl, struct work *work) {
+static bool get_upstream_work(CURL *curl, struct work *work)
+{
 	json_t *val;
 	int err;
 	bool rc;
 	struct timeval tv_start, tv_end, diff;
 
 start:
-	gettimeofday(&tv_start, NULL );
+	gettimeofday(&tv_start, NULL);
 
-	if(jsonrpc_2) {
+	if (jsonrpc_2) {
 		char s[128];
 		snprintf(s, 128, "{\"method\": \"getjob\", \"params\": {\"id\": \"%s\"}, \"id\":1}\r\n", rpc2_id);
 		val = json_rpc2_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
 	} else {
 		val = json_rpc_call(curl, rpc_url, rpc_userpass,
-							have_gbt ? gbt_req : getwork_req,
-							&err, have_gbt ? JSON_RPC_QUIET_404 : 0);
+		                    have_gbt ? gbt_req : getwork_req,
+		                    &err, have_gbt ? JSON_RPC_QUIET_404 : 0);
 	}
-	gettimeofday(&tv_end, NULL );
+	gettimeofday(&tv_end, NULL);
 
 	if (have_stratum) {
 		if (val)
@@ -1007,14 +1025,14 @@ start:
 		return false;
 
 	if (have_gbt)
-		rc = work_decode(json_object_get(val, "result"), work);
+		rc = gbt_work_decode(json_object_get(val, "result"), work);
 	else
 		rc = work_decode(json_object_get(val, "result"), work);
 
 	if (opt_debug && rc) {
 		timeval_subtract(&diff, &tv_end, &tv_start);
 		applog(LOG_DEBUG, "DEBUG: got new work in %d ms",
-				diff.tv_sec * 1000 + diff.tv_usec / 1000);
+		       diff.tv_sec * 1000 + diff.tv_usec / 1000);
 	}
 
 	json_decref(val);
@@ -1022,25 +1040,28 @@ start:
 	return rc;
 }
 
-static bool rpc2_login(CURL *curl) {
-	if(!jsonrpc_2) {
-		return false;
-	}
+static bool rpc2_login(CURL *curl)
+{
 	json_t *val;
 	bool rc;
 	struct timeval tv_start, tv_end, diff;
 	char s[JSON_BUF_LEN];
 
-	snprintf(s, JSON_BUF_LEN, "{\"method\": \"login\", \"params\": {\"login\": \"%s\", \"pass\": \"%s\", \"agent\": \"cpuminer-multi/0.1\"}, \"id\": 1}", rpc_user, rpc_pass);
+	if(!jsonrpc_2) {
+		return false;
+	}
+	snprintf(s, JSON_BUF_LEN, "{\"method\": \"login\", \"params\": {"
+		"\"login\": \"%s\", \"pass\": \"%s\", \"agent\": \"cpuminer-multi/0.1\"}, \"id\": 1}",
+		rpc_user, rpc_pass);
 
-	gettimeofday(&tv_start, NULL );
+	gettimeofday(&tv_start, NULL);
 	val = json_rpc_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
-	gettimeofday(&tv_end, NULL );
+	gettimeofday(&tv_end, NULL);
 
 	if (!val)
 		goto end;
 
-//    applog(LOG_DEBUG, "JSON value: %s", json_dumps(val, 0));
+//	applog(LOG_DEBUG, "JSON value: %s", json_dumps(val, 0));
 
 	rc = rpc2_login_decode(val);
 
@@ -1066,7 +1087,8 @@ static bool rpc2_login(CURL *curl) {
 	return rc;
 }
 
-static void workio_cmd_free(struct workio_cmd *wc) {
+static void workio_cmd_free(struct workio_cmd *wc)
+{
 	if (!wc)
 		return;
 
@@ -1083,7 +1105,8 @@ static void workio_cmd_free(struct workio_cmd *wc) {
 	free(wc);
 }
 
-static bool workio_get_work(struct workio_cmd *wc, CURL *curl) {
+static bool workio_get_work(struct workio_cmd *wc, CURL *curl)
+{
 	struct work *ret_work;
 	int failures = 0;
 
@@ -1100,8 +1123,8 @@ static bool workio_get_work(struct workio_cmd *wc, CURL *curl) {
 		}
 
 		/* pause, then restart work-request loop */
-		applog(LOG_ERR, "getwork failed, retry after %d seconds",
-				opt_fail_pause);
+		applog(LOG_ERR, "json_rpc_call failed, retry after %d seconds",
+			opt_fail_pause);
 		sleep(opt_fail_pause);
 	}
 
@@ -1112,7 +1135,8 @@ static bool workio_get_work(struct workio_cmd *wc, CURL *curl) {
 	return true;
 }
 
-static bool workio_submit_work(struct workio_cmd *wc, CURL *curl) {
+static bool workio_submit_work(struct workio_cmd *wc, CURL *curl)
+{
 	int failures = 0;
 
 	/* submit solution to bitcoin via JSON-RPC */
@@ -1130,7 +1154,8 @@ static bool workio_submit_work(struct workio_cmd *wc, CURL *curl) {
 	return true;
 }
 
-static bool workio_login(CURL *curl) {
+static bool workio_login(CURL *curl)
+{
 	int failures = 0;
 
 	/* submit solution to bitcoin via JSON-RPC */
@@ -1153,7 +1178,8 @@ static bool workio_login(CURL *curl) {
 	return true;
 }
 
-static void *workio_thread(void *userdata) {
+static void *workio_thread(void *userdata)
+{
 	struct thr_info *mythr = userdata;
 	CURL *curl;
 	bool ok = true;
@@ -1161,7 +1187,7 @@ static void *workio_thread(void *userdata) {
 	curl = curl_easy_init();
 	if (unlikely(!curl)) {
 		applog(LOG_ERR, "CURL initialization failed");
-		return NULL ;
+		return NULL;
 	}
 
 	if(!have_stratum) {
@@ -1172,7 +1198,7 @@ static void *workio_thread(void *userdata) {
 		struct workio_cmd *wc;
 
 		/* wait for workio_cmd sent to us, on our queue */
-		wc = tq_pop(mythr->q, NULL );
+		wc = tq_pop(mythr->q, NULL);
 		if (!wc) {
 			ok = false;
 			break;
@@ -1187,7 +1213,7 @@ static void *workio_thread(void *userdata) {
 			ok = workio_submit_work(wc, curl);
 			break;
 
-		default: /* should never happen */
+		default:		/* should never happen */
 			ok = false;
 			break;
 		}
@@ -1198,16 +1224,17 @@ static void *workio_thread(void *userdata) {
 	tq_freeze(mythr->q);
 	curl_easy_cleanup(curl);
 
-	return NULL ;
+	return NULL;
 }
 
-static bool get_work(struct thr_info *thr, struct work *work) {
+static bool get_work(struct thr_info *thr, struct work *work)
+{
 	struct workio_cmd *wc;
 	struct work *work_heap;
 
 	if (opt_benchmark) {
 		memset(work->data, 0x55, 76);
-		work->data[17] = swab32(time(NULL ));
+		work->data[17] = swab32(time(NULL));
 		memset(work->data + 19, 0x00, 52);
 		work->data[20] = 0x80000000;
 		work->data[31] = 0x00000280;
@@ -1230,7 +1257,7 @@ static bool get_work(struct thr_info *thr, struct work *work) {
 	}
 
 	/* wait for response, a unit of work */
-	work_heap = tq_pop(thr->q, NULL );
+	work_heap = tq_pop(thr->q, NULL);
 	if (!work_heap)
 		return false;
 
@@ -1241,7 +1268,8 @@ static bool get_work(struct thr_info *thr, struct work *work) {
 	return true;
 }
 
-static bool submit_work(struct thr_info *thr, const struct work *work_in) {
+static bool submit_work(struct thr_info *thr, const struct work *work_in)
+{
 	struct workio_cmd *wc;
 
 	/* fill out work request message */
@@ -1263,11 +1291,13 @@ static bool submit_work(struct thr_info *thr, const struct work *work_in) {
 
 	return true;
 
-	err_out: workio_cmd_free(wc);
+err_out:
+	workio_cmd_free(wc);
 	return false;
 }
 
-static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work) {
+static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
+{
 	unsigned char merkle_root[64];
 	int i;
 
@@ -1324,10 +1354,11 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work) {
 	}
 }
 
-static void *miner_thread(void *userdata) {
+static void *miner_thread(void *userdata)
+{
 	struct thr_info *mythr = userdata;
 	int thr_id = mythr->id;
-	struct work work = { { 0 } };
+	struct work work = {{0}};
 	uint32_t max_nonce;
 	uint32_t end_nonce = 0xffffffffU / opt_n_threads * (thr_id + 1) - 0x20;
 	unsigned char *scratchbuf = NULL;
@@ -1381,7 +1412,7 @@ static void *miner_thread(void *userdata) {
 			pthread_mutex_lock(&g_work_lock);
 			if ((!have_stratum
 					&& (!have_longpoll
-							|| time(NULL ) >= g_work_time + LP_SCANTIME * 3 / 4
+							|| time(NULL) >= g_work_time + LP_SCANTIME * 3 / 4
 							|| *nonceptr >= end_nonce))) {
 				if (unlikely(!get_work(mythr, &g_work))) {
 					applog(LOG_ERR, "work retrieval failed, exiting "
@@ -1389,7 +1420,7 @@ static void *miner_thread(void *userdata) {
 					pthread_mutex_unlock(&g_work_lock);
 					goto out;
 				}
-				g_work_time = have_stratum ? 0 : time(NULL );
+				g_work_time = have_stratum ? 0 : time(NULL);
 			}
 			if (have_stratum) {
 				pthread_mutex_unlock(&g_work_lock);
@@ -1411,7 +1442,7 @@ static void *miner_thread(void *userdata) {
 			max64 = LP_SCANTIME;
 		else
 			max64 = g_work_time + (have_longpoll ? LP_SCANTIME : opt_scantime)
-					- time(NULL );
+					- time(NULL);
 		max64 *= thr_hashrates[thr_id];
 		if (max64 <= 0) {
 			switch (opt_algo) {
@@ -1447,7 +1478,7 @@ static void *miner_thread(void *userdata) {
 			max_nonce = *nonceptr + max64;
 
 		hashes_done = 0;
-		gettimeofday(&tv_start, NULL );
+		gettimeofday(&tv_start, NULL);
 
 		/* scan nonces for a proof-of-work hash */
 		switch (opt_algo) {
@@ -1567,19 +1598,22 @@ static void *miner_thread(void *userdata) {
 			break;
 	}
 
-	out: tq_freeze(mythr->q);
+out:
+	tq_freeze(mythr->q);
 
-	return NULL ;
+	return NULL;
 }
 
-static void restart_threads(void) {
+static void restart_threads(void)
+{
 	int i;
 
 	for (i = 0; i < opt_n_threads; i++)
 		work_restart[i].restart = 1;
 }
 
-static void *longpoll_thread(void *userdata) {
+static void *longpoll_thread(void *userdata)
+{
 	struct thr_info *mythr = userdata;
 	CURL *curl = NULL;
 	char *copy_start, *hdr_path = NULL, *lp_url = NULL;
@@ -1591,7 +1625,8 @@ static void *longpoll_thread(void *userdata) {
 		goto out;
 	}
 
-	start: hdr_path = tq_pop(mythr->q, NULL );
+start:
+	hdr_path = tq_pop(mythr->q, NULL);
 	if (!hdr_path)
 		goto out;
 
@@ -1639,13 +1674,14 @@ static void *longpoll_thread(void *userdata) {
 			goto out;
 		}
 		if (likely(val)) {
+			char *start_job_id;
 			if (!jsonrpc_2) {
 				soval = json_object_get(json_object_get(val, "result"),
 						"submitold");
 				submit_old = soval ? json_is_true(soval) : false;
 			}
 			pthread_mutex_lock(&g_work_lock);
-			char *start_job_id = strdup(g_work.job_id);
+			start_job_id = strdup(g_work.job_id);
 			if (work_decode(json_object_get(val, "result"), &g_work)) {
 				if (strcmp(start_job_id, g_work.job_id)) {
 					applog(LOG_INFO, "LONGPOLL pushed new work");
@@ -1674,16 +1710,18 @@ static void *longpoll_thread(void *userdata) {
 		}
 	}
 
-	out: free(hdr_path);
+out:
+	free(hdr_path);
 	free(lp_url);
 	tq_freeze(mythr->q);
 	if (curl)
 		curl_easy_cleanup(curl);
 
-	return NULL ;
+	return NULL;
 }
 
-static bool stratum_handle_response(char *buf) {
+static bool stratum_handle_response(char *buf)
+{
 	json_t *val, *err_val, *res_val, *id_val;
 	json_error_t err;
 	bool ret = false;
@@ -1715,20 +1753,23 @@ static bool stratum_handle_response(char *buf) {
 	}
 
 	share_result(valid, NULL,
-			err_val ? (jsonrpc_2 ? json_string_value(err_val) : json_string_value(json_array_get(err_val, 1))) : NULL );
+			err_val ? (jsonrpc_2 ? json_string_value(err_val) : json_string_value(json_array_get(err_val, 1))) : NULL);
 
 	ret = true;
-	out: if (val)
+
+out:
+	if (val)
 		json_decref(val);
 
 	return ret;
 }
 
-static void *stratum_thread(void *userdata) {
+static void *stratum_thread(void *userdata)
+{
 	struct thr_info *mythr = userdata;
 	char *s;
 
-	stratum.url = tq_pop(mythr->q, NULL );
+	stratum.url = tq_pop(mythr->q, NULL);
 	if (!stratum.url)
 		goto out;
 	applog(LOG_INFO, "Starting Stratum on %s", stratum.url);
@@ -1748,7 +1789,7 @@ static void *stratum_thread(void *userdata) {
 				stratum_disconnect(&stratum);
 				if (opt_retries >= 0 && ++failures > opt_retries) {
 					applog(LOG_ERR, "...terminating workio thread");
-					tq_push(thr_info[work_thr_id].q, NULL );
+					tq_push(thr_info[work_thr_id].q, NULL);
 					goto out;
 				}
 				applog(LOG_ERR, "...retry after %d seconds", opt_fail_pause);
@@ -1797,31 +1838,33 @@ static void *stratum_thread(void *userdata) {
 		free(s);
 	}
 
-	out: return NULL ;
+out:
+	return NULL;
 }
 
-static void show_version_and_exit(void) {
+static void show_version_and_exit(void)
+{
 	printf(PACKAGE_STRING "\n built on " __DATE__ "\n features:"
 #if defined(USE_ASM) && defined(__i386__)
-			" i386"
+		" i386"
 #endif
 #if defined(USE_ASM) && defined(__x86_64__)
-			" x86_64"
+		" x86_64"
 #endif
-#if defined(USE_ASM) && defined(__i386__) || defined(__x86_64__)
-			" SSE2"
+#if defined(USE_ASM) && (defined(__i386__) || defined(__x86_64__))
+		" SSE2"
 #endif
 #if defined(__x86_64__) && defined(USE_AVX)
-			" AVX"
+		" AVX"
 #endif
 #if defined(__x86_64__) && defined(USE_AVX2)
-			" AVX2"
+		" AVX2"
 #endif
 #if defined(__x86_64__) && defined(USE_XOP)
-			" XOP"
+		" XOP"
 #endif
 #if defined(USE_ASM) && defined(__arm__) && defined(__APCS_32__)
-			" ARM"
+		" ARM"
 #if defined(__ARM_ARCH_5E__) || defined(__ARM_ARCH_5TE__) || \
 	defined(__ARM_ARCH_5TEJ__) || defined(__ARM_ARCH_6__) || \
 	defined(__ARM_ARCH_6J__) || defined(__ARM_ARCH_6K__) || \
@@ -1830,13 +1873,13 @@ static void show_version_and_exit(void) {
 	defined(__ARM_ARCH_7__) || \
 	defined(__ARM_ARCH_7A__) || defined(__ARM_ARCH_7R__) || \
 	defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7EM__)
-			" ARMv5E"
+		" ARMv5E"
 #endif
 #if defined(__ARM_NEON__)
-			" NEON"
+		" NEON"
 #endif
 #endif
-			"\n");
+		"\n");
 
 	printf("%s\n", curl_version());
 #ifdef JANSSON_VERSION
@@ -1845,20 +1888,21 @@ static void show_version_and_exit(void) {
 	exit(0);
 }
 
-static void show_usage_and_exit(int status) {
+static void show_usage_and_exit(int status)
+{
 	if (status)
-		fprintf(stderr,
-				"Try `" PROGRAM_NAME " --help' for more information.\n");
+		fprintf(stderr, "Try `" PROGRAM_NAME " --help' for more information.\n");
 	else
 		printf(usage);
 	exit(status);
 }
 
-static void parse_arg(int key, char *arg) {
+static void parse_arg(int key, char *arg)
+{
 	char *p;
 	int v, i;
 
-	switch (key) {
+	switch(key) {
 	case 'a':
 		for (i = 0; i < ARRAY_SIZE(algo_names); i++) {
 			v = strlen(algo_names[i]);
@@ -2037,7 +2081,7 @@ static void parse_arg(int key, char *arg) {
 	case 1011:
 		have_gbt = false;
 		break;
-	case 1013:           /* --coinbase-addr */
+	case 1013:			/* --coinbase-addr */
 		pk_script_size = address_to_script(pk_script, sizeof(pk_script), arg);
 		if (!pk_script_size)
 			show_usage_and_exit(1);
@@ -2054,7 +2098,8 @@ static void parse_arg(int key, char *arg) {
 	}
 }
 
-static void parse_config(void) {
+static void parse_config(void)
+{
 	int i;
 	json_t *val;
 
@@ -2084,12 +2129,13 @@ static void parse_config(void) {
 	}
 }
 
-static void parse_cmdline(int argc, char *argv[]) {
+static void parse_cmdline(int argc, char *argv[])
+{
 	int key;
 
 	while (1) {
 #if HAVE_GETOPT_LONG
-		key = getopt_long(argc, argv, short_options, options, NULL );
+		key = getopt_long(argc, argv, short_options, options, NULL);
 #else
 		key = getopt(argc, argv, short_options);
 #endif
@@ -2108,7 +2154,8 @@ static void parse_cmdline(int argc, char *argv[]) {
 }
 
 #ifndef WIN32
-static void signal_handler(int sig) {
+static void signal_handler(int sig)
+{
 	switch (sig) {
 	case SIGHUP:
 		applog(LOG_INFO, "SIGHUP received");
@@ -2125,7 +2172,8 @@ static void signal_handler(int sig) {
 }
 #endif
 
-static inline int cpuid(int code, uint32_t where[4]) {
+static inline int cpuid(int code, uint32_t where[4])
+{
 	asm volatile("cpuid":"=a"(*where),"=b"(*(where+1)),
 			"=c"(*(where+2)),"=d"(*(where+3)):"a"(code));
 	return (int)where[0];
@@ -2173,15 +2221,16 @@ int main(int argc, char *argv[]) {
 		sprintf(rpc_userpass, "%s:%s", rpc_user, rpc_pass);
 	}
 
-	pthread_mutex_init(&applog_lock, NULL );
-	pthread_mutex_init(&stats_lock, NULL );
-	pthread_mutex_init(&g_work_lock, NULL );
-	pthread_mutex_init(&rpc2_job_lock, NULL );
-	pthread_mutex_init(&stratum.sock_lock, NULL );
-	pthread_mutex_init(&stratum.work_lock, NULL );
+	pthread_mutex_init(&applog_lock, NULL);
+	pthread_mutex_init(&stats_lock, NULL);
+	pthread_mutex_init(&g_work_lock, NULL);
+	pthread_mutex_init(&rpc2_job_lock, NULL);
+	pthread_mutex_init(&stratum.sock_lock, NULL);
+	pthread_mutex_init(&stratum.work_lock, NULL);
 
-	flags = !opt_benchmark && strncmp(rpc_url, "https:", 6) ?
-			(CURL_GLOBAL_ALL & ~CURL_GLOBAL_SSL) : CURL_GLOBAL_ALL;
+	flags = !opt_benchmark && strncmp(rpc_url, "https:", 6)
+	        ? (CURL_GLOBAL_ALL & ~CURL_GLOBAL_SSL)
+	        : CURL_GLOBAL_ALL;
 	if (curl_global_init(flags)) {
 		applog(LOG_ERR, "CURL initialization failed");
 		return 1;
@@ -2190,10 +2239,8 @@ int main(int argc, char *argv[]) {
 #ifndef WIN32
 	if (opt_background) {
 		i = fork();
-		if (i < 0)
-			exit(1);
-		if (i > 0)
-			exit(0);
+		if (i < 0) exit(1);
+		if (i > 0) exit(0);
 		i = setsid();
 		if (i < 0)
 			applog(LOG_ERR, "setsid() failed (errno = %d)", errno);
@@ -2213,7 +2260,7 @@ int main(int argc, char *argv[]) {
 #elif defined(_SC_NPROCESSORS_CONF)
 	num_processors = sysconf(_SC_NPROCESSORS_CONF);
 #elif defined(CTL_HW) && defined(HW_NCPU)
-	int req[] = {CTL_HW, HW_NCPU};
+	int req[] = { CTL_HW, HW_NCPU };
 	size_t len = sizeof(num_processors);
 	sysctl(req, 2, &num_processors, &len, NULL, 0);
 #else
@@ -2305,10 +2352,12 @@ int main(int argc, char *argv[]) {
 	}
 
 	applog(LOG_INFO, "%d miner threads started, "
-			"using '%s' algorithm.", opt_n_threads, algo_names[opt_algo]);
+		"using '%s' algorithm.",
+		opt_n_threads,
+		algo_names[opt_algo]);
 
 	/* main loop - simply wait for workio thread to exit */
-	pthread_join(thr_info[work_thr_id].pth, NULL );
+	pthread_join(thr_info[work_thr_id].pth, NULL);
 
 	applog(LOG_INFO, "workio thread dead, exiting.");
 
