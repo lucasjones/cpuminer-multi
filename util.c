@@ -79,7 +79,14 @@ void applog(int prio, const char *fmt, ...)
 		va_list ap2;
 		char *buf;
 		int len;
-		
+
+		/* custom colors to syslog prio */
+		if (prio > LOG_DEBUG) {
+			switch (prio) {
+				case LOG_BLUE: prio = LOG_NOTICE; break;
+			}
+		}
+
 		va_copy(ap2, ap);
 		len = vsnprintf(NULL, 0, fmt, ap2) + 1;
 		va_end(ap2);
@@ -91,6 +98,7 @@ void applog(int prio, const char *fmt, ...)
 	if (0) {}
 #endif
 	else {
+		const char* color = "";
 		char *f;
 		int len;
 		time_t now;
@@ -103,16 +111,34 @@ void applog(int prio, const char *fmt, ...)
 		memcpy(&tm, tm_p, sizeof(tm));
 		pthread_mutex_unlock(&applog_lock);
 
+		switch (prio) {
+			case LOG_ERR:     color = CL_RED; break;
+			case LOG_WARNING: color = CL_YLW; break;
+			case LOG_NOTICE:  color = CL_WHT; break;
+			case LOG_INFO:    color = ""; break;
+			case LOG_DEBUG:   color = ""; break;
+
+			case LOG_BLUE:
+				prio = LOG_NOTICE;
+				color = CL_CYN;
+				break;
+		}
+		if (!use_colors)
+			color = "";
+
 		len = 40 + strlen(fmt) + 2;
 		f = alloca(len);
-		sprintf(f, "[%d-%02d-%02d %02d:%02d:%02d] %s\n",
+		sprintf(f, "[%d-%02d-%02d %02d:%02d:%02d]%s %s%s\n",
 			tm.tm_year + 1900,
 			tm.tm_mon + 1,
 			tm.tm_mday,
 			tm.tm_hour,
 			tm.tm_min,
 			tm.tm_sec,
-			fmt);
+			color,
+			fmt,
+			use_colors ? CL_N : ""
+		);
 		pthread_mutex_lock(&applog_lock);
 		vfprintf(stderr, f, ap);	/* atomic write to stderr */
 		fflush(stderr);

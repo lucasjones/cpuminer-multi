@@ -152,6 +152,7 @@ bool allow_getwork = true;
 bool want_stratum = true;
 bool have_stratum = false;
 bool use_syslog = false;
+bool use_colors = false;
 static bool opt_background = false;
 static bool opt_quiet = false;
 static int opt_retries = -1;
@@ -247,6 +248,7 @@ Options:\n\
       --no-stratum      disable X-Stratum support\n\
       --no-redirect     ignore requests to change the URL of the mining server\n\
   -q, --quiet           disable per-thread hashmeter output\n\
+  -C, --color           enable colored output\n\
   -D, --debug           enable debug output\n\
   -P, --protocol-dump   verbose dump of protocol-level activities\n"
 #ifdef HAVE_SYSLOG_H
@@ -272,7 +274,7 @@ static char const short_options[] =
 #ifdef HAVE_SYSLOG_H
 	"S"
 #endif
-	"a:c:Dhp:Px:qr:R:s:t:T:o:u:O:V";
+	"a:c:CDhp:Px:qr:R:s:t:T:o:u:O:V";
 
 static struct option const options[] = {
 	{ "algo", 1, NULL, 'a' },
@@ -284,6 +286,7 @@ static struct option const options[] = {
 	{ "coinbase-addr", 1, NULL, 1013 },
 	{ "coinbase-sig", 1, NULL, 1015 },
 	{ "config", 1, NULL, 'c' },
+	{ "color", 0, NULL, 'C' },
 	{ "debug", 0, NULL, 'D' },
 	{ "help", 0, NULL, 'h' },
 	{ "no-gbt", 0, NULL, 1011 },
@@ -479,7 +482,7 @@ bool rpc2_job_decode(const json_t *job, struct work *work)
 				hashrate += thr_hashrates[i];
 			pthread_mutex_unlock(&stats_lock);
 			double difficulty = (((double) 0xffffffff) / target);
-			applog(LOG_INFO, "Pool set diff to %g", difficulty);
+			applog(LOG_NOTICE, "Pool set diff to %g", difficulty);
 			rpc2_target = target;
 		}
 
@@ -491,7 +494,7 @@ bool rpc2_job_decode(const json_t *job, struct work *work)
 	}
 	if(work) {
 		if (!rpc2_blob) {
-			applog(LOG_ERR, "Requested work before work was received");
+			applog(LOG_WARNING, "Requested work before work was received");
 			goto err_out;
 		}
 		memcpy(work->data, rpc2_blob, rpc2_bloblen);
@@ -691,7 +694,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 		int64_t cbvalue;
 		if (!pk_script_size) {
 			if (allow_getwork) {
-				applog(LOG_INFO, "No payout address provided, switching to getwork");
+				applog(LOG_NOTICE, "No payout address provided, switching to getwork");
 				have_gbt = false;
 			} else
 				applog(LOG_ERR, "No payout address provided");
@@ -871,18 +874,23 @@ static void share_result(int result, struct work *work, const char *reason)
 
 	switch (opt_algo) {
 	case ALGO_CRYPTONIGHT:
-		applog(LOG_INFO, "accepted: %lu/%lu (%.2f%%), %.2f H/s at diff %g %s",
-				accepted_count, accepted_count + rejected_count,
-				100. * accepted_count / (accepted_count + rejected_count), hashrate,
-				(((double) 0xffffffff) / (work ? work->target[7] : rpc2_target)),
-				result ? "(yay!!!)" : "(booooo)");
-		break;
-	default:
-		sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", 1e-3 * hashrate);
-		applog(LOG_INFO, "accepted: %lu/%lu (%.2f%%), %s khash/s %s",
+		sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate);
+		applog(LOG_NOTICE, "accepted: %lu/%lu (%.2f%%), %s H/s at diff %g %s",
 				accepted_count, accepted_count + rejected_count,
 				100. * accepted_count / (accepted_count + rejected_count), s,
-				result ? "(yay!!!)" : "(booooo)");
+				(((double) 0xffffffff) / (work ? work->target[7] : rpc2_target)),
+				use_colors ?
+					(result ? CL_GRN "(yay!!!)" : CL_RED "(booooo)")
+				:	(result ? "(yay!!!)" : "(booooo)"));
+		break;
+	default:
+		sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate / 1000.0);
+		applog(LOG_NOTICE, "accepted: %lu/%lu (%.2f%%), %s khash/s %s",
+				accepted_count, accepted_count + rejected_count,
+				100. * accepted_count / (accepted_count + rejected_count), s,
+				use_colors ?
+					(result ? CL_GRN "(yay!!!)" : CL_RED "(booooo)")
+				:	(result ? "(yay!!!)" : "(booooo)"));
 		break;
 	}
 
@@ -1099,7 +1107,7 @@ start:
 	}
 
 	if (have_gbt && allow_getwork && !val && err == CURLE_OK) {
-		applog(LOG_INFO, "getblocktemplate failed, falling back to getwork");
+		applog(LOG_NOTICE, "getblocktemplate failed, falling back to getwork");
 		have_gbt = false;
 		goto start;
 	}
@@ -1234,7 +1242,8 @@ static bool workio_submit_work(struct workio_cmd *wc, CURL *curl)
 		}
 
 		/* pause, then restart work-request loop */
-		applog(LOG_ERR, "...retry after %d seconds", opt_fail_pause);
+		if (!opt_benchmark)
+			applog(LOG_ERR, "...retry after %d seconds", opt_fail_pause);
 		sleep(opt_fail_pause);
 	}
 
@@ -1255,7 +1264,8 @@ static bool workio_login(CURL *curl)
 		}
 
 		/* pause, then restart work-request loop */
-		applog(LOG_ERR, "...retry after %d seconds", opt_fail_pause);
+		if (!opt_benchmark)
+			applog(LOG_ERR, "...retry after %d seconds", opt_fail_pause);
 		sleep(opt_fail_pause);
 		pthread_mutex_unlock(&rpc2_login_lock);
 		pthread_mutex_lock(&rpc2_login_lock);
@@ -1320,7 +1330,8 @@ static bool get_work(struct thr_info *thr, struct work *work)
 	struct work *work_heap;
 
 	if (opt_benchmark) {
-		memset(work->data, 0x55, 76);
+		for (int n=0; n<74; n++) ((char*)work->data)[n] = n;
+		//memset(work->data, 0x55, 76);
 		work->data[17] = swab32(time(NULL));
 		memset(work->data + 19, 0x00, 52);
 		work->data[20] = 0x80000000;
@@ -1464,7 +1475,7 @@ static void *miner_thread(void *userdata)
 	 * of the number of CPUs */
 	if (num_processors > 1 && opt_n_threads % num_processors == 0) {
 		if (!opt_quiet)
-			applog(LOG_INFO, "Binding thread %d to cpu %d", thr_id,
+			applog(LOG_DEBUG, "Binding thread %d to cpu %d", thr_id,
 					thr_id % num_processors);
 		affine_to_cpu(thr_id, thr_id % num_processors);
 	}
@@ -1514,7 +1525,11 @@ static void *miner_thread(void *userdata)
 				continue;
 			}
 		}
-		if (jsonrpc_2 ? memcmp(work.data, g_work.data, 39) || memcmp(((uint8_t*) work.data) + 43, ((uint8_t*) g_work.data) + 43, 33) : memcmp(work.data, g_work.data, 76)) {
+		if (jsonrpc_2
+			? memcmp(work.data, g_work.data, 39) ||
+				memcmp(((uint8_t*) work.data) + 43, ((uint8_t*) g_work.data) + 43, 33)
+			: memcmp(work.data, g_work.data, 76))
+		{
 			work_free(&work);
 			work_copy(&work, &g_work);
 			nonceptr = (uint32_t*) (((char*)work.data) + (jsonrpc_2 ? 39 : 76));
@@ -1670,11 +1685,11 @@ static void *miner_thread(void *userdata)
 			if (i == opt_n_threads) {
 				switch(opt_algo) {
 				case ALGO_CRYPTONIGHT:
-					applog(LOG_INFO, "Total: %s H/s", hashrate);
+					applog(LOG_NOTICE, "Total: %s H/s", hashrate);
 					break;
 				default:
 					sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate / 1000);
-					applog(LOG_INFO, "Total: %s khash/s", s);
+					applog(LOG_NOTICE, "Total: %s khash/s", s);
 					break;
 				}
 			}
@@ -1786,7 +1801,7 @@ start:
 				rc = work_decode(res, &g_work);
 			if (rc) {
 				if (strcmp(start_job_id, g_work.job_id)) {
-					applog(LOG_INFO, "LONGPOLL pushed new work");
+					applog(LOG_BLUE, "LONGPOLL pushed new work");
 					time(&g_work_time);
 					restart_threads();
 				}
@@ -1894,7 +1909,8 @@ static void *stratum_thread(void *userdata)
 					tq_push(thr_info[work_thr_id].q, NULL);
 					goto out;
 				}
-				applog(LOG_ERR, "...retry after %d seconds", opt_fail_pause);
+				if (!opt_benchmark)
+					applog(LOG_ERR, "...retry after %d seconds", opt_fail_pause);
 				sleep(opt_fail_pause);
 			}
 		}
@@ -1907,7 +1923,7 @@ static void *stratum_thread(void *userdata)
 				stratum_gen_work(&stratum, &g_work);
 				time(&g_work_time);
 				pthread_mutex_unlock(&g_work_lock);
-				applog(LOG_INFO, "Stratum requested work restart");
+				applog(LOG_BLUE, "Stratum requested work restart");
 				restart_threads();
 			}
 		} else {
@@ -1919,7 +1935,7 @@ static void *stratum_thread(void *userdata)
 				time(&g_work_time);
 				pthread_mutex_unlock(&g_work_lock);
 				if (stratum.job.clean) {
-					applog(LOG_INFO, "Stratum requested work restart");
+					applog(LOG_BLUE, "Stratum requested work restart");
 					restart_threads();
 				}
 			}
@@ -2056,6 +2072,9 @@ static void parse_arg(int key, char *arg, char *pname)
 		json_decref(config);
 		break;
 	}
+	case 'C':
+		use_colors = true;
+		break;
 	case 'q':
 		opt_quiet = true;
 		break;
@@ -2230,6 +2249,7 @@ static void parse_arg(int key, char *arg, char *pname)
 		break;
 	case 'S':
 		use_syslog = true;
+		use_colors = false;
 		break;
 	case 'V':
 		show_version_and_exit();
