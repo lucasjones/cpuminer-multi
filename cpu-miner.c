@@ -40,7 +40,7 @@
 #include "compat.h"
 #include "miner.h"
 
-#define PROGRAM_NAME		"minerd"
+#define PROGRAM_NAME	"cpuminer-multi"
 #define LP_SCANTIME		60
 #define JSON_BUF_LEN 345
 
@@ -2350,10 +2350,19 @@ static bool has_aes_ni()
 	return cpu_info[2] & (1 << 25);
 }
 
+static void show_credits()
+{
+	printf(PROGRAM_NAME " by Lucas Jones and Tanguy Pruvot\n");
+	printf("  This is version " PACKAGE_VERSION "\n");
+	printf("  based on pooler/cpuminer 2.4 (c) 2010 Jeff Garzik, 2012 pooler\n");
+}
+
 int main(int argc, char *argv[]) {
 	struct thr_info *thr;
 	long flags;
 	int i;
+
+	show_credits();
 
 	rpc_user = strdup("");
 	rpc_pass = strdup("");
