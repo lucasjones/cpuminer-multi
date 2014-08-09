@@ -1068,7 +1068,7 @@ static void *miner_thread(void *userdata) {
             exit(1);
         }
     }
-    uint32_t *nonceptr = (uint32_t*) (((char*)work.data) + (jsonrpc_2 ? 39 : 76));
+    uint32_t *nonceptr = (uint32_t*) (((char*)work.data) + (jsonrpc_2 ? 39 : 88));
 
     while (1) {
         uint64_t hashes_done;
@@ -1108,7 +1108,7 @@ static void *miner_thread(void *userdata) {
         if (jsonrpc_2 ? memcmp(work.data, g_work.data, 39) || memcmp(((uint8_t*) work.data) + 43, ((uint8_t*) g_work.data) + 43, 33) : memcmp(work.data, g_work.data, 76)) {
             work_free(&work);
             work_copy(&work, &g_work);
-            nonceptr = (uint32_t*) (((char*)work.data) + (jsonrpc_2 ? 39 : 76));
+            nonceptr = (uint32_t*) (((char*)work.data) + (jsonrpc_2 ? 39 : 88));
             *nonceptr = 0xffffffffU / opt_n_threads * thr_id;
         } else
             ++(*nonceptr);
