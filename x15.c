@@ -21,16 +21,12 @@
 #include "sha3/sph_shabal.h"
 #include "sha3/sph_whirlpool.h"
 
-#define DEBUG_ALGO
+//#define DEBUG_ALGO
 
 static void x15hash(void *output, const void *input)
 {
-	const uint32_t *in32 = input;
 	unsigned char hash[128]; // uint32_t hashA[16], hashB[16];
 	#define hashB hash+64
-
-for (int n=0; n<20; n++)
-	printf("%x\n", in32[n]);
 
 	memset(hash, 0, 128);
 
@@ -53,7 +49,7 @@ for (int n=0; n<20; n++)
 	sph_blake512_init(&ctx_blake);
 	sph_blake512(&ctx_blake, input, 80);
 	sph_blake512_close(&ctx_blake, hash);
-#if 0
+
 	sph_bmw512_init(&ctx_bmw);
 	sph_bmw512(&ctx_bmw, hash, 64);
 	sph_bmw512_close(&ctx_bmw, hashB);
@@ -109,7 +105,7 @@ for (int n=0; n<20; n++)
 	sph_whirlpool_init(&ctx_whirlpool);
 	sph_whirlpool(&ctx_whirlpool, hashB, 64);
 	sph_whirlpool_close(&ctx_whirlpool, hash);
-#endif
+
 	memcpy(output, hash, 32);
 }
 
@@ -145,8 +141,6 @@ int scanhash_x15(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 		be32enc(&endiandata[kk], ((uint32_t*)pdata)[kk]);
 	};
 #ifdef DEBUG_ALGO
-	applog(LOG_DEBUG, "Thr: %02d, firstN: %08x, maxN: %08x, ToDo: %d -- %x, %x => %x", thr_id,
-			first_nonce, max_nonce, max_nonce - first_nonce, pdata[19], endiandata[0], pdata[0]);
 	if (Htarg != 0)
 		printf("[%d] Htarg=%X\n", thr_id, Htarg);
 #endif
@@ -155,11 +149,8 @@ int scanhash_x15(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 			uint32_t mask = masks[m];
 			do {
 				pdata[19] = ++n;
-				//be32enc(&endiandata[19], n);
+				be32enc(&endiandata[19], n);
 				x15hash(hash64, &endiandata);
-		applog(LOG_DEBUG, "Thr: %02d, firstN: %08x, maxN: %08x, ToDo: %d -- %x %x %x %x  %x %x %x %x", thr_id,
-			first_nonce, max_nonce, max_nonce - first_nonce, hash64[0], hash64[1], hash64[2], hash64[3], hash64[4], hash64[5], hash64[6], hash64[7]);
-		exit(0);
 #ifndef DEBUG_ALGO
 				if ((!(hash64[7] & mask)) && fulltest(hash64, ptarget)) {
 					*hashes_done = n - first_nonce + 1;
