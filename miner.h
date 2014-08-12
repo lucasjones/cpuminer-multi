@@ -356,4 +356,10 @@ extern void *tq_pop(struct thread_q *tq, const struct timespec *abstime);
 extern void tq_freeze(struct thread_q *tq);
 extern void tq_thaw(struct thread_q *tq);
 
+void print_hash_tests(void);
+void x11hash(void *output, const void *input);
+void x13hash(void *output, const void *input);
+void x14hash(void *output, const void *input);
+void x15hash(void *output, const void *input);
+
 #endif /* __MINER_H__ */

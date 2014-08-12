@@ -19,7 +19,7 @@
 #include "sha3/sph_hamsi.h"
 #include "sha3/sph_fugue.h"
 
-static void x13hash(void *output, const void *input)
+void x13hash(void *output, const void *input)
 {
 	unsigned char hash[128]; // uint32_t hashA[16], hashB[16];
 	#define hashB hash+64

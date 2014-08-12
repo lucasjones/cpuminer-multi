@@ -261,6 +261,7 @@ Options:\n\
 #endif
 "\
       --benchmark       run in offline benchmark mode\n\
+      --cputest         debug hashes from cpu algorithms\n\
   -c, --config=FILE     load a JSON-format configuration file\n\
   -V, --version         display version information and exit\n\
   -h, --help            display this help text and exit\n\
@@ -282,6 +283,7 @@ static struct option const options[] = {
 	{ "background", 0, NULL, 'B' },
 #endif
 	{ "benchmark", 0, NULL, 1005 },
+	{ "cputest", 0, NULL, 1006 },
 	{ "cert", 1, NULL, 1001 },
 	{ "coinbase-addr", 1, NULL, 1013 },
 	{ "coinbase-sig", 1, NULL, 1015 },
@@ -2220,6 +2222,9 @@ static void parse_arg(int key, char *arg, char *pname)
 		want_stratum = false;
 		have_stratum = false;
 		break;
+	case 1006:
+		print_hash_tests();
+		exit(0);
 	case 1007:
 		want_stratum = false;
 		break;
