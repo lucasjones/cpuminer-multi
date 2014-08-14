@@ -113,6 +113,7 @@ enum algos {
     ALGO_X13,         /* X13 */
     ALGO_X14,         /* X14 */
     ALGO_X15,         /* X15 Whirlpool */
+    ALGO_PENTABLAKE,  /* Pentablake */
     ALGO_CRYPTONIGHT, /* CryptoNight */
 };
 
@@ -130,6 +131,7 @@ static const char *algo_names[] = {
     [ALGO_X13] =         "x13",
     [ALGO_X14] =         "x14",
     [ALGO_X15] =         "x15",
+    [ALGO_PENTABLAKE] =  "pentablake",
     [ALGO_CRYPTONIGHT] = "cryptonight",
 };
 
@@ -214,6 +216,7 @@ Options:\n\
                           x13          X13\n\
                           x14          X14\n\
                           x15          X15\n\
+                          pentablake   Pentablake\n\
                           cryptonight  CryptoNight\n\
   -o, --url=URL         URL of mining server\n\
   -O, --userpass=U:P    username:password pair for mining server\n\
@@ -1142,6 +1145,9 @@ static void *miner_thread(void *userdata) {
             case ALGO_X15:
                 max64 = 0x1ffff;
                 break;
+            case ALGO_PENTABLAKE:
+                max64 = 0x3ffff;
+                break;
             default:
                 max64 = 0x1fffffLL;
                 break;
@@ -1212,6 +1218,10 @@ static void *miner_thread(void *userdata) {
             break;
         case ALGO_X15:
             rc = scanhash_x15(thr_id, work.data, work.target, max_nonce,
+                    &hashes_done);
+            break;
+        case ALGO_PENTABLAKE:
+            rc = scanhash_pentablake(thr_id, work.data, work.target, max_nonce,
                     &hashes_done);
             break;
         case ALGO_CRYPTONIGHT:

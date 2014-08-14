@@ -34,6 +34,7 @@ minerd_SOURCES	= elist.h \
 		  x13.c \
 		  x14.c \
 		  x15.c \
+		  pentablake.c \
 		  sha3/sph_keccak.c \
 		  sha3/sph_hefty1.c \
 		  sha3/sph_groestl.c \
@@ -73,7 +74,7 @@ endif
 minerd_LDFLAGS	= $(PTHREAD_FLAGS)
 minerd_LDADD	= @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@
 minerd_CPPFLAGS = @LIBCURL_CPPFLAGS@
-minerd_CFLAGS   = -Ofast -flto -fuse-linker-plugin
+minerd_CFLAGS   = -O2
 
 if HAVE_WINDOWS
 minerd_CFLAGS += -Wl,--stack,10485760
