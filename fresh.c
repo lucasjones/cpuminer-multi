@@ -11,36 +11,36 @@
 
 //#define DEBUG_ALGO
 
-inline void freshhash(void* output, const void* input, uint32_t len)
+extern void freshhash(void* output, const void* input, uint32_t len)
 {
 	unsigned char hash[128]; // uint32_t hashA[16], hashB[16];
 	#define hashA hash
 	#define hashB hash+64
 
 	memset(hash, 0, 128);
-	sph_shavite512_context ctx_shavite1;
-	sph_simd512_context ctx_simd1;
-	sph_echo512_context ctx_echo1;
+	sph_shavite512_context ctx_shavite;
+	sph_simd512_context ctx_simd;
+	sph_echo512_context ctx_echo;
 
-	sph_shavite512_init(&ctx_shavite1);
-	sph_shavite512(&ctx_shavite1, input, len);
-	sph_shavite512_close(&ctx_shavite1, hashA);
+	sph_shavite512_init(&ctx_shavite);
+	sph_shavite512(&ctx_shavite, input, len);
+	sph_shavite512_close(&ctx_shavite, hashA);
 
-	sph_simd512_init(&ctx_simd1);
-	sph_simd512(&ctx_simd1, hashA, 64);
-	sph_simd512_close(&ctx_simd1, hashB);
+	sph_simd512_init(&ctx_simd);
+	sph_simd512(&ctx_simd, hashA, 64);
+	sph_simd512_close(&ctx_simd, hashB);
 
-	sph_shavite512_init(&ctx_shavite1);
-	sph_shavite512(&ctx_shavite1, hashB, 64);
-	sph_shavite512_close(&ctx_shavite1, hashA);
+	sph_shavite512_init(&ctx_shavite);
+	sph_shavite512(&ctx_shavite, hashB, 64);
+	sph_shavite512_close(&ctx_shavite, hashA);
 
-	sph_simd512_init(&ctx_simd1);
-	sph_simd512(&ctx_simd1, hashA, 64);
-	sph_simd512_close(&ctx_simd1, hashB);
+	sph_simd512_init(&ctx_simd);
+	sph_simd512(&ctx_simd, hashA, 64);
+	sph_simd512_close(&ctx_simd, hashB);
 
-	sph_echo512_init(&ctx_echo1);
-	sph_echo512(&ctx_echo1, hashB, 64);
-	sph_echo512_close(&ctx_echo1, hashA);
+	sph_echo512_init(&ctx_echo);
+	sph_echo512(&ctx_echo, hashB, 64);
+	sph_echo512_close(&ctx_echo, hashA);
 
 	memcpy(output, hash, 32);
 }

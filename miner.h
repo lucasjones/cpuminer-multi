@@ -357,6 +357,7 @@ extern void tq_freeze(struct thread_q *tq);
 extern void tq_thaw(struct thread_q *tq);
 
 void print_hash_tests(void);
+void freshhash(void* output, const void* input, uint32_t len);
 void x11hash(void *output, const void *input);
 void x13hash(void *output, const void *input);
 void x14hash(void *output, const void *input);

@@ -1586,20 +1586,24 @@ void print_hash_tests(void)
 	printf("CPU HASH ON EMPTY BUFFER RESULTS:\n");
 
 	memset(hash, 0, sizeof hash);
+	freshhash(&hash[0], &buf[0], 80);
+	printf("\nfresh:   "); print_hash(hash);
+
+	memset(hash, 0, sizeof hash);
 	x11hash(&hash[0], &buf[0]);
-	printf("\nX11: "); print_hash(hash);
+	printf("\nX11:     "); print_hash(hash);
 
 	memset(hash, 0, sizeof hash);
 	x13hash(&hash[0], &buf[0]);
-	printf("\nX13: "); print_hash(hash);
+	printf("\nX13:     "); print_hash(hash);
 
 	memset(hash, 0, sizeof hash);
 	x14hash(&hash[0], &buf[0]);
-	printf("\nX14: "); print_hash(hash);
+	printf("\nX14:     "); print_hash(hash);
 
 	memset(hash, 0, sizeof hash);
 	x15hash(&hash[0], &buf[0]);
-	printf("\nX15: "); print_hash(hash);
+	printf("\nX15:     "); print_hash(hash);
 
 	printf("\n");
 }
