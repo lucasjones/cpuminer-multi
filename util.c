@@ -1572,38 +1572,88 @@ out:
 	return rval;
 }
 
-static void print_hash(unsigned char *hash)
+/* sprintf can be used in applog */
+static char* format_hash(char* buf, uint8_t *hash)
 {
-	for (int i=0; i < 32; i++) {
-		printf("%02x", hash[i]);
+	int len = 0;
+	for (int i=0; i < 32; i += 4) {
+		len += sprintf(buf+len, "%02x%02x%02x%02x ",
+			hash[i], hash[i+1], hash[i+2], hash[i+3]);
 	}
+	return buf;
 }
+
+void applog_hash(void *hash)
+{
+	char s[128] = {'\0'};
+	applog(LOG_DEBUG, "%s", format_hash(s, hash));
+}
+
+#define printpfx(n,h) \
+	printf("%s%12s%s: %s\n", CL_BLU, n, CL_N, format_hash(s, (uint8_t*) h))
 
 void print_hash_tests(void)
 {
-	unsigned char buf[128], hash[128];
+	char* buf[128], hash[128], s[80];
 	memset(buf, 0, sizeof buf);
-	printf("CPU HASH ON EMPTY BUFFER RESULTS:\n");
+
+	printf("\n" CL_WHT "CPU HASH ON EMPTY BUFFER RESULTS:" CL_N " (dev purpose)\n\n");
+
+	memset(hash, 0, sizeof hash);
+	sha256d((uint8_t*) &hash[0], (uint8_t*)&buf[0], 64);
+	printpfx("SHA 256D", hash);
+
+	memset(hash, 0, sizeof hash);
+	heavyhash((uint8_t*) &hash[0], (uint8_t*) &buf[0], 32);
+	printpfx("Heavy", hash);
+
+	memset(hash, 0, sizeof hash);
+	keccakhash(&hash[0], &buf[0]);
+	printpfx("Keccak", hash);
+
+	memset(hash, 0, sizeof hash);
+	quarkhash(&hash[0], &buf[0]);
+	printpfx("Quark", hash);
+
+	memset(hash, 0, sizeof hash);
+	skeinhash(&hash[0], &buf[0]);
+	printpfx("Skein", hash);
+
+	memset(hash, 0, sizeof hash);
+	blakehash(&hash[0], &buf[0]);
+	printpfx("Blake", hash);
+
+	memset(hash, 0, sizeof hash);
+	inkhash(&hash[0], &buf[0]);
+	printpfx("Shavite", hash);
 
 	memset(hash, 0, sizeof hash);
 	freshhash(&hash[0], &buf[0], 80);
-	printf("\nfresh:   "); print_hash(hash);
+	printpfx("Fresh", hash);
 
 	memset(hash, 0, sizeof hash);
 	x11hash(&hash[0], &buf[0]);
-	printf("\nX11:     "); print_hash(hash);
+	printpfx("X11", hash);
 
 	memset(hash, 0, sizeof hash);
 	x13hash(&hash[0], &buf[0]);
-	printf("\nX13:     "); print_hash(hash);
+	printpfx("X13", hash);
 
 	memset(hash, 0, sizeof hash);
 	x14hash(&hash[0], &buf[0]);
-	printf("\nX14:     "); print_hash(hash);
+	printpfx("X14", hash);
 
 	memset(hash, 0, sizeof hash);
 	x15hash(&hash[0], &buf[0]);
-	printf("\nX15:     "); print_hash(hash);
+	printpfx("X15", hash);
+
+	memset(hash, 0, sizeof hash);
+	pentablakehash(&hash[0], &buf[0]);
+	printpfx("Pentablake", hash);
+
+	memset(hash, 0, sizeof hash);
+	cryptonight_hash(&hash[0], &buf[0], 76);
+	printpfx("Cryptonight", hash);
 
 	printf("\n");
 }

@@ -8,7 +8,7 @@
 
 #include "sha3/sph_skein.h"
 
-static void skeinhash(void *state, const void *input)
+extern void skeinhash(void *state, const void *input)
 {
     sph_skein512_context     ctx_skein;
     static unsigned char pblank[1];

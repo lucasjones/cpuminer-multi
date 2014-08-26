@@ -6,7 +6,7 @@
 
 #include "sha3/sph_shavite.h"
 
-static void inkhash(void *state, const void *input)
+extern void inkhash(void *state, const void *input)
 {
     sph_shavite512_context	 ctx_shavite;
     uint32_t hash[16];

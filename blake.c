@@ -18,7 +18,7 @@ void init_blakehash_contexts()
     sph_blake256_init(&base_contexts.blake1);
 }
 
-static void blakehash(void *state, const void *input)
+extern void blakehash(void *state, const void *input)
 {
     blakehash_context_holder ctx;
 //an array of uint32

@@ -9,7 +9,7 @@
 
 //#define DEBUG_ALGO
 
-static void pentablakehash(void *output, const void *input)
+extern void pentablakehash(void *output, const void *input)
 {
 	unsigned char hash[128]; // uint32_t hashA[16], hashB[16];
 	#define hashB hash+64

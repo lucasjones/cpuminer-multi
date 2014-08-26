@@ -356,11 +356,22 @@ extern void *tq_pop(struct thread_q *tq, const struct timespec *abstime);
 extern void tq_freeze(struct thread_q *tq);
 extern void tq_thaw(struct thread_q *tq);
 
+void applog_hash(void *hash);
+
 void print_hash_tests(void);
+void sha256d(unsigned char *hash, const unsigned char *data, int len);
+void blakehash(void *state, const void *input);
+void heavyhash(unsigned char* output, const unsigned char* input, int len);
+void quarkhash(void *state, const void *input);
+void skeinhash(void *state, const void *input);
 void freshhash(void* output, const void* input, uint32_t len);
+void keccakhash(void *state, const void *input);
+void inkhash(void *state, const void *input); /* shavite */
 void x11hash(void *output, const void *input);
 void x13hash(void *output, const void *input);
 void x14hash(void *output, const void *input);
 void x15hash(void *output, const void *input);
+void pentablakehash(void *output, const void *input);
+void cryptonight_hash(void* output, const void* input, size_t len);
 
 #endif /* __MINER_H__ */

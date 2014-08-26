@@ -6,7 +6,7 @@
 
 #include "sha3/sph_keccak.h"
 
-static void keccakhash(void *state, const void *input)
+extern void keccakhash(void *state, const void *input)
 {
     sph_keccak256_context ctx_keccak;
     uint32_t hash[32];	

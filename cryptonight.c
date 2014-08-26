@@ -259,7 +259,7 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	uint32_t *nonceptr = (uint32_t*) (((char*)pdata) + 39);
 	uint32_t n = *nonceptr - 1;
 	const uint32_t first_nonce = n + 1;
-	const uint32_t Htarg = ptarget[7];
+	//const uint32_t Htarg = ptarget[7];
 	uint32_t hash[HASH_SIZE / 4] __attribute__((aligned(32)));
 
 	struct cryptonight_ctx *ctx = (struct cryptonight_ctx*)malloc(sizeof(struct cryptonight_ctx));

@@ -40,7 +40,7 @@ void init_quarkhash_contexts()
     sph_jh512_init(&base_contexts.jh2);	
 }
 
-static void quarkhash(void *state, const void *input)
+extern void quarkhash(void *state, const void *input)
 {
 //    sph_blake512_context     ctx_blake;
 //    sph_bmw512_context       ctx_bmw;

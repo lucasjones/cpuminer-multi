@@ -28,9 +28,7 @@ static void combine_hashes(uint32_t *out, uint32_t *hash1, uint32_t *hash2, uint
     }
 }
 
-
-
-void heavycoin_hash(unsigned char* output, const unsigned char* input, int len)
+extern void heavyhash(unsigned char* output, const unsigned char* input, int len)
 {
     unsigned char hash1[32];
     HEFTY1(input, len, hash1);
@@ -87,7 +85,7 @@ int scanhash_heavy(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
     uint32_t start_nonce = pdata[19];
     
     do {
-        heavycoin_hash((unsigned char *)hash, (unsigned char *)pdata, 80);
+        heavyhash((unsigned char *)hash, (unsigned char *)pdata, 80);
     
         if (hash[7] <= ptarget[7]) {
             if (fulltest(hash, ptarget)) {
