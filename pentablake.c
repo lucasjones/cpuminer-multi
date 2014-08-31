@@ -7,14 +7,19 @@
 
 #include "sha3/sph_blake.h"
 
+#ifndef WIN32
+# define ALIGNED32 __attribute__((aligned(32)))
+#else
+# define ALIGNED32 __declspec(align(32))
+#endif
+
 //#define DEBUG_ALGO
 
 extern void pentablakehash(void *output, const void *input)
 {
-	unsigned char hash[128]; // uint32_t hashA[16], hashB[16];
+	unsigned char hash[128] ALIGNED32;
+	// same as uint32_t hashA[16], hashB[16];
 	#define hashB hash+64
-
-	memset(hash, 0, 128);
 
 	sph_blake512_context     ctx_blake;
 
@@ -44,8 +49,8 @@ int scanhash_pentablake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	const uint32_t first_nonce = pdata[19];
 	const uint32_t Htarg = ptarget[7];
 
-	uint32_t hash64[8] __attribute__((aligned(32)));
-	uint32_t endiandata[32];
+	uint32_t hash64[8] ALIGNED32;
+	uint32_t endiandata[32] ALIGNED32;
 
 	uint64_t htmax[] = {
 		0,

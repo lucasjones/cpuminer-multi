@@ -17,7 +17,6 @@ extern void freshhash(void* output, const void* input, uint32_t len)
 	#define hashA hash
 	#define hashB hash+64
 
-	memset(hash, 0, 128);
 	sph_shavite512_context ctx_shavite;
 	sph_simd512_context ctx_simd;
 	sph_echo512_context ctx_echo;

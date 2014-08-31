@@ -24,8 +24,6 @@ void x13hash(void *output, const void *input)
 	unsigned char hash[128]; // uint32_t hashA[16], hashB[16];
 	#define hashB hash+64
 
-	memset(hash, 0, 128);
-
 	sph_blake512_context     ctx_blake;
 	sph_bmw512_context       ctx_bmw;
 	sph_groestl512_context   ctx_groestl;
