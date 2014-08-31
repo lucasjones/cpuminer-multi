@@ -11,12 +11,8 @@
 extern void skeinhash(void *state, const void *input)
 {
     sph_skein512_context     ctx_skein;
-    static unsigned char pblank[1];
 
-    uint32_t mask = 8;
-    uint32_t zero = 0;
-
-	//these uint512 in the c++ source of the client are backed by an array of uint32
+    // the uint512 in the c++ source of the client are backed by an array of uint32
     uint32_t hashA[16], hashB[16];	
 	
     sph_skein512_init(&ctx_skein);
@@ -46,7 +42,7 @@ int scanhash_skein(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 {
 	uint32_t n = pdata[19] - 1;
 	const uint32_t first_nonce = pdata[19];
-	const uint32_t Htarg = ptarget[7];
+	//const uint32_t Htarg = ptarget[7];
 
 	uint32_t hash64[8] __attribute__((aligned(32)));
 	uint32_t endiandata[32];
@@ -64,7 +60,7 @@ int scanhash_skein(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	do {
 		pdata[19] = ++n;
 		be32enc(&endiandata[19], n); 
-		skeinhash(hash64, &endiandata);
+		skeinhash(hash64, endiandata);
         if (((hash64[7]&0xFFFFFF00)==0) && 
 				fulltest(hash64, ptarget)) {
             *hashes_done = n - first_nonce + 1;
