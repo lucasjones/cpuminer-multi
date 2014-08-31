@@ -3,7 +3,8 @@ Version multi 1.0.5 (Tanguy Pruvot)
 - Merge remaining v2.4 cpu-miner changes
 - Add colored output option (--color)
 - Add --cputest parameter (debug)
-- Add pentablake (from bitbandi)
+- Test and fix blake on NEOS, needs 14 rounds (was 8)
+- Add pentablake (5x blake256) (from bitbandi)
 
 Version multi 1.0.4 (Tanguy Pruvot)
 

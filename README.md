@@ -29,6 +29,8 @@ Algorithms
  * ✓ __x15__ (RadianceCoin [RCE])
  * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
  * ✓ __fresh__ (FreshCoin)
+ * ✓ __blake__ (Neos blake256)
+ * ✓ __pentablake__ (Joincoin)
 
 #### Implemented, but untested
  * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
@@ -36,8 +38,6 @@ Algorithms
  * ? quark (Quarkcoin)
  * ? skein (Skeincoin, Myriadcoin)
  * ? shavite3 (INKcoin)
- * ? blake (Blakecoin)
- * ? pentablake
 
 #### Planned support for
  * *scrypt-jane* (YaCoin, CopperBars, Pennies, Tickets, etc..)
