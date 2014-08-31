@@ -82,7 +82,7 @@ int scanhash_fresh(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	if (Htarg != 0)
 		printf("[%d] Htarg=%X\n", thr_id, Htarg);
 #endif
-	for (int m=0; m < sizeof(masks); m++) {
+	for (int m=0; m < 6; m++) {
 		if (Htarg <= htmax[m]) {
 			uint32_t mask = masks[m];
 			do {

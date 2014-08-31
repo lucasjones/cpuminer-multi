@@ -130,7 +130,7 @@ int scanhash_x13(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 #ifdef DEBUG_ALGO
 	printf("[%d] Htarg=%X\n", thr_id, Htarg);
 #endif
-	for (int m=0; m < sizeof(masks); m++) {
+	for (int m=0; m < 6; m++) {
 		if (Htarg <= htmax[m]) {
 			uint32_t mask = masks[m];
 			do {
