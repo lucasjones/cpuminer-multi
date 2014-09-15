@@ -1403,7 +1403,7 @@ static bool stratum_handle_response(char *buf) {
     err_val = json_object_get(val, "error");
     id_val = json_object_get(val, "id");
 
-    if (!id_val || json_is_null(id_val) || !res_val)
+    if (!id_val || json_is_null(id_val) || (jsonrpc_2 ? (!res_val && !err_val) : !res_val))
         goto out;
 
     if(jsonrpc_2) {
