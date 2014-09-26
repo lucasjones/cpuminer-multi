@@ -10,7 +10,8 @@
 
 extern void skeinhash(void *state, const void *input)
 {
-    sph_skein512_context     ctx_skein;
+    sph_skein512_context ctx_skein;
+    SHA256_CTX sha256;
 
     // the uint512 in the c++ source of the client are backed by an array of uint32
     uint32_t hashA[16], hashB[16];	
@@ -19,14 +20,12 @@ extern void skeinhash(void *state, const void *input)
     sph_skein512 (&ctx_skein, input, 80); //6
     sph_skein512_close(&ctx_skein, hashA); //7
 
-    SHA256_CTX sha256;
     SHA256_Init(&sha256);
     SHA256_Update(&sha256, hashA, 64);
     SHA256_Final((unsigned char*) hashB, &sha256);
 
     memcpy(state, hashB, 32);
 	
-
 /*	int ii;
 	printf("result: ");
 	for (ii=0; ii < 32; ii++)

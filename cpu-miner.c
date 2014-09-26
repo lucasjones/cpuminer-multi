@@ -1140,13 +1140,13 @@ start:
 static bool rpc2_login(CURL *curl)
 {
 	json_t *val;
-	bool rc;
+	bool rc = false;
 	struct timeval tv_start, tv_end, diff;
 	char s[JSON_BUF_LEN];
 
-	if(!jsonrpc_2) {
+	if (!jsonrpc_2)
 		return false;
-	}
+
 	snprintf(s, JSON_BUF_LEN, "{\"method\": \"login\", \"params\": {"
 		"\"login\": \"%s\", \"pass\": \"%s\", \"agent\": \"cpuminer-multi/0.1\"}, \"id\": 1}",
 		rpc_user, rpc_pass);
@@ -1164,11 +1164,12 @@ static bool rpc2_login(CURL *curl)
 
 	json_t *result = json_object_get(val, "result");
 
-	if(!result) goto end;
+	if (!result)
+		goto end;
 
 	json_t *job = json_object_get(result, "job");
 
-	if(!rpc2_job_decode(job, &g_work)) {
+	if (!rpc2_job_decode(job, &g_work)) {
 		goto end;
 	}
 
@@ -1179,8 +1180,7 @@ static bool rpc2_login(CURL *curl)
 	}
 
 	json_decref(val);
-
-	end:
+end:
 	return rc;
 }
 
@@ -1756,7 +1756,7 @@ start:
 	applog(LOG_INFO, "Long-polling activated for %s", lp_url);
 
 	while (1) {
-		json_t *val, *res, *soval;
+		json_t *val;
 		char *req = NULL;
 		int err;
 
@@ -1790,8 +1790,9 @@ start:
 		if (likely(val)) {
 			bool rc;
 			char *start_job_id;
+			json_t *res, *soval;
+			res = json_object_get(val, "result");
 			if (!jsonrpc_2) {
-				res = json_object_get(val, "result");
 				soval = json_object_get(res, "submitold");
 				submit_old = soval ? json_is_true(soval) : false;
 			}

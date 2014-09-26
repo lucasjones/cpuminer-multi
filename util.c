@@ -1624,6 +1624,10 @@ void print_hash_tests(void)
 	printpfx("Blake", hash);
 
 	memset(hash, 0, sizeof hash);
+	pentablakehash(&hash[0], &buf[0]);
+	printpfx("Pentablake", hash);
+
+	memset(hash, 0, sizeof hash);
 	inkhash(&hash[0], &buf[0]);
 	printpfx("Shavite", hash);
 
@@ -1646,10 +1650,6 @@ void print_hash_tests(void)
 	memset(hash, 0, sizeof hash);
 	x15hash(&hash[0], &buf[0]);
 	printpfx("X15", hash);
-
-	memset(hash, 0, sizeof hash);
-	pentablakehash(&hash[0], &buf[0]);
-	printpfx("Pentablake", hash);
 
 	memset(hash, 0, sizeof hash);
 	cryptonight_hash(&hash[0], &buf[0], 76);

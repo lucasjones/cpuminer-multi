@@ -88,7 +88,6 @@ int scanhash_x11(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 {
 	uint32_t n = pdata[19] - 1;
 	const uint32_t first_nonce = pdata[19];
-	const uint32_t Htarg = ptarget[7];
 
 	uint32_t hash64[8] __attribute__((aligned(32)));
 	uint32_t endiandata[32];
