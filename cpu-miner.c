@@ -1856,10 +1856,13 @@ static bool stratum_handle_response(char *buf)
 	err_val = json_object_get(val, "error");
 	id_val = json_object_get(val, "id");
 
-	if (!id_val || json_is_null(id_val) || !res_val)
+	if (!id_val || json_is_null(id_val))
 		goto out;
 
-	if(jsonrpc_2) {
+	if (jsonrpc_2) {
+		if (!res_val && !err_val)
+			goto out;
+
 		json_t *status = json_object_get(res_val, "status");
 		if(status) {
 			const char *s = json_string_value(status);
@@ -1868,6 +1871,9 @@ static bool stratum_handle_response(char *buf)
 			valid = json_is_null(err_val);
 		}
 	} else {
+		if (!res_val)
+			goto out;
+
 		valid = json_is_true(res_val);
 	}
 
