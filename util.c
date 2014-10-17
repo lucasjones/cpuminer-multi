@@ -1163,8 +1163,8 @@ bool stratum_authorize(struct stratum_ctx *sctx, const char *user, const char *p
 	if (jsonrpc_2) {
 		s = malloc(300 + strlen(user) + strlen(pass));
 		sprintf(s, "{\"method\": \"login\", \"params\": {"
-			"\"login\": \"%s\", \"pass\": \"%s\", \"agent\": \"cpuminer-multi/1.0\"}, \"id\": 1}",
-			user, pass);
+			"\"login\": \"%s\", \"pass\": \"%s\", \"agent\": \"%s\"}, \"id\": 1}",
+			user, pass, USER_AGENT);
 	} else {
 		s = malloc(80 + strlen(user) + strlen(pass));
 		sprintf(s, "{\"id\": 2, \"method\": \"mining.authorize\", \"params\": [\"%s\", \"%s\"]}",

@@ -1148,8 +1148,8 @@ static bool rpc2_login(CURL *curl)
 		return false;
 
 	snprintf(s, JSON_BUF_LEN, "{\"method\": \"login\", \"params\": {"
-		"\"login\": \"%s\", \"pass\": \"%s\", \"agent\": \"cpuminer-multi/0.1\"}, \"id\": 1}",
-		rpc_user, rpc_pass);
+		"\"login\": \"%s\", \"pass\": \"%s\", \"agent\": \"%s\"}, \"id\": 1}",
+		rpc_user, rpc_pass, USER_AGENT);
 
 	gettimeofday(&tv_start, NULL);
 	val = json_rpc_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
