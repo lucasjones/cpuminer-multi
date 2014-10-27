@@ -30,6 +30,7 @@ minerd_SOURCES	= elist.h \
 		  blake.c \
 		  cryptonight.c \
 		  fresh.c \
+		  neoscrypt.c \
 		  x11.c \
 		  x13.c \
 		  x14.c \
@@ -59,22 +60,24 @@ minerd_SOURCES	= elist.h \
 		  crypto/c_skein.c \
 		  crypto/hash.c \
 		  crypto/aesb.c
+
 if USE_ASM
+   minerd_SOURCES += neoscrypt_asm.S
 if ARCH_x86
-minerd_SOURCES += sha2-x86.S scrypt-x86.S aesb-x86.S crypto/aesb-x86-impl.c
+   minerd_SOURCES += sha2-x86.S scrypt-x86.S aesb-x86.S crypto/aesb-x86-impl.c
 endif
 if ARCH_x86_64
-minerd_SOURCES += sha2-x64.S scrypt-x64.S aesb-x64.S
+   minerd_SOURCES += sha2-x64.S scrypt-x64.S aesb-x64.S
 endif
 if ARCH_ARM
-minerd_SOURCES += sha2-arm.S scrypt-arm.S
+   minerd_SOURCES += sha2-arm.S scrypt-arm.S
 endif
 endif
 
 minerd_LDFLAGS	= $(PTHREAD_FLAGS)
 minerd_LDADD	= @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@
 minerd_CPPFLAGS = @LIBCURL_CPPFLAGS@
-minerd_CFLAGS   = -O2 -Wno-pointer-sign
+minerd_CFLAGS   = -Wno-pointer-sign -O3
 
 if HAVE_WINDOWS
 minerd_CFLAGS += -Wl,--stack,10485760

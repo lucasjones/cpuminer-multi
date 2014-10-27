@@ -85,6 +85,8 @@ static inline uint32_t swab32(uint32_t v)
 #include <sys/endian.h>
 #endif
 
+typedef unsigned char uchar;
+
 #if !HAVE_DECL_BE32DEC
 static inline uint32_t be32dec(const void *pp)
 {
@@ -167,6 +169,9 @@ extern int scanhash_keccak(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 
 extern int scanhash_heavy(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
+
+extern int scanhash_neoscrypt(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done, uint32_t profile);
 
 extern int scanhash_quark(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
@@ -367,6 +372,7 @@ void skeinhash(void *state, const void *input);
 void freshhash(void* output, const void* input, uint32_t len);
 void keccakhash(void *state, const void *input);
 void inkhash(void *state, const void *input); /* shavite */
+void neoscrypt(unsigned char *output, const unsigned char *password, uint32_t profile);
 void x11hash(void *output, const void *input);
 void x13hash(void *output, const void *input);
 void x14hash(void *output, const void *input);

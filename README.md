@@ -1,7 +1,7 @@
 CPUMiner-Multi
 ==============
 
-[![Build Status](https://travis-ci.org/LucasJones/cpuminer-multi.svg?branch=master)](https://travis-ci.org/LucasJones/cpuminer-multi)
+[![Build Status](https://travis-ci.org/tpruvot/cpuminer-multi.svg?branch=master)](https://travis-ci.org/tpruvot/cpuminer-multi)
 
 This is a multi-threaded CPU miner,
 fork of [pooler](//github.com/pooler)'s cpuminer (see AUTHORS for list of contributors).
@@ -30,6 +30,7 @@ Algorithms
  * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
  * ✓ __fresh__ (FreshCoin)
  * ✓ __blake__ (Neos blake256)
+ * ✓ __neoscrypt__ (Feathercoin)
  * ✓ __pentablake__ (Joincoin)
 
 #### Implemented, but untested
@@ -114,7 +115,12 @@ When the --proxy option is not used, the program honors the http_proxy and all_p
 
 Donations
 =========
-Donations for the work done in this fork are accepted at
+Donations for the work done in this fork are accepted :
+
+tpruvot :
+* BTC `1FhDPLPpw18X4srecguG3MxJYe4a1JsZnd`
+
+Lucas Jones :
 * MRO: `472haywQKoxFzf7asaQ4XKBc2foAY4ezk8HiN63ifW4iAbJiLnfmJfhHSR9XmVKw2WYPnszJV9MEHj9Z5WMK9VCNHaGLDmJ`
 * BTC: `139QWoktddChHsZMWZFxmBva4FM96X2dhE`
 

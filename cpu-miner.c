@@ -41,6 +41,7 @@
 #include "miner.h"
 
 #define PROGRAM_NAME	"cpuminer-multi"
+
 #define LP_SCANTIME		60
 #define JSON_BUF_LEN 345
 
@@ -110,6 +111,7 @@ enum algos {
 	ALGO_SHA256D,     /* SHA-256d */
 	ALGO_KECCAK,      /* Keccak */
 	ALGO_HEAVY,       /* Heavy */
+	ALGO_NEOSCRYPT,   /* NeoScrypt(128, 2, 1) with Salsa20/20 and ChaCha20/20 */
 	ALGO_QUARK,       /* Quark */
 	ALGO_SKEIN,       /* Skein */
 	ALGO_SHAVITE3,    /* Shavite3 */
@@ -128,6 +130,7 @@ static const char *algo_names[] = {
 	[ALGO_SHA256D] =     "sha256d",
 	[ALGO_KECCAK] =      "keccak",
 	[ALGO_HEAVY] =       "heavy",
+	[ALGO_NEOSCRYPT] =   "neoscrypt",
 	[ALGO_QUARK] =       "quark",
 	[ALGO_SKEIN] =       "skein",
 	[ALGO_SHAVITE3] =    "shavite3",
@@ -162,6 +165,7 @@ static int opt_scantime = 5;
 static const bool opt_time = true;
 static enum algos opt_algo = ALGO_SCRYPT;
 static int opt_scrypt_n = 1024;
+static unsigned int opt_nfactor = 6;
 static int opt_n_threads;
 static int num_processors;
 static char *rpc_url;
@@ -217,6 +221,7 @@ Options:\n\
                           keccak       Keccak\n\
                           quark        Quark\n\
                           heavy        Heavy\n\
+                          neoscrypt    NeoScrypt(128, 2, 1)\n\
                           skein        Skein\n\
                           shavite3     Shavite3\n\
                           blake        Blake\n\
@@ -240,6 +245,7 @@ Options:\n\
   -T, --timeout=N       timeout for long polling, in seconds (default: none)\n\
   -s, --scantime=N      upper bound on time spent scanning current work when\n\
                           long polling is unavailable, in seconds (default: 5)\n\
+  -n, --nfactor         scrypt/neoscrypt N-Factor\n\
       --coinbase-addr=ADDR  payout address for solo mining\n\
       --coinbase-sig=TEXT  data to insert in the coinbase when possible\n\
       --no-longpoll     disable long polling support\n\
@@ -275,7 +281,7 @@ static char const short_options[] =
 #ifdef HAVE_SYSLOG_H
 	"S"
 #endif
-	"a:c:CDhp:Px:qr:R:s:t:T:o:u:O:V";
+	"a:c:CDhp:Px:qr:R:s:t:T:o:u:O:Vn:";
 
 static struct option const options[] = {
 	{ "algo", 1, NULL, 'a' },
@@ -291,6 +297,7 @@ static struct option const options[] = {
 	{ "color", 0, NULL, 'C' },
 	{ "debug", 0, NULL, 'D' },
 	{ "help", 0, NULL, 'h' },
+	{ "nfactor", 0, NULL, 'n' },
 	{ "no-gbt", 0, NULL, 1011 },
 	{ "no-getwork", 0, NULL, 1010 },
 	{ "no-longpoll", 0, NULL, 1003 },
@@ -515,23 +522,32 @@ err_out:
 static bool work_decode(const json_t *val, struct work *work)
 {
 	int i;
+	int data_size = sizeof(work->data), target_size = sizeof(work->target);
+	int adata_sz = ARRAY_SIZE(work->data), atarget_sz = ARRAY_SIZE(work->target);
 
-	if(jsonrpc_2) {
+	if (opt_algo == ALGO_NEOSCRYPT) {
+		data_size = 80; target_size = 32;
+		adata_sz = data_size >> 2;
+		atarget_sz = target_size >> 2;
+	}
+
+	if (jsonrpc_2) {
 		return rpc2_job_decode(val, work);
 	}
 
-	if (unlikely(!jobj_binary(val, "data", work->data, sizeof(work->data)))) {
+	if (unlikely(!jobj_binary(val, "data", work->data, data_size))) {
 		applog(LOG_ERR, "JSON invalid data");
 		goto err_out;
 	}
-	if (unlikely(!jobj_binary(val, "target", work->target, sizeof(work->target)))) {
+	if (unlikely(!jobj_binary(val, "target", work->target, target_size))) {
 		applog(LOG_ERR, "JSON invalid target");
 		goto err_out;
 	}
 
-	for (i = 0; i < ARRAY_SIZE(work->data); i++)
+	for (i = 0; i < adata_sz; i++)
 		work->data[i] = le32dec(work->data + i);
-	for (i = 0; i < ARRAY_SIZE(work->target); i++)
+
+	for (i = 0; i < atarget_sz; i++)
 		work->target[i] = le32dec(work->target + i);
 
 	return true;
@@ -935,8 +951,16 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			free(hashhex);
 		} else {
 			char *xnonce2str;
+
 			le32enc(&ntime, work->data[17]);
 			le32enc(&nonce, work->data[19]);
+
+			if (opt_algo == ALGO_NEOSCRYPT) {
+				/* reversed */
+				be32enc(&ntime, work->data[17]);
+				be32enc(&nonce, work->data[19]);
+			}
+
 			bin2hex(ntimestr, (const unsigned char *)(&ntime), 4);
 			bin2hex(noncestr, (const unsigned char *)(&nonce), 4);
 			xnonce2str = abin2hex(work->xnonce2, work->xnonce2_len);
@@ -950,6 +974,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			applog(LOG_ERR, "submit_upstream_work stratum_send_line failed");
 			goto out;
 		}
+
 	} else if (work->txs) {
 		char *req;
 
@@ -973,6 +998,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 				"{\"method\": \"submitblock\", \"params\": [\"%s%s\"], \"id\":1}\r\n",
 				data_str, work->txs);
 		}
+
 		val = json_rpc_call(curl, rpc_url, rpc_userpass, req, NULL, 0);
 		free(req);
 		if (unlikely(!val)) {
@@ -999,6 +1025,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			share_result(json_is_null(res), work, json_string_value(res));
 
 		json_decref(val);
+
 	} else {
 
 		if (jsonrpc_2) {
@@ -1030,17 +1057,44 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			reason = json_object_get(res, "reject-reason");
 			share_result(!strcmp(status ? json_string_value(status) : "", "OK"), work,
 					reason ? json_string_value(reason) : NULL);
-		} else {
-			/* build hex string */
-			for (i = 0; i < ARRAY_SIZE(work->data); i++)
+
+		} else if (opt_algo == ALGO_NEOSCRYPT) {
+			/* different data size and reversed endian */
+			int data_size = 80, adata_sz = data_size / sizeof(uint32_t);
+
+			uchar gw_str[2 * data_size + 1];
+
+			/* Convert to little endian */
+			for(i = 0; i < adata_sz; i++)
 				le32enc(work->data + i, work->data[i]);
 
-			bin2hex(data_str, (unsigned char *)work->data, sizeof(work->data));
+			/* Convert binary to hexadecimal string */
+			bin2hex(gw_str, (uchar *) work->data, data_size);
 
 			/* build JSON-RPC request */
 			snprintf(s, JSON_BUF_LEN,
 				"{\"method\": \"getwork\", \"params\": [ \"%s\" ], \"id\":1}\r\n",
 				data_str);
+
+			/* Issue a JSON-RPC request */
+			val = json_rpc_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
+			if (unlikely(!val)) {
+				applog(LOG_ERR, "submit_upstream_work json_rpc_call failed");
+				goto out;
+			}
+
+			/* Process a JSON-RPC response */
+			res = json_object_get(val, "result");
+			reason = json_object_get(val, "reject-reason");
+			share_result(json_is_true(res), work, reason ? json_string_value(reason) : NULL);
+
+		} else {
+
+			/* build hex string */
+			for (i = 0; i < ARRAY_SIZE(work->data); i++)
+				le32enc(work->data + i, work->data[i]);
+
+			bin2hex(data_str, (unsigned char *)work->data, sizeof(work->data));
 
 			/* issue JSON-RPC request */
 			val = json_rpc_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
@@ -1435,6 +1489,13 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			work->data[9 + i] = be32dec((uint32_t *) merkle_root + i);
 		work->data[17] = le32dec(sctx->job.ntime);
 		work->data[18] = le32dec(sctx->job.nbits);
+
+		if (opt_algo == ALGO_NEOSCRYPT) {
+			/* reversed endian */
+			for (i = 0; i <= 18; i++)
+				work->data[i] = swab32(work->data[i]);
+		}
+
 		work->data[20] = 0x80000000;
 		work->data[31] = 0x00000280;
 
@@ -1447,10 +1508,14 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			free(xnonce2str);
 		}
 
-		if (opt_algo == ALGO_SCRYPT)
-			diff_to_target(work->target, sctx->job.diff / 65536.0);
-		else
-			diff_to_target(work->target, sctx->job.diff);
+		switch (opt_algo) {
+			case ALGO_SCRYPT:
+			case ALGO_NEOSCRYPT:
+				diff_to_target(work->target, sctx->job.diff / 65536.0);
+				break;
+			default:
+				diff_to_target(work->target, sctx->job.diff);
+		}
 	}
 }
 
@@ -1501,6 +1566,12 @@ static void *miner_thread(void *userdata)
 		if (have_stratum) {
 			while (!jsonrpc_2 && time(NULL) >= g_work_time + 120)
 				sleep(1);
+
+			while (!stratum.job.diff) {
+				applog(LOG_DEBUG, "Waiting for Stratum to set the job difficulty");
+				sleep(1);
+			}
+
 			pthread_mutex_lock(&g_work_lock);
 			if ((*nonceptr) >= end_nonce
 				&& !(jsonrpc_2 ? memcmp(work.data, g_work.data, 39) ||
@@ -1508,6 +1579,7 @@ static void *miner_thread(void *userdata)
 				  : memcmp(work.data, g_work.data, 76)))
 				stratum_gen_work(&stratum, &g_work);
 		} else {
+
 			int min_scantime = have_longpoll ? LP_SCANTIME : opt_scantime;
 			/* obtain new work from internal workio thread */
 			pthread_mutex_lock(&g_work_lock);
@@ -1548,10 +1620,16 @@ static void *miner_thread(void *userdata)
 			max64 = g_work_time + (have_longpoll ? LP_SCANTIME : opt_scantime)
 					- time(NULL);
 		max64 *= thr_hashrates[thr_id];
+
 		if (max64 <= 0) {
 			switch (opt_algo) {
 			case ALGO_SCRYPT:
+			case ALGO_NEOSCRYPT:
 				max64 = opt_scrypt_n < 16 ? 0x3ffff : 0x3fffff / opt_scrypt_n;
+				if (opt_nfactor > 3)
+					max64 >>= (opt_nfactor - 3);
+				else if (opt_nfactor > 16)
+					max64 = 0xF;
 				break;
 			case ALGO_CRYPTONIGHT:
 				max64 = 0x40LL;
@@ -1586,9 +1664,10 @@ static void *miner_thread(void *userdata)
 
 		/* scan nonces for a proof-of-work hash */
 		switch (opt_algo) {
+
 		case ALGO_SCRYPT:
 			rc = scanhash_scrypt(thr_id, work.data, scratchbuf, work.target,
-					max_nonce, &hashes_done, opt_scrypt_n);
+					max_nonce, &hashes_done, 0x80000020 | (opt_nfactor << 8));
 			break;
 
 		case ALGO_SHA256D:
@@ -1604,6 +1683,11 @@ static void *miner_thread(void *userdata)
 		case ALGO_HEAVY:
 			rc = scanhash_heavy(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
+			break;
+
+		case ALGO_NEOSCRYPT:
+			rc = scanhash_neoscrypt(thr_id, work.data, work.target,
+					max_nonce, &hashes_done, 0x80000020 | (opt_nfactor << 8));
 			break;
 
 		case ALGO_QUARK:
@@ -2061,6 +2145,19 @@ static void parse_arg(int key, char *arg, char *pname)
 			fprintf(stderr, "%s: unknown algorithm -- '%s'\n",
 				pname, arg);
 			show_usage_and_exit(1);
+		}
+		if (opt_algo == ALGO_SCRYPT)
+			opt_nfactor = 9;
+		break;
+	case 'n':
+		if (opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_SCRYPT) {
+			v = atoi(arg);
+			/* Nfactor = lb(N) - 1; N = (1 << (Nfactor + 1)) */
+			if ((v < 0) || (v > 30)) {
+				fprintf(stderr, "%s: incorrect Nfactor %d\n", pname, v);
+				show_usage_and_exit(1);
+			}
+			opt_nfactor = v;
 		}
 		break;
 	case 'B':

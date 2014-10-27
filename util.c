@@ -573,7 +573,8 @@ bool hex2bin(unsigned char *p, const char *hexstr, size_t len)
 		len--;
 	}
 
-	return (len == 0 && *hexstr == 0) ? true : false;
+	return(!len) ? true : false;
+/*	return (len == 0 && *hexstr == 0) ? true : false; */
 }
 
 int varint_encode(unsigned char *p, uint64_t n)
@@ -1610,6 +1611,10 @@ void print_hash_tests(void)
 	memset(hash, 0, sizeof hash);
 	keccakhash(&hash[0], &buf[0]);
 	printpfx("Keccak", hash);
+
+	memset(hash, 0, sizeof hash);
+	neoscrypt(&hash[0], (uchar*) &buf[0], 80000620);
+	printpfx("Neoscrypt", hash);
 
 	memset(hash, 0, sizeof hash);
 	quarkhash(&hash[0], &buf[0]);

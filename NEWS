@@ -5,6 +5,7 @@ Version multi 1.0.5 (Tanguy Pruvot)
 - Add --cputest parameter (debug)
 - Test and fix blake on NEOS, needs 14 rounds (was 8)
 - Add pentablake (5x blake256) (from bitbandi)
+- Add neoscrypt
 
 Version multi 1.0.4 (Tanguy Pruvot)
 
