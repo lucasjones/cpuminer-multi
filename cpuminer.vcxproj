@@ -1,0 +1,326 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{36DC07F9-A4A6-4877-A146-1B960083CF6F}</ProjectGuid>
+    <RootNamespace>cpuminer</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+    <CLRSupport>false</CLRSupport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+    <CLRSupport>false</CLRSupport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+    <CLRSupport>false</CLRSupport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+    <CLRSupport>false</CLRSupport>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;CURL_STATICLIB;SCRYPT_KECCAK512;SCRYPT_CHACHA;SCRYPT_CHOOSE_COMPILETIME;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.;compat;compat\curl-for-windows\curl\include;compat\jansson;compat\getopt;compat\pthreads;compat\curl-for-windows\openssl\openssl\include;compat\curl-for-windows\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;pthreadVC2.lib;libcurl.x86.lib;openssl.x86.lib;zlib.x86.lib;ws2_32.lib;Wldap32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>compat\pthreads\x86;compat\curl-for-windows\out\x86\Release\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
+      <LinkStatus>true</LinkStatus>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;CURL_STATICLIB;SCRYPT_KECCAK512;SCRYPT_CHACHA;SCRYPT_CHOOSE_COMPILETIME;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.;compat;compat\curl-for-windows\curl\include;compat\jansson;compat\getopt;compat\pthreads;compat\curl-for-windows\openssl\openssl\include;compat\curl-for-windows\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;pthreadVC2.lib;libcurl.x64.lib;openssl.x64.lib;zlib.x64.lib;ws2_32.lib;Wldap32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>compat\pthreads\x64;compat\curl-for-windows\out\x64\Release\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
+      <LinkStatus>true</LinkStatus>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
+      <CompileAsManaged>false</CompileAsManaged>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;CURL_STATICLIB;SCRYPT_KECCAK512;SCRYPT_CHACHA;SCRYPT_CHOOSE_COMPILETIME;MAXWELL_OR_FERMI=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.;compat;compat\curl-for-windows\curl\include;compat\jansson;compat\getopt;compat\pthreads;compat\curl-for-windows\openssl\openssl\include;compat\curl-for-windows\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ExceptionHandling>SyncCThrow</ExceptionHandling>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;pthreadVC2.lib;libcurl.x86.lib;openssl.x86.lib;zlib.x86.lib;ws2_32.lib;Wldap32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>compat\pthreads\x86;compat\curl-for-windows\out\x86\Release\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <LinkStatus>false</LinkStatus>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
+      <CompileAsManaged>false</CompileAsManaged>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;CURL_STATICLIB;SCRYPT_KECCAK512;SCRYPT_CHACHA;SCRYPT_CHOOSE_COMPILETIME;MAXWELL_OR_FERMI=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.;compat;compat\curl-for-windows\curl\include;compat\jansson;compat\getopt;compat\pthreads;compat\curl-for-windows\openssl\openssl\include;compat\curl-for-windows\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;pthreadVC2.lib;libcurl.x64.lib;openssl.x64.lib;zlib.x64.lib;ws2_32.lib;Wldap32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>compat\pthreads\x64;compat\curl-for-windows\out\x64\Release\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
+      <LinkStatus>false</LinkStatus>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="compat\getopt\getopt_long.c" />
+    <ClCompile Include="compat\gettimeofday.c" />
+    <ClCompile Include="compat\jansson\dump.c" />
+    <ClCompile Include="compat\jansson\hashtable.c" />
+    <ClCompile Include="compat\jansson\load.c" />
+    <ClCompile Include="compat\jansson\strbuffer.c" />
+    <ClCompile Include="compat\jansson\utf.c" />
+    <ClCompile Include="compat\jansson\value.c" />
+    <ClCompile Include="compat\winansi.c" />
+    <ClCompile Include="cpu-miner.c">
+      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
+      <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
+    </ClCompile>
+    <ClCompile Include="crypto\aesb-x86-impl.c" />
+    <ClCompile Include="crypto\aesb.c" />
+    <ClCompile Include="crypto\c_blake256.c" />
+    <ClCompile Include="crypto\c_groestl.c" />
+    <ClCompile Include="crypto\c_jh.c" />
+    <ClCompile Include="crypto\c_keccak.c" />
+    <ClCompile Include="crypto\c_skein.c" />
+    <ClCompile Include="crypto\hash.c" />
+    <ClCompile Include="crypto\oaes_lib.c" />
+    <ClCompile Include="ink.c" />
+    <ClCompile Include="sha3\blake2s.c" />
+    <ClCompile Include="sha3\sph_hefty1.c" />
+    <ClCompile Include="util.c">
+      <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
+    </ClCompile>
+    <ClCompile Include="blake.c" />
+    <ClCompile Include="cryptonight.c" />
+    <ClCompile Include="fresh.c" />
+    <ClCompile Include="heavy.c" />
+    <ClCompile Include="keccak.c" />
+    <ClCompile Include="neoscrypt.c" />
+    <ClCompile Include="pentablake.c" />
+    <ClCompile Include="quark.c" />
+    <ClCompile Include="sha2.c" />
+    <ClCompile Include="scrypt.c">
+      <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
+    </ClCompile>
+    <ClCompile Include="skein.c" />
+    <ClCompile Include="x11.c" />
+    <ClCompile Include="x13.c" />
+    <ClCompile Include="x14.c" />
+    <ClCompile Include="x15.c" />
+    <ClCompile Include="sha3\aes_helper.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="sha3\sph_blake.c" />
+    <ClCompile Include="sha3\sph_bmw.c" />
+    <ClCompile Include="sha3\sph_cubehash.c" />
+    <ClCompile Include="sha3\sph_echo.c" />
+    <ClCompile Include="sha3\sph_fugue.c" />
+    <ClCompile Include="sha3\sph_groestl.c" />
+    <ClCompile Include="sha3\sph_jh.c" />
+    <ClCompile Include="sha3\sph_keccak.c" />
+    <ClCompile Include="sha3\sph_luffa.c" />
+    <ClCompile Include="sha3\sph_shabal.c" />
+    <ClCompile Include="sha3\sph_shavite.c" />
+    <ClCompile Include="sha3\sph_simd.c" />
+    <ClCompile Include="sha3\sph_skein.c" />
+    <ClCompile Include="sha3\sph_hamsi.c" />
+    <ClCompile Include="sha3\sph_hamsi_helper.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="sha3\sph_whirlpool.c" />
+    <ClCompile Include="sha3\sph_x15_helper.c">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ccminer\compat\jansson\config.h" />
+    <ClInclude Include="..\ccminer\compat\jansson\jansson.h" />
+    <ClInclude Include="compat.h" />
+    <ClInclude Include="compat\getopt\getopt.h" />
+    <ClInclude Include="compat\inttypes.h" />
+    <ClInclude Include="compat\stdbool.h" />
+    <ClInclude Include="compat\sys\time.h" />
+    <ClInclude Include="compat\unistd.h" />
+    <ClInclude Include="compat\winansi.h" />
+    <ClInclude Include="cpuminer-config.h" />
+    <ClInclude Include="crypto\c_blake256.h" />
+    <ClInclude Include="crypto\c_groestl.h" />
+    <ClInclude Include="crypto\c_jh.h" />
+    <ClInclude Include="crypto\c_keccak.h" />
+    <ClInclude Include="crypto\c_skein.h" />
+    <ClInclude Include="crypto\hash-ops.h" />
+    <ClInclude Include="crypto\oaes_lib.h" />
+    <ClInclude Include="elist.h" />
+    <ClInclude Include="miner.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-chacha.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-hash.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-hash_keccak.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-hash_sha256.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-mix_chacha-avx.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-mix_chacha-sse2.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-mix_chacha-ssse3.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-mix_chacha.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-mix_salsa-avx.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-mix_salsa-sse2.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-mix_salsa.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-pbkdf2.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-portable-x86.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-portable.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-romix-basic.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-romix-template.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-romix.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-salsa.h" />
+    <ClInclude Include="scryptjane\scrypt-jane-test-vectors.h" />
+    <ClInclude Include="sha3\blake2s.h" />
+    <ClInclude Include="sha3\sph_blake.h" />
+    <ClInclude Include="sha3\sph_bmw.h" />
+    <ClInclude Include="sha3\sph_cubehash.h" />
+    <ClInclude Include="sha3\sph_echo.h" />
+    <ClInclude Include="sha3\sph_fugue.h" />
+    <ClInclude Include="sha3\sph_groestl.h" />
+    <ClInclude Include="sha3\sph_haval.h" />
+    <ClInclude Include="sha3\sph_hefty1.h" />
+    <ClInclude Include="sha3\sph_jh.h" />
+    <ClInclude Include="sha3\sph_keccak.h" />
+    <ClInclude Include="sha3\sph_luffa.h" />
+    <ClInclude Include="sha3\sph_shabal.h" />
+    <ClInclude Include="sha3\sph_shavite.h" />
+    <ClInclude Include="sha3\sph_simd.h" />
+    <ClInclude Include="sha3\sph_skein.h" />
+    <ClInclude Include="sha3\sph_hamsi.h" />
+    <ClInclude Include="sha3\sph_types.h" />
+    <ClInclude Include="sha3\sph_whirlpool.h" />
+    <ClInclude Include="uint256.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="neoscrypt_asm.S">
+    </ClCompile>
+    <ClCompile Include="aesb-x86.SS">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="scrypt-x86.S">
+      <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="sha2-x86.S">
+      <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="aesb-x64.S">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="scrypt-x64.S">
+      <ExcludedFromBuild Condition="'$(Platform)'=='Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="sha2-x64.S">
+      <ExcludedFromBuild Condition="'$(Platform)'=='Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <None Include="scrypt-arm.S" />
+    <None Include="sha2-arm.S" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <!-- Copy the required dlls -->
+  <Target Name="AfterBuild">
+    <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="AfterClean">
+    <Delete Files="@(FilesToCopy->'$(OutDir)%(Filename)%(Extension)')" TreatErrorsAsWarnings="true" />
+  </Target>
+</Project>

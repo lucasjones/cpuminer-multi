@@ -10,6 +10,15 @@
 
 #include <stdio.h>
 
+#ifdef WIN32
+#define snprintf(...) _snprintf(__VA_ARGS__)
+#define strdup(x) _strdup(x)
+#endif
+
+#ifdef WIN32
+#define inline __inline
+#endif
+
 #ifndef __cplusplus
 #define JSON_INLINE inline
 #else

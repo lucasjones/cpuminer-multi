@@ -31,7 +31,16 @@
 #include <string.h>
 
 #include "miner.h"
-#include "sha3/blake2s.h"
+
+#define USE_CUSTOM_BLAKE2S
+// TODO: try blake2sp
+//#include "sha3/blake2s.h"
+
+#define STACK_ALIGN 0x40
+
+#if defined(__i386__) || defined(_M_IA64) /*|| defined(_M_IX86) // tofix: win32 msvc */
+#define ASM 1
+#endif
 
 #if (WINDOWS)
 /* sizeof(unsigned long) = 4 for MinGW64 */
@@ -45,9 +54,9 @@ typedef unsigned int  uint;
 #define MIN(a, b) ((a) < (b) ? a : b)
 #define MAX(a, b) ((a) > (b) ? a : b)
 
-#define SCRYPT_BLOCK_SIZE 64
-#define SCRYPT_HASH_BLOCK_SIZE 64
-#define SCRYPT_HASH_DIGEST_SIZE 32
+#define SCRYPT_BLOCK_SIZE 64U
+#define SCRYPT_HASH_BLOCK_SIZE 64U
+#define SCRYPT_HASH_DIGEST_SIZE 32U
 
 #define ROTL32(a,b) (((a) << (b)) | ((a) >> (32 - b)))
 #define ROTR32(a,b) (((a) >> (b)) | ((a) << (32 - b)))
@@ -636,6 +645,7 @@ static void blake2s_update(blake2s_state *S, const uchar *input, uint input_size
     }
 }
 #endif
+
 static void neoscrypt_blake2s(const void *input, const uint input_size, const void *key, const uchar key_size,
   void *output, const uchar output_size) {
     uchar block[BLAKE2S_BLOCK_SIZE];
@@ -685,14 +695,18 @@ static void neoscrypt_blake2s(const void *input, const uint input_size, const vo
  * prf_output_size must be <= prf_key_size; */
 static void neoscrypt_fastkdf(const uchar *password, uint password_len, const uchar *salt, uint salt_len,
   uint N, uchar *output, uint output_len) {
-    const uint stack_align = 0x40, kdf_buf_size = FASTKDF_BUFFER_SIZE,
-      prf_input_size = BLAKE2S_BLOCK_SIZE, prf_key_size = BLAKE2S_KEY_SIZE, prf_output_size = BLAKE2S_OUT_SIZE;
+
+#define kdf_buf_size FASTKDF_BUFFER_SIZE
+#define prf_input_size BLAKE2S_BLOCK_SIZE
+#define prf_key_size BLAKE2S_KEY_SIZE
+#define prf_output_size BLAKE2S_OUT_SIZE
+
     uint bufptr, a, b, i, j;
     uchar *A, *B, *prf_input, *prf_key, *prf_output;
 
     /* Align and set up the buffers in stack */
-    uchar stack[2 * kdf_buf_size + prf_input_size + prf_key_size + prf_output_size + stack_align];
-    A          = &stack[stack_align & ~(stack_align - 1)];
+    uchar stack[2 * kdf_buf_size + prf_input_size + prf_key_size + prf_output_size + STACK_ALIGN];
+    A          = &stack[STACK_ALIGN & ~(STACK_ALIGN - 1)];
     B          = &A[kdf_buf_size + prf_input_size];
     prf_output = &A[2 * kdf_buf_size + prf_input_size + prf_key_size];
 
@@ -870,7 +884,7 @@ static void neoscrypt_blkmix(uint *X, uint *Y, uint r, uint mixmode) {
  *   profile bits 30 to 13 are reserved */
 void neoscrypt(uchar *output, const uchar *password, uint32_t profile)
 {
-    uint N = 128, r = 2, dblmix = 1, mixmode = 0x14, stack_align = 0x40;
+    uint N = 128, r = 2, dblmix = 1, mixmode = 0x14;
     uint kdf, i, j;
     uint *X, *Y, *Z, *V;
 
@@ -886,9 +900,9 @@ void neoscrypt(uchar *output, const uchar *password, uint32_t profile)
         r = (1 << ((profile >> 5) & 0x7));
     }
 
-    uchar stack[(N + 3) * r * 2 * SCRYPT_BLOCK_SIZE + stack_align];
+    uchar *stack = (uchar*) malloc((N + 3) * r * 2 * SCRYPT_BLOCK_SIZE + STACK_ALIGN);
     /* X = r * 2 * SCRYPT_BLOCK_SIZE */
-    X = (uint *) &stack[stack_align & ~(stack_align - 1)];
+    X = (uint *) &stack[STACK_ALIGN & ~(STACK_ALIGN - 1)];
     /* Z is a copy of X for ChaCha */
     Z = &X[32 * r];
     /* Y is an X sized temporal space */
@@ -966,7 +980,6 @@ void neoscrypt(uchar *output, const uchar *password, uint32_t profile)
 
     /* output = KDF(password, X) */
     switch(kdf) {
-
         default:
         case(0x0):
             neoscrypt_fastkdf(password, 80, (uchar *) X, r * 2 * SCRYPT_BLOCK_SIZE, 32, output, 32);
@@ -975,9 +988,9 @@ void neoscrypt(uchar *output, const uchar *password, uint32_t profile)
         case(0x1):
             neoscrypt_pbkdf2_sha256(password, 80, (uchar *) X, r * 2 * SCRYPT_BLOCK_SIZE, 1, output, 32);
             break;
-
     }
 
+    free(stack);
 }
 
 static bool fulltest_le(const uint *hash, const uint *target)
@@ -1013,7 +1026,7 @@ static bool fulltest_le(const uint *hash, const uint *target)
 int scanhash_neoscrypt(int thr_id, uint32_t *pdata, const uint32_t *ptarget, uint32_t max_nonce,
                        uint64_t *hashes_done, uint32_t profile)
 {
-    uint32_t hash[8] __attribute__((aligned(32)));
+    uint32_t _ALIGN(32) hash[8];
     uint32_t start_nonce = pdata[19], inc_nonce = 1;
     const uint32_t targint = ptarget[7];
 

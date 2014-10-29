@@ -18,6 +18,8 @@
 #include <stdint.h>
 
 #if defined(_MSC_VER)
+#include <inttypes.h>
+#define inline __inline
 #define ALIGN(x) __declspec(align(x))
 #else
 #define ALIGN(x) __attribute__((aligned(x)))
@@ -76,7 +78,7 @@ static inline void store48(void *dst, uint64_t w)
 }
 
 /* prevents compiler optimizing out memset() */
-static inline void secure_zero_memory( void *v, size_t n )
+inline void secure_zero_memory(void *v, size_t n)
 {
 	volatile uint8_t *p = ( volatile uint8_t * )v;
 

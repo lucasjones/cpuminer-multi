@@ -8,7 +8,7 @@
 
 #include "sha3/sph_skein.h"
 
-extern void skeinhash(void *state, const void *input)
+void skeinhash(void *state, const void *input)
 {
     sph_skein512_context ctx_skein;
     SHA256_CTX sha256;
@@ -43,7 +43,7 @@ int scanhash_skein(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	const uint32_t first_nonce = pdata[19];
 	//const uint32_t Htarg = ptarget[7];
 
-	uint32_t hash64[8] __attribute__((aligned(32)));
+	uint32_t _ALIGN(32) hash64[8];
 	uint32_t endiandata[32];
 	
 	//char testdata[] = {"\x70\x00\x00\x00\x5d\x38\x5b\xa1\x14\xd0\x79\x97\x0b\x29\xa9\x41\x8f\xd0\x54\x9e\x7d\x68\xa9\x5c\x7f\x16\x86\x21\xa3\x14\x20\x10\x00\x00\x00\x00\x57\x85\x86\xd1\x49\xfd\x07\xb2\x2f\x3a\x8a\x34\x7c\x51\x6d\xe7\x05\x2f\x03\x4d\x2b\x76\xff\x68\xe0\xd6\xec\xff\x9b\x77\xa4\x54\x89\xe3\xfd\x51\x17\x32\x01\x1d\xf0\x73\x10\x00"};

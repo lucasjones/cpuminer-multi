@@ -6,6 +6,7 @@ Version multi 1.0.5 (Tanguy Pruvot)
 - Test and fix blake on NEOS, needs 14 rounds (was 8)
 - Add pentablake (5x blake256) (from bitbandi)
 - Add neoscrypt
+- Windows (VC++ 2013 build support)
 
 Version multi 1.0.4 (Tanguy Pruvot)
 

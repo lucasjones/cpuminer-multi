@@ -1,6 +1,5 @@
-
 minerd
-minerd.exe
+*.exe
 *.o
 
 autom4te.cache
@@ -29,3 +28,12 @@ mingw32-config.cache
 */.dirstamp
 
 *.iml
+
+*.vcxproj.user
+*.opensdf
+*.sdf
+*.suo
+Release/
+Debug/
+x64/Release/
+x64/Debug/

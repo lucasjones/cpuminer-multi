@@ -117,8 +117,9 @@ Donations
 =========
 Donations for the work done in this fork are accepted :
 
-tpruvot :
-* BTC `1FhDPLPpw18X4srecguG3MxJYe4a1JsZnd`
+Tanguy Pruvot :
+* BTC: `1FhDPLPpw18X4srecguG3MxJYe4a1JsZnd`
+* NEOS:`NaEcVrdzoCWHUYXb7X8QoafoKS9UV69Yk4`
 
 Lucas Jones :
 * MRO: `472haywQKoxFzf7asaQ4XKBc2foAY4ezk8HiN63ifW4iAbJiLnfmJfhHSR9XmVKw2WYPnszJV9MEHj9Z5WMK9VCNHaGLDmJ`

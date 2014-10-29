@@ -32,6 +32,10 @@
 #include <assert.h>
 #include <string.h>
 
+#ifdef _MSC_VER
+#define inline __inline
+#endif
+
 #include "sph_hefty1.h"
 
 #define Min(A, B) (A <= B ? A : B)

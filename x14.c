@@ -108,7 +108,7 @@ int scanhash_x14(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	const uint32_t first_nonce = pdata[19];
 	const uint32_t Htarg = ptarget[7];
 
-	uint32_t hash64[8] __attribute__((aligned(32)));
+	uint32_t _ALIGN(32) hash64[8];
 	uint32_t endiandata[32];
 
 	uint64_t htmax[] = {

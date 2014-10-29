@@ -21,11 +21,18 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <time.h>
+#include <signal.h>
+
+#include <curl/curl.h>
+#include <jansson.h>
+#include <openssl/sha.h>
+
 #ifdef WIN32
 #include <windows.h>
+#include <stdint.h>
+
 #else
 #include <errno.h>
-#include <signal.h>
 #include <sys/resource.h>
 #if HAVE_SYS_SYSCTL_H
 #include <sys/types.h>
@@ -35,10 +42,16 @@
 #include <sys/sysctl.h>
 #endif
 #endif
-#include <jansson.h>
-#include <curl/curl.h>
+
 #include "compat.h"
 #include "miner.h"
+
+#ifdef WIN32
+#include <Mmsystem.h>
+#pragma comment(lib, "winmm.lib")
+#include "compat/winansi.h"
+BOOL WINAPI ConsoleHandler(DWORD);
+#endif
 
 #define PROGRAM_NAME	"cpuminer-multi"
 
@@ -123,25 +136,27 @@ enum algos {
 	ALGO_X15,         /* X15 Whirlpool */
 	ALGO_PENTABLAKE,  /* Pentablake */
 	ALGO_CRYPTONIGHT, /* CryptoNight */
+	ALGO_COUNT
 };
 
 static const char *algo_names[] = {
-	[ALGO_SCRYPT] =      "scrypt",
-	[ALGO_SHA256D] =     "sha256d",
-	[ALGO_KECCAK] =      "keccak",
-	[ALGO_HEAVY] =       "heavy",
-	[ALGO_NEOSCRYPT] =   "neoscrypt",
-	[ALGO_QUARK] =       "quark",
-	[ALGO_SKEIN] =       "skein",
-	[ALGO_SHAVITE3] =    "shavite3",
-	[ALGO_BLAKE] =       "blake",
-	[ALGO_FRESH] =       "fresh",
-	[ALGO_X11] =         "x11",
-	[ALGO_X13] =         "x13",
-	[ALGO_X14] =         "x14",
-	[ALGO_X15] =         "x15",
-	[ALGO_PENTABLAKE] =  "pentablake",
-	[ALGO_CRYPTONIGHT] = "cryptonight",
+	"scrypt",
+	"sha256d",
+	"keccak",
+	"heavy",
+	"neoscrypt",
+	"quark",
+	"skein",
+	"shavite3",
+	"blake",
+	"fresh",
+	"x11",
+	"x13",
+	"x14",
+	"x15",
+	"pentablake",
+	"cryptonight",
+	"\0"
 };
 
 bool opt_debug = false;
@@ -155,7 +170,7 @@ bool allow_getwork = true;
 bool want_stratum = true;
 bool have_stratum = false;
 bool use_syslog = false;
-bool use_colors = false;
+bool use_colors = true;
 static bool opt_background = false;
 static bool opt_quiet = false;
 static int opt_retries = -1;
@@ -254,7 +269,7 @@ Options:\n\
       --no-stratum      disable X-Stratum support\n\
       --no-redirect     ignore requests to change the URL of the mining server\n\
   -q, --quiet           disable per-thread hashmeter output\n\
-  -C, --color           enable colored output\n\
+      --no-color        disable colored output\n\
   -D, --debug           enable debug output\n\
   -P, --protocol-dump   verbose dump of protocol-level activities\n"
 #ifdef HAVE_SYSLOG_H
@@ -294,7 +309,7 @@ static struct option const options[] = {
 	{ "coinbase-addr", 1, NULL, 1013 },
 	{ "coinbase-sig", 1, NULL, 1015 },
 	{ "config", 1, NULL, 'c' },
-	{ "color", 0, NULL, 'C' },
+	{ "no-color", 0, NULL, 1002 },
 	{ "debug", 0, NULL, 'D' },
 	{ "help", 0, NULL, 'h' },
 	{ "nfactor", 0, NULL, 'n' },
@@ -330,6 +345,12 @@ static char *lp_id;
 
 static bool rpc2_login(CURL *curl);
 static void workio_cmd_free(struct workio_cmd *wc);
+
+void proper_exit(int reason)
+{
+	/* placeholder if required */
+	exit(reason);
+}
 
 json_t *json_rpc2_call_recur(CURL *curl, const char *url,
 		const char *userpass, json_t *rpc_req,
@@ -414,7 +435,7 @@ static inline void work_copy(struct work *dest, const struct work *src)
 	if (src->job_id)
 		dest->job_id = strdup(src->job_id);
 	if (src->xnonce2) {
-		dest->xnonce2 = malloc(src->xnonce2_len);
+		dest->xnonce2 = (uchar*) malloc(src->xnonce2_len);
 		memcpy(dest->xnonce2, src->xnonce2, src->xnonce2_len);
 	}
 }
@@ -435,7 +456,7 @@ static bool jobj_binary(const json_t *obj, const char *key,
 		applog(LOG_ERR, "JSON key '%s' is not a string", key);
 		return false;
 	}
-	if (!hex2bin(buf, hexstr, buflen))
+	if (!hex2bin((uchar*) buf, hexstr, buflen))
 		return false;
 
 	return true;
@@ -467,7 +488,7 @@ bool rpc2_job_decode(const json_t *job, struct work *work)
 	}
 	if (blobLen != 0) {
 		pthread_mutex_lock(&rpc2_job_lock);
-		char *blob = malloc(blobLen / 2);
+		uchar *blob = (uchar*) malloc(blobLen / 2);
 		if (!hex2bin(blob, hexblob, blobLen / 2)) {
 			applog(LOG_ERR, "JSON invalid blob");
 			pthread_mutex_unlock(&rpc2_job_lock);
@@ -477,7 +498,7 @@ bool rpc2_job_decode(const json_t *job, struct work *work)
 			free(rpc2_blob);
 		}
 		rpc2_bloblen = blobLen / 2;
-		rpc2_blob = malloc(rpc2_bloblen);
+		rpc2_blob = (char*) malloc(rpc2_bloblen);
 		memcpy(rpc2_blob, blob, blobLen / 2);
 
 		free(blob);
@@ -612,10 +633,10 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 	uint32_t prevhash[8];
 	uint32_t target[8];
 	int cbtx_size;
-	unsigned char *cbtx = NULL;
+	uchar *cbtx = NULL;
 	int tx_count, tx_size;
-	unsigned char txc_vi[9];
-	unsigned char (*merkle_tree)[32] = NULL;
+	uchar txc_vi[9];
+	uchar **merkle_tree = NULL;
 	bool coinbase_append = false;
 	bool submit_coinbase = false;
 	bool version_force = false;
@@ -703,7 +724,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 	if (tmp) {
 		const char *cbtx_hex = json_string_value(json_object_get(tmp, "data"));
 		cbtx_size = cbtx_hex ? strlen(cbtx_hex) / 2 : 0;
-		cbtx = malloc(cbtx_size + 100);
+		cbtx = (uchar*) malloc(cbtx_size + 100);
 		if (cbtx_size < 60 || !hex2bin(cbtx, cbtx_hex, cbtx_size)) {
 			applog(LOG_ERR, "JSON invalid coinbasetxn");
 			goto out;
@@ -724,7 +745,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 			goto out;
 		}
 		cbvalue = json_is_integer(tmp) ? json_integer_value(tmp) : json_number_value(tmp);
-		cbtx = malloc(256);
+		cbtx = (uchar*) malloc(256);
 		le32enc((uint32_t *)cbtx, 1); /* version */
 		cbtx[4] = 1; /* in-counter */
 		memset(cbtx+5, 0x00, 32); /* prev txout hash */
@@ -795,18 +816,18 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 	}
 
 	n = varint_encode(txc_vi, 1 + tx_count);
-	work->txs = malloc(2 * (n + cbtx_size + tx_size) + 1);
+	work->txs = (char*) malloc(2 * (n + cbtx_size + tx_size) + 1);
 	bin2hex(work->txs, txc_vi, n);
 	bin2hex(work->txs + 2*n, cbtx, cbtx_size);
 
 	/* generate merkle root */
-	merkle_tree = malloc(32 * ((1 + tx_count + 1) & ~1));
+	merkle_tree = (unsigned char**) malloc(32 * ((1 + tx_count + 1) & ~1));
 	sha256d(merkle_tree[0], cbtx, cbtx_size);
 	for (i = 0; i < tx_count; i++) {
 		tmp = json_array_get(txa, i);
 		const char *tx_hex = json_string_value(json_object_get(tmp, "data"));
 		const int tx_size = tx_hex ? strlen(tx_hex) / 2 : 0;
-		unsigned char *tx = malloc(tx_size);
+		unsigned char *tx = (uchar*) malloc(tx_size);
 		if (!tx_hex || !hex2bin(tx, tx_hex, tx_size)) {
 			applog(LOG_ERR, "JSON invalid transactions");
 			free(tx);
@@ -936,7 +957,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 		char ntimestr[9], noncestr[9];
 
 		if (jsonrpc_2) {
-			char hash[32];
+			uchar hash[32];
 
 			bin2hex(noncestr, (const unsigned char *)work->data + 39, 4);
 			switch(opt_algo) {
@@ -987,13 +1008,13 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			json_object_set_new(val, "workid", json_string(work->workid));
 			params = json_dumps(val, 0);
 			json_decref(val);
-			req = malloc(128 + 2*80 + strlen(work->txs) + strlen(params));
+			req = (char*) malloc(128 + 2 * 80 + strlen(work->txs) + strlen(params));
 			sprintf(req,
 				"{\"method\": \"submitblock\", \"params\": [\"%s%s\", %s], \"id\":1}\r\n",
 				data_str, work->txs, params);
 			free(params);
 		} else {
-			req = malloc(128 + 2*80 + strlen(work->txs));
+			req = (char*) malloc(128 + 2 * 80 + strlen(work->txs));
 			sprintf(req,
 				"{\"method\": \"submitblock\", \"params\": [\"%s%s\"], \"id\":1}\r\n",
 				data_str, work->txs);
@@ -1030,7 +1051,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 
 		if (jsonrpc_2) {
 			char noncestr[9];
-			char hash[32];
+			uchar hash[32];
 			char *hashhex;
 
 			bin2hex(noncestr, (const unsigned char *)work->data + 39, 4);
@@ -1040,7 +1061,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			default:
 				cryptonight_hash(hash, work->data, 76);
 			}
-			hashhex = abin2hex(hash, 32);
+			hashhex = abin2hex(&hash[0], 32);
 			snprintf(s, JSON_BUF_LEN,
 					"{\"method\": \"submit\", \"params\": {\"id\": \"%s\", \"job_id\": \"%s\", \"nonce\": \"%s\", \"result\": \"%s\"}, \"id\":1}\r\n",
 					rpc2_id, work->job_id, noncestr, hashhex);
@@ -1062,14 +1083,14 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			/* different data size and reversed endian */
 			int data_size = 80, adata_sz = data_size / sizeof(uint32_t);
 
-			uchar gw_str[2 * data_size + 1];
+			uchar gw_str[2 * 80 + 1];
 
 			/* Convert to little endian */
 			for(i = 0; i < adata_sz; i++)
 				le32enc(work->data + i, work->data[i]);
 
 			/* Convert binary to hexadecimal string */
-			bin2hex(gw_str, (uchar *) work->data, data_size);
+			bin2hex((char*) gw_str, (const uchar*) work->data, data_size);
 
 			/* build JSON-RPC request */
 			snprintf(s, JSON_BUF_LEN,
@@ -1261,7 +1282,7 @@ static bool workio_get_work(struct workio_cmd *wc, CURL *curl)
 	struct work *ret_work;
 	int failures = 0;
 
-	ret_work = calloc(1, sizeof(*ret_work));
+	ret_work = (struct work*) calloc(1, sizeof(*ret_work));
 	if (!ret_work)
 		return false;
 
@@ -1309,7 +1330,8 @@ static bool workio_submit_work(struct workio_cmd *wc, CURL *curl)
 static bool workio_login(CURL *curl)
 {
 	int failures = 0;
-
+	if (opt_benchmark)
+		return true;
 	/* submit solution to bitcoin via JSON-RPC */
 	pthread_mutex_lock(&rpc2_login_lock);
 	while (!rpc2_login(curl)) {
@@ -1333,7 +1355,7 @@ static bool workio_login(CURL *curl)
 
 static void *workio_thread(void *userdata)
 {
-	struct thr_info *mythr = userdata;
+	struct thr_info *mythr = (struct thr_info *) userdata;
 	CURL *curl;
 	bool ok = true;
 
@@ -1351,7 +1373,7 @@ static void *workio_thread(void *userdata)
 		struct workio_cmd *wc;
 
 		/* wait for workio_cmd sent to us, on our queue */
-		wc = tq_pop(mythr->q, NULL);
+		wc = (struct workio_cmd *) tq_pop(mythr->q, NULL);
 		if (!wc) {
 			ok = false;
 			break;
@@ -1397,7 +1419,7 @@ static bool get_work(struct thr_info *thr, struct work *work)
 	}
 
 	/* fill out work request message */
-	wc = calloc(1, sizeof(*wc));
+	wc = (struct workio_cmd *) calloc(1, sizeof(*wc));
 	if (!wc)
 		return false;
 
@@ -1411,7 +1433,7 @@ static bool get_work(struct thr_info *thr, struct work *work)
 	}
 
 	/* wait for response, a unit of work */
-	work_heap = tq_pop(thr->q, NULL);
+	work_heap = (struct work*) tq_pop(thr->q, NULL);
 	if (!work_heap)
 		return false;
 
@@ -1427,11 +1449,11 @@ static bool submit_work(struct thr_info *thr, const struct work *work_in)
 	struct workio_cmd *wc;
 
 	/* fill out work request message */
-	wc = calloc(1, sizeof(*wc));
+	wc = (struct workio_cmd *) calloc(1, sizeof(*wc));
 	if (!wc)
 		return false;
 
-	wc->u.work = malloc(sizeof(*work_in));
+	wc->u.work = (struct work*) malloc(sizeof(*work_in));
 	if (!wc->u.work)
 		goto err_out;
 
@@ -1466,7 +1488,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 		free(work->job_id);
 		work->job_id = strdup(sctx->job.job_id);
 		work->xnonce2_len = sctx->xnonce2_size;
-		work->xnonce2 = realloc(work->xnonce2, sctx->xnonce2_size);
+		work->xnonce2 = (uchar*) realloc(work->xnonce2, sctx->xnonce2_size);
 		memcpy(work->xnonce2, sctx->job.xnonce2, sctx->xnonce2_size);
 
 		/* Generate merkle root */
@@ -1521,7 +1543,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 
 static void *miner_thread(void *userdata)
 {
-	struct thr_info *mythr = userdata;
+	struct thr_info *mythr = (struct thr_info *) userdata;
 	int thr_id = mythr->id;
 	struct work work = {{0}};
 	uint32_t max_nonce;
@@ -1567,7 +1589,7 @@ static void *miner_thread(void *userdata)
 			while (!jsonrpc_2 && time(NULL) >= g_work_time + 120)
 				sleep(1);
 
-			while (!stratum.job.diff) {
+			while (!stratum.job.diff && opt_algo == ALGO_NEOSCRYPT) {
 				applog(LOG_DEBUG, "Waiting for Stratum to set the job difficulty");
 				sleep(1);
 			}
@@ -1657,10 +1679,10 @@ static void *miner_thread(void *userdata)
 		if (*nonceptr + max64 > end_nonce)
 			max_nonce = end_nonce;
 		else
-			max_nonce = *nonceptr + max64;
+			max_nonce = *nonceptr + (uint32_t) max64;
 
 		hashes_done = 0;
-		gettimeofday(&tv_start, NULL);
+		gettimeofday((struct timeval *) &tv_start, NULL);
 
 		/* scan nonces for a proof-of-work hash */
 		switch (opt_algo) {
@@ -1771,7 +1793,8 @@ static void *miner_thread(void *userdata)
 			if (i == opt_n_threads) {
 				switch(opt_algo) {
 				case ALGO_CRYPTONIGHT:
-					applog(LOG_NOTICE, "Total: %s H/s", hashrate);
+					sprintf(s, "%.3f", hashrate);
+					applog(LOG_NOTICE, "Total: %s H/s", s);
 					break;
 				default:
 					sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate / 1000);
@@ -1802,7 +1825,7 @@ static void restart_threads(void)
 
 static void *longpoll_thread(void *userdata)
 {
-	struct thr_info *mythr = userdata;
+	struct thr_info *mythr = (struct thr_info*) userdata;
 	CURL *curl = NULL;
 	char *copy_start, *hdr_path = NULL, *lp_url = NULL;
 	bool need_slash = false;
@@ -1814,7 +1837,7 @@ static void *longpoll_thread(void *userdata)
 	}
 
 start:
-	hdr_path = tq_pop(mythr->q, NULL);
+	hdr_path = (char*) tq_pop(mythr->q, NULL);
 	if (!hdr_path)
 		goto out;
 
@@ -1830,7 +1853,7 @@ start:
 		if (rpc_url[strlen(rpc_url) - 1] != '/')
 			need_slash = true;
 
-		lp_url = malloc(strlen(rpc_url) + strlen(copy_start) + 2);
+		lp_url = (char*) malloc(strlen(rpc_url) + strlen(copy_start) + 2);
 		if (!lp_url)
 			goto out;
 
@@ -1856,7 +1879,7 @@ start:
 			val = json_rpc2_call(curl, rpc_url, rpc_userpass, s, &err, JSON_RPC_LONGPOLL);
 		} else {
 			if (have_gbt) {
-				req = malloc(strlen(gbt_lp_req) + strlen(lp_id) + 1);
+				req = (char*) malloc(strlen(gbt_lp_req) + strlen(lp_id) + 1);
 				sprintf(req, gbt_lp_req, lp_id);
 			}
 			val = json_rpc_call(curl, rpc_url, rpc_userpass, getwork_req, &err, JSON_RPC_LONGPOLL);
@@ -1976,10 +1999,10 @@ out:
 
 static void *stratum_thread(void *userdata)
 {
-	struct thr_info *mythr = userdata;
+	struct thr_info *mythr = (struct thr_info *) userdata;
 	char *s;
 
-	stratum.url = tq_pop(mythr->q, NULL);
+	stratum.url = (char*) tq_pop(mythr->q, NULL);
 	if (!stratum.url)
 		goto out;
 	applog(LOG_INFO, "Starting Stratum on %s", stratum.url);
@@ -2127,7 +2150,7 @@ static void parse_arg(int key, char *arg, char *pname)
 			v = strlen(algo_names[i]);
 			if (!strncmp(arg, algo_names[i], v)) {
 				if (arg[v] == '\0') {
-					opt_algo = i;
+					opt_algo = (enum algos) i;
 					break;
 				}
 				if (arg[v] == ':' && i == ALGO_SCRYPT) {
@@ -2135,7 +2158,7 @@ static void parse_arg(int key, char *arg, char *pname)
 					v = strtol(arg+v+1, &ep, 10);
 					if (*ep || v & (v-1) || v < 2)
 						continue;
-					opt_algo = i;
+					opt_algo = (enum algos) i;
 					opt_scrypt_n = v;
 					break;
 				}
@@ -2179,7 +2202,6 @@ static void parse_arg(int key, char *arg, char *pname)
 		break;
 	}
 	case 'C':
-		use_colors = true;
 		break;
 	case 'q':
 		opt_quiet = true;
@@ -2241,7 +2263,7 @@ static void parse_arg(int key, char *arg, char *pname)
 				free(rpc_userpass);
 				rpc_userpass = strdup(ap);
 				free(rpc_user);
-				rpc_user = calloc(p - ap + 1, 1);
+				rpc_user = (char*) calloc(p - ap + 1, 1);
 				strncpy(rpc_user, ap, p - ap);
 				free(rpc_pass);
 				rpc_pass = strdup(++p);
@@ -2275,7 +2297,7 @@ static void parse_arg(int key, char *arg, char *pname)
 				show_usage_and_exit(1);
 			}
 			free(rpc_url);
-			rpc_url = malloc(strlen(hp) + 8);
+			rpc_url = (char*) malloc(strlen(hp) + 8);
 			sprintf(rpc_url, "http://%s", hp);
 		}
 		have_stratum = !opt_benchmark && !strncasecmp(rpc_url, "stratum", 7);
@@ -2291,7 +2313,7 @@ static void parse_arg(int key, char *arg, char *pname)
 		free(rpc_userpass);
 		rpc_userpass = strdup(arg);
 		free(rpc_user);
-		rpc_user = calloc(p - arg + 1, 1);
+		rpc_user = (char*) calloc(p - arg + 1, 1);
 		strncpy(rpc_user, arg, p - arg);
 		free(rpc_pass);
 		rpc_pass = strdup(++p);
@@ -2316,6 +2338,9 @@ static void parse_arg(int key, char *arg, char *pname)
 	case 1001:
 		free(opt_cert);
 		opt_cert = strdup(arg);
+		break;
+	case 1002:
+		use_colors = false;
 		break;
 	case 1003:
 		want_longpoll = false;
@@ -2435,41 +2460,85 @@ static void signal_handler(int sig)
 		break;
 	case SIGINT:
 		applog(LOG_INFO, "SIGINT received, exiting");
-		exit(0);
+		proper_exit(0);
 		break;
 	case SIGTERM:
 		applog(LOG_INFO, "SIGTERM received, exiting");
-		exit(0);
+		proper_exit(0);
 		break;
 	}
 }
+#else
+BOOL WINAPI ConsoleHandler(DWORD dwType)
+{
+	switch (dwType) {
+	case CTRL_C_EVENT:
+		applog(LOG_INFO, "CTRL_C_EVENT received, exiting");
+		proper_exit(0);
+		break;
+	case CTRL_BREAK_EVENT:
+		applog(LOG_INFO, "CTRL_BREAK_EVENT received, exiting");
+		proper_exit(0);
+		break;
+	default:
+		return false;
+	}
+	return true;
+}
 #endif
 
-static inline int cpuid(int code, uint32_t where[4])
-{
-	asm volatile("cpuid":"=a"(*where),"=b"(*(where+1)),
-			"=c"(*(where+2)),"=d"(*(where+3)):"a"(code));
-	return (int)where[0];
+static inline void cpuid(int functionnumber, int output[4]) {
+#if defined (_MSC_VER) || defined (__INTEL_COMPILER)
+	// Microsoft or Intel compiler, intrin.h included
+	__cpuidex(output, functionnumber, 0);
+#elif defined(__GNUC__) || defined(__clang__)
+	// use inline assembly, Gnu/AT&T syntax
+	int a, b, c, d;
+	asm volatile("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "a"(functionnumber), "c"(0));
+	output[0] = a;
+	output[1] = b;
+	output[2] = c;
+	output[3] = d;
+#else
+	// unknown platform. try inline assembly with masm/intel syntax
+	__asm {
+		mov eax, functionnumber
+		xor ecx, ecx
+		cpuid;
+		mov esi, output
+		mov[esi], eax
+		mov[esi + 4], ebx
+		mov[esi + 8], ecx
+		mov[esi + 12], edx
+	}
+#endif
 }
 
 static bool has_aes_ni()
 {
-	uint32_t cpu_info[4];
+	int cpu_info[4];
 	cpuid(1, cpu_info);
 	return cpu_info[2] & (1 << 25);
 }
 
+
 static void show_credits()
 {
 	printf(PROGRAM_NAME " by Lucas Jones and Tanguy Pruvot\n");
+#ifdef _MSC_VER
+	printf(CL_GRY "  This is version " PACKAGE_VERSION " built with VC++ 2013\n" CL_N);
+#else
 	printf("  This is version " PACKAGE_VERSION "\n");
-	printf("  based on pooler/cpuminer 2.4 (c) 2010 Jeff Garzik, 2012 pooler\n");
+#endif
+	printf(CL_GRY "  based on pooler/cpuminer 2.4 (c) 2010 Jeff Garzik, 2012 pooler\n" CL_N);
 }
 
 int main(int argc, char *argv[]) {
 	struct thr_info *thr;
 	long flags;
 	int i;
+
+	pthread_mutex_init(&applog_lock, NULL);
 
 	show_credits();
 
@@ -2497,16 +2566,16 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (!rpc_userpass) {
-		rpc_userpass = malloc(strlen(rpc_user) + strlen(rpc_pass) + 2);
+		rpc_userpass = (char*) malloc(strlen(rpc_user) + strlen(rpc_pass) + 2);
 		if (!rpc_userpass)
 			return 1;
 		sprintf(rpc_userpass, "%s:%s", rpc_user, rpc_pass);
 	}
 
-	pthread_mutex_init(&applog_lock, NULL);
 	pthread_mutex_init(&stats_lock, NULL);
 	pthread_mutex_init(&g_work_lock, NULL);
 	pthread_mutex_init(&rpc2_job_lock, NULL);
+	pthread_mutex_init(&rpc2_login_lock, NULL);
 	pthread_mutex_init(&stratum.sock_lock, NULL);
 	pthread_mutex_init(&stratum.work_lock, NULL);
 
@@ -2530,9 +2599,12 @@ int main(int argc, char *argv[]) {
 		if (i < 0)
 			applog(LOG_ERR, "chdir() failed (errno = %d)", errno);
 		signal(SIGHUP, signal_handler);
-		signal(SIGINT, signal_handler);
 		signal(SIGTERM, signal_handler);
 	}
+	/* Always catch Ctrl+C */
+	signal(SIGINT, signal_handler);
+#else
+	SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleHandler, TRUE);
 #endif
 
 #if defined(WIN32)
@@ -2558,11 +2630,11 @@ int main(int argc, char *argv[]) {
 		openlog("cpuminer", LOG_PID, LOG_USER);
 #endif
 
-	work_restart = calloc(opt_n_threads, sizeof(*work_restart));
+	work_restart = (struct work_restart*) calloc(opt_n_threads, sizeof(*work_restart));
 	if (!work_restart)
 		return 1;
 
-	thr_info = calloc(opt_n_threads + 3, sizeof(*thr));
+	thr_info = (struct thr_info*) calloc(opt_n_threads + 3, sizeof(*thr));
 	if (!thr_info)
 		return 1;
 

@@ -52,8 +52,11 @@ int scanhash_fresh(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	uint32_t n = pdata[19] - 1;
 	const uint32_t first_nonce = pdata[19];
 	const uint32_t Htarg = ptarget[7];
-
+#ifdef _MSC_VER
+	uint32_t __declspec(align(32)) hash64[8];
+#else
 	uint32_t hash64[8] __attribute__((aligned(32)));
+#endif
 	uint32_t endiandata[32];
 
 	uint64_t htmax[] = {

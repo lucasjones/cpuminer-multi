@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <inttypes.h>
 #include <sys/time.h>
+
 #include <pthread.h>
 #include <jansson.h>
 #include <curl/curl.h>
@@ -18,6 +19,7 @@
 #  include <stdlib.h>
 # endif
 #endif
+
 #ifdef HAVE_ALLOCA_H
 # include <alloca.h>
 #elif !defined alloca
@@ -34,6 +36,16 @@ extern "C"
 #  endif
 void *alloca (size_t);
 # endif
+#endif
+
+#ifdef _MSC_VER
+#define strncasecmp(x,y,z) _strnicmp(x,y,z)
+	#define strncasecmp(x,y,z) _strnicmp(x,y,z)
+	#define strcasecmp(x,y) _stricmp(x,y)
+	typedef int ssize_t;
+	#define _ALIGN(x) __declspec(align(x))
+#else
+	#define _ALIGN(x) __attribute__ ((aligned(x)))
 #endif
 
 #ifdef HAVE_SYSLOG_H

@@ -10,6 +10,10 @@
 #include <stdlib.h>
 #include "hashtable.h"
 
+#ifdef WIN32
+#define inline __inline
+#endif
+
 typedef struct hashtable_list list_t;
 typedef struct hashtable_pair pair_t;
 typedef struct hashtable_bucket bucket_t;

@@ -60,10 +60,15 @@ static void do_skein_hash(const void* input, size_t len, char* output) {
 	assert(likely(SKEIN_SUCCESS == r));
 }
 
-extern int fast_aesb_single_round(const uint8_t *in, uint8_t*out, const uint8_t *expandedKey);
 extern int aesb_single_round(const uint8_t *in, uint8_t*out, const uint8_t *expandedKey);
 extern int aesb_pseudo_round_mut(uint8_t *val, uint8_t *expandedKey);
+#ifndef _MSC_VER
+extern int fast_aesb_single_round(const uint8_t *in, uint8_t*out, const uint8_t *expandedKey);
 extern int fast_aesb_pseudo_round_mut(uint8_t *val, uint8_t *expandedKey);
+#else
+#define fast_aesb_single_round     aesb_single_round
+#define fast_aesb_pseudo_round_mut aesb_pseudo_round_mut
+#endif
 
 static void (* const extra_hashes[4])(const void *, size_t, char *) = {
 		do_blake_hash, do_groestl_hash, do_jh_hash, do_skein_hash
@@ -103,12 +108,12 @@ static inline void xor_blocks_dst(const uint8_t* a, const uint8_t* b, uint8_t* d
 }
 
 struct cryptonight_ctx {
-	uint8_t long_state[MEMORY] __attribute((aligned(16)));
+	uint8_t _ALIGN(16) long_state[MEMORY];
 	union cn_slow_hash_state state;
-	uint8_t text[INIT_SIZE_BYTE] __attribute((aligned(16)));
-	uint8_t a[AES_BLOCK_SIZE] __attribute__((aligned(16)));
-	uint8_t b[AES_BLOCK_SIZE] __attribute__((aligned(16)));
-	uint8_t c[AES_BLOCK_SIZE] __attribute__((aligned(16)));
+	uint8_t _ALIGN(16) text[INIT_SIZE_BYTE];
+	uint8_t _ALIGN(16) a[AES_BLOCK_SIZE];
+	uint8_t _ALIGN(16) b[AES_BLOCK_SIZE];
+	uint8_t _ALIGN(16) c[AES_BLOCK_SIZE];
 	oaes_ctx* aes_ctx;
 };
 
@@ -260,7 +265,7 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	uint32_t n = *nonceptr - 1;
 	const uint32_t first_nonce = n + 1;
 	//const uint32_t Htarg = ptarget[7];
-	uint32_t hash[HASH_SIZE / 4] __attribute__((aligned(32)));
+	uint32_t _ALIGN(32) hash[HASH_SIZE / 4];
 
 	struct cryptonight_ctx *ctx = (struct cryptonight_ctx*)malloc(sizeof(struct cryptonight_ctx));
 

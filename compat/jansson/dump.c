@@ -330,7 +330,7 @@ static int do_dump(const json_t *json, unsigned long flags, int depth,
                 else
                     cmp_func = object_key_compare_serials;
 
-                qsort(keys, size, sizeof(object_key_t *), cmp_func);
+                qsort((void*)keys, size, sizeof(object_key_t *), cmp_func);
 
                 for(i = 0; i < size; i++)
                 {
@@ -345,7 +345,7 @@ static int do_dump(const json_t *json, unsigned long flags, int depth,
                     if(dump(separator, separator_length, data) ||
                        do_dump(value, flags, depth + 1, dump, data))
                     {
-                        free(keys);
+                        free((void*)keys);
                         goto object_error;
                     }
 
@@ -354,7 +354,7 @@ static int do_dump(const json_t *json, unsigned long flags, int depth,
                         if(dump(",", 1, data) ||
                            dump_indent(flags, depth + 1, 1, dump, data))
                         {
-                            free(keys);
+                            free((void*)keys);
                             goto object_error;
                         }
                     }
@@ -362,13 +362,13 @@ static int do_dump(const json_t *json, unsigned long flags, int depth,
                     {
                         if(dump_indent(flags, depth, 0, dump, data))
                         {
-                            free(keys);
+                            free((void*)keys);
                             goto object_error;
                         }
                     }
                 }
 
-                free(keys);
+                free((void*)keys);
             }
             else
             {

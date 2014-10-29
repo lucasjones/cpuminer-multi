@@ -28,6 +28,7 @@
 #if defined(WIN32)
 #include <winsock2.h>
 #include <mstcpip.h>
+#include "compat/winansi.h"
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -126,8 +127,8 @@ void applog(int prio, const char *fmt, ...)
 		if (!use_colors)
 			color = "";
 
-		len = 40 + strlen(fmt) + 2;
-		f = alloca(len);
+		len = 64 + (int) strlen(fmt) + 2;
+		f = (char*) malloc(len);
 		sprintf(f, "[%d-%02d-%02d %02d:%02d:%02d]%s %s%s\n",
 			tm.tm_year + 1900,
 			tm.tm_mon + 1,
@@ -142,6 +143,7 @@ void applog(int prio, const char *fmt, ...)
 		pthread_mutex_lock(&applog_lock);
 		vfprintf(stderr, f, ap);	/* atomic write to stderr */
 		fflush(stderr);
+		free(f),
 		pthread_mutex_unlock(&applog_lock);
 	}
 	va_end(ap);
@@ -156,7 +158,7 @@ static char *hack_json_numbers(const char *in)
 	int i, off, intoff;
 	bool in_str, in_int;
 
-	out = calloc(2 * strlen(in) + 1, 1);
+	out = (char*) calloc(2 * strlen(in) + 1, 1);
 	if (!out)
 		return NULL;
 	off = intoff = 0;
@@ -211,7 +213,7 @@ static void databuf_free(struct data_buffer *db)
 static size_t all_data_cb(const void *ptr, size_t size, size_t nmemb,
 			  void *user_data)
 {
-	struct data_buffer *db = user_data;
+	struct data_buffer *db = (struct data_buffer *) user_data;
 	size_t len = size * nmemb;
 	size_t oldlen, newlen;
 	void *newmem;
@@ -226,8 +228,8 @@ static size_t all_data_cb(const void *ptr, size_t size, size_t nmemb,
 
 	db->buf = newmem;
 	db->len = newlen;
-	memcpy(db->buf + oldlen, ptr, len);
-	memcpy(db->buf + newlen, &zero, 1);	/* null terminate */
+	memcpy((uchar*) db->buf + oldlen, ptr, len);
+	memcpy((uchar*) db->buf + newlen, &zero, 1);	/* null terminate */
 
 	return len;
 }
@@ -235,14 +237,14 @@ static size_t all_data_cb(const void *ptr, size_t size, size_t nmemb,
 static size_t upload_data_cb(void *ptr, size_t size, size_t nmemb,
 			     void *user_data)
 {
-	struct upload_buffer *ub = user_data;
+	struct upload_buffer *ub = (struct upload_buffer *) user_data;
 	int len = size * nmemb;
 
 	if (len > ub->len - ub->pos)
 		len = ub->len - ub->pos;
 
 	if (len) {
-		memcpy(ptr, ub->buf + ub->pos, len);
+		memcpy(ptr, ((uchar*)ub->buf) + ub->pos, len);
 		ub->pos += len;
 	}
 
@@ -252,17 +254,17 @@ static size_t upload_data_cb(void *ptr, size_t size, size_t nmemb,
 #if LIBCURL_VERSION_NUM >= 0x071200
 static int seek_data_cb(void *user_data, curl_off_t offset, int origin)
 {
-	struct upload_buffer *ub = user_data;
+	struct upload_buffer *ub = (struct upload_buffer *) user_data;
 	
 	switch (origin) {
 	case SEEK_SET:
-		ub->pos = offset;
+		ub->pos = (size_t) offset;
 		break;
 	case SEEK_CUR:
-		ub->pos += offset;
+		ub->pos += (size_t) offset;
 		break;
 	case SEEK_END:
-		ub->pos = ub->len + offset;
+		ub->pos = ub->len + (size_t) offset;
 		break;
 	default:
 		return 1; /* CURL_SEEKFUNC_FAIL */
@@ -274,26 +276,26 @@ static int seek_data_cb(void *user_data, curl_off_t offset, int origin)
 
 static size_t resp_hdr_cb(void *ptr, size_t size, size_t nmemb, void *user_data)
 {
-	struct header_info *hi = user_data;
+	struct header_info *hi = (struct header_info *) user_data;
 	size_t remlen, slen, ptrlen = size * nmemb;
 	char *rem, *val = NULL, *key = NULL;
 	void *tmp;
 
-	val = calloc(1, ptrlen);
-	key = calloc(1, ptrlen);
+	val = (char*) calloc(1, ptrlen);
+	key = (char*) calloc(1, ptrlen);
 	if (!key || !val)
 		goto out;
 
 	tmp = memchr(ptr, ':', ptrlen);
 	if (!tmp || (tmp == ptr))	/* skip empty keys / blanks */
 		goto out;
-	slen = tmp - ptr;
+	slen = (char*)tmp - (char*)ptr;
 	if ((slen + 1) == ptrlen)	/* skip key w/ no value */
 		goto out;
 	memcpy(key, ptr, slen);		/* store & nul term key */
 	key[slen] = 0;
 
-	rem = ptr + slen + 1;		/* trim value's leading whitespace */
+	rem = (char*)ptr + slen + 1;		/* trim value's leading whitespace */
 	remlen = ptrlen - slen - 1;
 	while ((remlen > 0) && (isspace(*rem))) {
 		remlen--;
@@ -479,7 +481,7 @@ json_t *json_rpc_call(CURL *curl, const char *url,
 		goto err_out;
 	}
 
-	json_buf = hack_json_numbers(all_data.buf);
+	json_buf = hack_json_numbers((char*) all_data.buf);
 	errno = 0; /* needed for Jansson < 2.1 */
 	val = JSON_LOADS(json_buf, &err);
 	free(json_buf);
@@ -542,7 +544,7 @@ void bin2hex(char *s, const unsigned char *p, size_t len)
 
 char *abin2hex(const unsigned char *p, size_t len)
 {
-	char *s = malloc((len * 2) + 1);
+	char *s = (char*) malloc((len * 2) + 1);
 	if (!s)
 		return NULL;
 	bin2hex(s, p, len);
@@ -620,7 +622,7 @@ static bool b58dec(unsigned char *bin, size_t binsz, const char *b58)
 	size_t b58sz = strlen(b58);
 	bool rc = false;
 
-	outi = calloc(outisz, sizeof(*outi));
+	outi = (uint32_t *) calloc(outisz, sizeof(*outi));
 
 	for (i = 0; i < b58sz; ++i) {
 		for (c = 0; b58digits[c] != b58[i]; c++)
@@ -781,7 +783,7 @@ void diff_to_target(uint32_t *target, double diff)
 	
 	for (k = 6; k > 0 && diff > 1.0; k--)
 		diff /= 4294967296.0;
-	m = 4294901760.0 / diff;
+	m = (uint64_t)(4294901760.0 / diff);
 	if (m == 0 && k == 6)
 		memset(target, 0xff, 32);
 	else {
@@ -864,13 +866,13 @@ bool stratum_socket_full(struct stratum_ctx *sctx, int timeout)
 
 static void stratum_buffer_append(struct stratum_ctx *sctx, const char *s)
 {
-	size_t old, new;
+	size_t old, n;
 
 	old = strlen(sctx->sockbuf);
-	new = old + strlen(s) + 1;
-	if (new >= sctx->sockbuf_size) {
-		sctx->sockbuf_size = new + (RBUFSIZE - (new % RBUFSIZE));
-		sctx->sockbuf = realloc(sctx->sockbuf, sctx->sockbuf_size);
+	n = old + strlen(s) + 1;
+	if (n >= sctx->sockbuf_size) {
+		sctx->sockbuf_size = n + (RBUFSIZE - (n % RBUFSIZE));
+		sctx->sockbuf = (char*) realloc(sctx->sockbuf, sctx->sockbuf_size);
 	}
 	strcpy(sctx->sockbuf + old, s);
 }
@@ -938,7 +940,7 @@ out:
 static curl_socket_t opensocket_grab_cb(void *clientp, curlsocktype purpose,
 	struct curl_sockaddr *addr)
 {
-	curl_socket_t *sock = clientp;
+	curl_socket_t *sock = (curl_socket_t*) clientp;
 	*sock = socket(addr->family, addr->socktype, addr->protocol);
 	return *sock;
 }
@@ -960,7 +962,7 @@ bool stratum_connect(struct stratum_ctx *sctx, const char *url)
 	}
 	curl = sctx->curl;
 	if (!sctx->sockbuf) {
-		sctx->sockbuf = calloc(RBUFSIZE, 1);
+		sctx->sockbuf = (char*) calloc(RBUFSIZE, 1);
 		sctx->sockbuf_size = RBUFSIZE;
 	}
 	sctx->sockbuf[0] = '\0';
@@ -971,7 +973,7 @@ bool stratum_connect(struct stratum_ctx *sctx, const char *url)
 		sctx->url = strdup(url);
 	}
 	free(sctx->curl_url);
-	sctx->curl_url = malloc(strlen(url));
+	sctx->curl_url = (char*) malloc(strlen(url));
 	sprintf(sctx->curl_url, "http%s", strstr(url, "://"));
 
 	if (opt_protocol)
@@ -1060,7 +1062,7 @@ bool stratum_subscribe(struct stratum_ctx *sctx)
 		return true;
 
 start:
-	s = malloc(128 + (sctx->session_id ? strlen(sctx->session_id) : 0));
+	s = (char*) malloc(128 + (sctx->session_id ? strlen(sctx->session_id) : 0));
 	if (retry)
 		sprintf(s, "{\"id\": 1, \"method\": \"mining.subscribe\", \"params\": []}");
 	else if (sctx->session_id)
@@ -1128,7 +1130,7 @@ start:
 	free(sctx->xnonce1);
 	sctx->session_id = sid ? strdup(sid) : NULL;
 	sctx->xnonce1_size = strlen(xnonce1) / 2;
-	sctx->xnonce1 = malloc(sctx->xnonce1_size);
+	sctx->xnonce1 = (uchar*) malloc(sctx->xnonce1_size);
 	hex2bin(sctx->xnonce1, xnonce1, sctx->xnonce1_size);
 	sctx->xnonce2_size = xn2_size;
 	sctx->next_diff = 1.0;
@@ -1162,12 +1164,12 @@ bool stratum_authorize(struct stratum_ctx *sctx, const char *user, const char *p
 	bool ret = false;
 
 	if (jsonrpc_2) {
-		s = malloc(300 + strlen(user) + strlen(pass));
+		s = (char*) malloc(300 + strlen(user) + strlen(pass));
 		sprintf(s, "{\"method\": \"login\", \"params\": {"
 			"\"login\": \"%s\", \"pass\": \"%s\", \"agent\": \"%s\"}, \"id\": 1}",
 			user, pass, USER_AGENT);
 	} else {
-		s = malloc(80 + strlen(user) + strlen(pass));
+		s = (char*) malloc(80 + strlen(user) + strlen(pass));
 		sprintf(s, "{\"id\": 2, \"method\": \"mining.authorize\", \"params\": [\"%s\", \"%s\"]}",
 			user, pass);
 	}
@@ -1234,7 +1236,7 @@ static bool stratum_notify(struct stratum_ctx *sctx, json_t *params)
 	bool clean, ret = false;
 	int merkle_count, i;
 	json_t *merkle_arr;
-	unsigned char **merkle;
+	uchar **merkle;
 
 	job_id = json_string_value(json_array_get(params, 0));
 	prevhash = json_string_value(json_array_get(params, 1));
@@ -1255,7 +1257,7 @@ static bool stratum_notify(struct stratum_ctx *sctx, json_t *params)
 		applog(LOG_ERR, "Stratum notify: invalid parameters");
 		goto out;
 	}
-	merkle = malloc(merkle_count * sizeof(char *));
+	merkle = (uchar**) malloc(merkle_count * sizeof(char *));
 	for (i = 0; i < merkle_count; i++) {
 		const char *s = json_string_value(json_array_get(merkle_arr, i));
 		if (!s || strlen(s) != 64) {
@@ -1265,7 +1267,7 @@ static bool stratum_notify(struct stratum_ctx *sctx, json_t *params)
 			applog(LOG_ERR, "Stratum notify: invalid Merkle branch");
 			goto out;
 		}
-		merkle[i] = malloc(32);
+		merkle[i] = (uchar*) malloc(32);
 		hex2bin(merkle[i], s, 32);
 	}
 
@@ -1275,7 +1277,7 @@ static bool stratum_notify(struct stratum_ctx *sctx, json_t *params)
 	coinb2_size = strlen(coinb2) / 2;
 	sctx->job.coinbase_size = coinb1_size + sctx->xnonce1_size +
 	                          sctx->xnonce2_size + coinb2_size;
-	sctx->job.coinbase = realloc(sctx->job.coinbase, sctx->job.coinbase_size);
+	sctx->job.coinbase = (uchar*) realloc(sctx->job.coinbase, sctx->job.coinbase_size);
 	sctx->job.xnonce2 = sctx->job.coinbase + coinb1_size + sctx->xnonce1_size;
 	hex2bin(sctx->job.coinbase, coinb1, coinb1_size);
 	memcpy(sctx->job.coinbase + coinb1_size, sctx->xnonce1, sctx->xnonce1_size);
@@ -1342,7 +1344,7 @@ static bool stratum_reconnect(struct stratum_ctx *sctx, json_t *params)
 	if (!host || !port)
 		return false;
 
-	url = malloc(32 + strlen(host));
+	url = (char*) malloc(32 + strlen(host));
 	sprintf(url, "stratum+tcp://%s:%d", host, port);
 
 	if (!opt_redirect) {
@@ -1464,7 +1466,7 @@ struct thread_q *tq_new(void)
 {
 	struct thread_q *tq;
 
-	tq = calloc(1, sizeof(*tq));
+	tq = (struct thread_q*) calloc(1, sizeof(*tq));
 	if (!tq)
 		return NULL;
 
@@ -1519,7 +1521,7 @@ bool tq_push(struct thread_q *tq, void *data)
 	struct tq_ent *ent;
 	bool rc = true;
 
-	ent = calloc(1, sizeof(*ent));
+	ent = (struct tq_ent*) calloc(1, sizeof(*ent));
 	if (!ent)
 		return false;
 
@@ -1587,7 +1589,7 @@ static char* format_hash(char* buf, uint8_t *hash)
 void applog_hash(void *hash)
 {
 	char s[128] = {'\0'};
-	applog(LOG_DEBUG, "%s", format_hash(s, hash));
+	applog(LOG_DEBUG, "%s", format_hash(s, (uchar*) hash));
 }
 
 #define printpfx(n,h) \
@@ -1613,7 +1615,7 @@ void print_hash_tests(void)
 	printpfx("Keccak", hash);
 
 	memset(hash, 0, sizeof hash);
-	neoscrypt(&hash[0], (uchar*) &buf[0], 80000620);
+	neoscrypt((uchar*) &hash[0], (uchar*)&buf[0], 80000620);
 	printpfx("Neoscrypt", hash);
 
 	memset(hash, 0, sizeof hash);
