@@ -289,7 +289,6 @@
     <ClInclude Include="sha3\sph_hamsi.h" />
     <ClInclude Include="sha3\sph_types.h" />
     <ClInclude Include="sha3\sph_whirlpool.h" />
-    <ClInclude Include="uint256.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="neoscrypt_asm.S">

@@ -71,6 +71,10 @@ Build
  * To build a 64-bit binary, export OBJECT_MODE=64
  * GNU-style long options are not supported, but are accessible via configuration file
 
+#### Basic Windows build with Visual Studio 2013
+ * All the required .lib files are now included in tree (windows only)
+ * AVX enabled by default, but not AVX2 (edit cpu-miner-config.h if required)
+
 #### Basic Windows build instructions, using MinGW:
  * Install MinGW and the MSYS Developer Tool Kit (http://www.mingw.org/)
    * Make sure you have mstcpip.h in MinGW\include

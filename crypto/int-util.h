@@ -8,13 +8,14 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
-#ifdef HAVE_SYS_PARAM_H
+#ifndef _MSC_VER
 #include <sys/param.h>
+#else
+#define inline __inline
 #endif
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
 #include <stdlib.h>
-#define inline __inline
 //#define IS_LITTLE_ENDIAN (1 == *(unsigned char *)&(const int){1})
 #define LITTLE_ENDIAN 1234
 #define BIG_ENDIAN 4321

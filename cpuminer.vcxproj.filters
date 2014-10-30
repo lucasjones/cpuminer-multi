@@ -223,9 +223,6 @@
     <ClInclude Include="compat\sys\time.h">
       <Filter>compat</Filter>
     </ClInclude>
-    <ClInclude Include="uint256.h">
-      <Filter>compat</Filter>
-    </ClInclude>
     <ClInclude Include="compat\unistd.h">
       <Filter>compat</Filter>
     </ClInclude>

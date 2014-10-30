@@ -5,6 +5,7 @@
 // Modified for CPUminer by Lucas Jones
 
 #include "cpuminer-config.h"
+
 #include "miner.h"
 #include "crypto/oaes_lib.h"
 #include "crypto/c_keccak.h"
@@ -14,6 +15,12 @@
 #include "crypto/c_skein.h"
 #include "crypto/int-util.h"
 #include "crypto/hash-ops.h"
+
+#if USE_INT128 && defined(_MSC_VER)
+/* only for mingw64 on windows */
+#undef  USE_INT128
+#define USE_INT128 (0)
+#endif
 
 #if USE_INT128
 

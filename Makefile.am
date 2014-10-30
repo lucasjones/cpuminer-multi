@@ -5,11 +5,13 @@ else
 JANSSON_INCLUDES=
 endif
 
+ACLOCAL_AMFLAGS = -I m4
+
 EXTRA_DIST	= example-cfg.json nomacro.pl
 
 SUBDIRS		= compat
 
-INCLUDES	= $(PTHREAD_FLAGS) -fno-strict-aliasing $(JANSSON_INCLUDES)
+INCLUDES	= @PTHREAD_FLAGS@ -fno-strict-aliasing $(JANSSON_INCLUDES)
 
 bin_PROGRAMS	= minerd
 
@@ -75,10 +77,14 @@ if ARCH_ARM
 endif
 endif
 
-minerd_LDFLAGS	= $(PTHREAD_FLAGS)
+if HAVE_WINDOWS
+   minerd_SOURCES += compat/winansi.c
+endif
+
+minerd_LDFLAGS	= @LDFLAGS@
 minerd_LDADD	= @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@
 minerd_CPPFLAGS = @LIBCURL_CPPFLAGS@
-minerd_CFLAGS   = -Wno-pointer-sign -O3
+minerd_CFLAGS   = -Wno-pointer-sign
 
 if HAVE_WINDOWS
 minerd_CFLAGS += -Wl,--stack,10485760

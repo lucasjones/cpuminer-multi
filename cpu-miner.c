@@ -2526,11 +2526,11 @@ static void show_credits()
 {
 	printf(PROGRAM_NAME " by Lucas Jones and Tanguy Pruvot\n");
 #ifdef _MSC_VER
-	printf(CL_GRY "  This is version " PACKAGE_VERSION " built with VC++ 2013\n" CL_N);
+	printf(CL_GRY " This is version " PACKAGE_VERSION ", built with VC++ 2013" CL_N "\n");
 #else
-	printf("  This is version " PACKAGE_VERSION "\n");
+	printf(CL_GRY " This is version " PACKAGE_VERSION CL_N "\n");
 #endif
-	printf(CL_GRY "  based on pooler/cpuminer 2.4 (c) 2010 Jeff Garzik, 2012 pooler\n" CL_N);
+	printf(CL_GRY " based on pooler cpuminer 2.4" CL_N "\n");
 }
 
 int main(int argc, char *argv[]) {
