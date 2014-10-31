@@ -1,12 +1,12 @@
 Version multi 1.0.5 (Tanguy Pruvot)
 
 - Merge remaining v2.4 cpu-miner changes
-- Add colored output option (--color)
-- Add --cputest parameter (debug)
+- Add colored output (diable with --no-color)
 - Test and fix blake on NEOS, needs 14 rounds (was 8)
 - Add pentablake (5x blake256) (from bitbandi)
 - Add neoscrypt
-- Windows (VC++ 2013 build support)
+- Windows (VC++ 2013 and MinGW64 build support)
+- Enhance --version informations (compiler + lib versions)
 
 Version multi 1.0.4 (Tanguy Pruvot)
 

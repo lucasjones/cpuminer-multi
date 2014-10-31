@@ -928,7 +928,7 @@ static void share_result(int result, struct work *work, const char *reason)
 				accepted_count, accepted_count + rejected_count,
 				100. * accepted_count / (accepted_count + rejected_count), s,
 				use_colors ?
-					(result ? CL_GRN "(yay!!!)" : CL_RED "(booooo)")
+					(result ? CL_GRN "yay!!!" : CL_RED "booooo")
 				:	(result ? "(yay!!!)" : "(booooo)"));
 		break;
 	}

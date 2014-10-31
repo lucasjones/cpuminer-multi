@@ -29,7 +29,7 @@ Algorithms
  * ✓ __x15__ (RadianceCoin [RCE])
  * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
  * ✓ __fresh__ (FreshCoin)
- * ✓ __blake__ (Neos blake256)
+ * ✓ __blake__ (Neos/Saffron Blake-256)
  * ✓ __neoscrypt__ (Feathercoin)
  * ✓ __pentablake__ (Joincoin)
 
@@ -47,13 +47,16 @@ Algorithms
 
 Dependencies
 ============
-* libcurl			http://curl.haxx.se/libcurl/
-* jansson			http://www.digip.org/jansson/ (jansson is included in-tree)
-* openssl           https://www.openssl.org/
+* libcurl http://curl.haxx.se/libcurl/
+* jansson http://www.digip.org/jansson/ (jansson is included in-tree)
+* openssl https://www.openssl.org/
+* pthreads
+* zlib (for curl/ssl)
 
 Download
 ========
-* Binary releases: https://github.com/LucasJones/cpuminer-multi/releases
+* Binary releases:  https://github.com/LucasJones/cpuminer-multi/releases
+* Windows releases: https://github.com/tpruvot/cpuminer-multi/releases
 * Git tree:   https://github.com/LucasJones/cpuminer-multi
   * Clone with `git clone https://github.com/LucasJones/cpuminer-multi`
 
@@ -73,7 +76,7 @@ Build
 
 #### Basic Windows build with Visual Studio 2013
  * All the required .lib files are now included in tree (windows only)
- * AVX enabled by default, but not AVX2 (edit cpu-miner-config.h if required)
+ * AVX enabled by default for x64 platform (AVX2 and XOP could also be used)
 
 #### Basic Windows build instructions, using MinGW:
  * Install MinGW and the MSYS Developer Tool Kit (http://www.mingw.org/)
@@ -84,7 +87,8 @@ Build
    * Make sure you have curl-config in MinGW\bin
  * Install openssl devel (https://www.openssl.org/related/binaries.html)
  * In the MSYS shell, run:
-   * ./autogen.sh	# only needed if building from git repo
+   * for 64bit, you can use ./mingw64.sh else :
+     ./autogen.sh	# only needed if building from git repo
    * LIBCURL="-lcurldll" ./configure CFLAGS="*-march=native*"
      * # Use -march=native if building for a single machine
    * make
