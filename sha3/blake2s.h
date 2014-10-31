@@ -78,7 +78,7 @@ static inline void store48(void *dst, uint64_t w)
 }
 
 /* prevents compiler optimizing out memset() */
-inline void secure_zero_memory(void *v, size_t n)
+static inline void secure_zero_memory(void *v, size_t n)
 {
 	volatile uint8_t *p = ( volatile uint8_t * )v;
 

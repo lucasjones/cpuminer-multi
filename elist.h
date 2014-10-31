@@ -30,7 +30,7 @@ struct list_head {
  * This is only for internal list manipulation where we know
  * the prev/next entries already!
  */
-inline void __list_add(struct list_head *nlh,
+static inline void __list_add(struct list_head *nlh,
 			      struct list_head *prev,
 			      struct list_head *next)
 {

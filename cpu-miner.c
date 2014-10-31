@@ -205,9 +205,9 @@ static int rpc2_bloblen = 0;
 static uint32_t rpc2_target = 0;
 static char *rpc2_job_id = NULL;
 bool aes_ni_supported = false;
+double opt_diff_factor = 1.0;
 static pthread_mutex_t rpc2_job_lock;
 static pthread_mutex_t rpc2_login_lock;
-
 pthread_mutex_t applog_lock;
 static pthread_mutex_t stats_lock;
 
@@ -260,6 +260,7 @@ Options:\n\
   -T, --timeout=N       timeout for long polling, in seconds (default: none)\n\
   -s, --scantime=N      upper bound on time spent scanning current work when\n\
                           long polling is unavailable, in seconds (default: 5)\n\
+  -f, --diff            Divide difficulty by this factor (std is 1) \n\
   -n, --nfactor         neoscrypt N-Factor\n\
       --coinbase-addr=ADDR  payout address for solo mining\n\
       --coinbase-sig=TEXT  data to insert in the coinbase when possible\n\
@@ -296,7 +297,7 @@ static char const short_options[] =
 #ifdef HAVE_SYSLOG_H
 	"S"
 #endif
-	"a:c:CDhp:Px:qr:R:s:t:T:o:u:O:Vn:";
+	"a:c:CDhp:Px:qr:R:s:t:T:o:u:O:Vn:f:";
 
 static struct option const options[] = {
 	{ "algo", 1, NULL, 'a' },
@@ -312,7 +313,8 @@ static struct option const options[] = {
 	{ "no-color", 0, NULL, 1002 },
 	{ "debug", 0, NULL, 'D' },
 	{ "help", 0, NULL, 'h' },
-	{ "nfactor", 0, NULL, 'n' },
+	{ "diff", 1, NULL, 'f' },
+	{ "nfactor", 1, NULL, 'n' },
 	{ "no-gbt", 0, NULL, 1011 },
 	{ "no-getwork", 0, NULL, 1010 },
 	{ "no-longpoll", 0, NULL, 1003 },
@@ -898,7 +900,7 @@ out:
 	return rc;
 }
 
-static void share_result(int result, struct work *work, const char *reason)
+static int share_result(int result, struct work *work, const char *reason)
 {
 	char s[345];
 	double hashrate;
@@ -933,8 +935,15 @@ static void share_result(int result, struct work *work, const char *reason)
 		break;
 	}
 
-	if (opt_debug && reason)
-		applog(LOG_DEBUG, "DEBUG: reject reason: %s", reason);
+	if (reason) {
+		applog(LOG_WARNING, "reject reason: %s", reason);
+		if (strncmp(reason, "low difficulty share", 20) == 0) {
+			opt_diff_factor = (opt_diff_factor * 2.0) / 3.0;
+			applog(LOG_WARNING, "factor reduced to : %0.2f", opt_diff_factor);
+			return 0;
+		}
+	}
+	return 1;
 }
 
 static bool submit_upstream_work(CURL *curl, struct work *work)
@@ -1533,10 +1542,10 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 		switch (opt_algo) {
 			case ALGO_SCRYPT:
 			case ALGO_NEOSCRYPT:
-				diff_to_target(work->target, sctx->job.diff / 65536.0);
+				diff_to_target(work->target, sctx->job.diff / (65536.0 * opt_diff_factor));
 				break;
 			default:
-				diff_to_target(work->target, sctx->job.diff);
+				diff_to_target(work->target, sctx->job.diff / opt_diff_factor);
 		}
 	}
 }
@@ -2158,6 +2167,7 @@ static void parse_arg(int key, char *arg, char *pname)
 {
 	char *p;
 	int v, i;
+	double d;
 
 	switch(key) {
 	case 'a':
@@ -2395,6 +2405,12 @@ static void parse_arg(int key, char *arg, char *pname)
 			show_usage_and_exit(1);
 		}
 		strcpy(coinbase_sig, arg);
+		break;
+	case 'f':
+		d = atof(arg);
+		if (d == 0)	/* sanity check */
+			show_usage_and_exit(1);
+		opt_diff_factor = d;
 		break;
 	case 'S':
 		use_syslog = true;
