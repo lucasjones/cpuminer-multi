@@ -260,7 +260,7 @@ Options:\n\
   -T, --timeout=N       timeout for long polling, in seconds (default: none)\n\
   -s, --scantime=N      upper bound on time spent scanning current work when\n\
                           long polling is unavailable, in seconds (default: 5)\n\
-  -n, --nfactor         scrypt/neoscrypt N-Factor\n\
+  -n, --nfactor         neoscrypt N-Factor\n\
       --coinbase-addr=ADDR  payout address for solo mining\n\
       --coinbase-sig=TEXT  data to insert in the coinbase when possible\n\
       --no-longpoll     disable long polling support\n\
@@ -1689,7 +1689,7 @@ static void *miner_thread(void *userdata)
 
 		case ALGO_SCRYPT:
 			rc = scanhash_scrypt(thr_id, work.data, scratchbuf, work.target,
-					max_nonce, &hashes_done, 0x80000020 | (opt_nfactor << 8));
+					max_nonce, &hashes_done, opt_scrypt_n);
 			break;
 
 		case ALGO_SHA256D:
@@ -2188,7 +2188,7 @@ static void parse_arg(int key, char *arg, char *pname)
 			opt_nfactor = 9;
 		break;
 	case 'n':
-		if (opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_SCRYPT) {
+		if (opt_algo == ALGO_NEOSCRYPT) {
 			v = atoi(arg);
 			/* Nfactor = lb(N) - 1; N = (1 << (Nfactor + 1)) */
 			if ((v < 0) || (v > 30)) {
