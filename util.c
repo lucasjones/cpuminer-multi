@@ -109,7 +109,7 @@ void applog(int prio, const char *fmt, ...)
 
 		pthread_mutex_lock(&applog_lock);
 		tm_p = localtime(&now);
-		memcpy(&tm, tm_p, sizeof(tm));
+		memcpy(&tm, tm_p, sizeof(struct tm));
 		pthread_mutex_unlock(&applog_lock);
 
 		switch (prio) {

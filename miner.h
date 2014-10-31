@@ -3,6 +3,22 @@
 
 #include "cpuminer-config.h"
 
+#ifdef _MSC_VER
+
+#ifdef _MSC_VER
+#undef USE_ASM  /* to fix */
+#endif
+
+/* missing arch defines for msvc */
+#if defined(_M_X64)
+#define __i386__ 1
+#define __x86_64__ 1
+#elif defined(_M_X86)
+#define __i386__ 1
+#endif
+
+#endif
+
 #include <stdbool.h>
 #include <inttypes.h>
 #include <sys/time.h>
@@ -173,7 +189,7 @@ extern int scanhash_sha256d(int thr_id, uint32_t *pdata, const uint32_t *ptarget
 extern unsigned char *scrypt_buffer_alloc(int N);
 extern int scanhash_scrypt(int thr_id, uint32_t *pdata,
                             unsigned char *scratchbuf, const uint32_t *ptarget,
-                            uint32_t max_nonce, uint64_t *hashes_done, int N);
+							uint32_t max_nonce, uint64_t *hashes_done, uint32_t N);
 
 extern int scanhash_keccak(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);

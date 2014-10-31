@@ -24,12 +24,10 @@
  * SUCH DAMAGE.
  */
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-/* broken */
-//#define __i386__ 1
+#ifdef _MSC_VER
+/* arch defines */
+#include "miner.h"
 #endif
-
-#define ASM 1
 
 #if (ASM) && (__x86_64__)
 

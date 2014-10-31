@@ -38,8 +38,8 @@
 
 #define STACK_ALIGN 0x40
 
-#if defined(__i386__) || defined(_M_IA64) /*|| defined(_M_IX86) // tofix: win32 msvc */
-#define ASM 1
+#ifdef _MSC_VER // tofix: win32 msvc */
+#define ASM 0
 #endif
 
 #if (WINDOWS)
@@ -318,7 +318,7 @@ static void neoscrypt_pbkdf2_sha256(const uint8_t *password, size_t password_len
 
 /* NeoScrypt */
 
-#if defined(ASM)
+#if (ASM)
 
 extern void neoscrypt_salsa(uint *X, uint rounds);
 extern void neoscrypt_salsa_tangle(uint *X, uint count);
