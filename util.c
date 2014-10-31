@@ -1642,6 +1642,10 @@ void print_hash_tests(void)
 	printpfx("Fresh", hash);
 
 	memset(hash, 0, sizeof hash);
+	s3hash(&hash[0], &buf[0]);
+	printpfx("S3", hash);
+
+	memset(hash, 0, sizeof hash);
 	x11hash(&hash[0], &buf[0]);
 	printpfx("X11", hash);
 

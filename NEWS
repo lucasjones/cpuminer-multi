@@ -2,6 +2,7 @@ Version multi 1.0.6 (Tanguy Pruvot)
 - Fix scrypt algo
 - More work on VC2013
 - Add -f tuning option to test with reduced difficulty
+- Add S3 algo
 
 Version multi 1.0.5 (Tanguy Pruvot)
 

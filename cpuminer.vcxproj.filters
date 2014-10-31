@@ -152,6 +152,7 @@
     <ClCompile Include="aesb-x86.SS">
       <Filter>arch\x86</Filter>
     </ClCompile>
+    <ClCompile Include="s3.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sha3\sph_blake.h">

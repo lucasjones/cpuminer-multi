@@ -31,6 +31,7 @@ minerd_SOURCES	= elist.h \
 		  cryptonight.c \
 		  fresh.c \
 		  neoscrypt.c \
+		  s3.c \
 		  x11.c \
 		  x13.c \
 		  x14.c \

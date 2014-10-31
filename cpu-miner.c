@@ -130,6 +130,7 @@ enum algos {
 	ALGO_SHAVITE3,    /* Shavite3 */
 	ALGO_BLAKE,       /* Blake */
 	ALGO_FRESH,       /* Fresh */
+	ALGO_S3,          /* S3 */
 	ALGO_X11,         /* X11 */
 	ALGO_X13,         /* X13 */
 	ALGO_X14,         /* X14 */
@@ -150,6 +151,7 @@ static const char *algo_names[] = {
 	"shavite3",
 	"blake",
 	"fresh",
+	"s3",
 	"x11",
 	"x13",
 	"x14",
@@ -241,6 +243,7 @@ Options:\n\
                           shavite3     Shavite3\n\
                           blake        Blake\n\
                           fresh        Fresh\n\
+                          s3           S3\n\
                           x11          X11\n\
                           x13          X13\n\
                           x14          X14\n\
@@ -1740,6 +1743,10 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_FRESH:
 			rc = scanhash_fresh(thr_id, work.data, work.target, max_nonce,
+					&hashes_done);
+			break;
+		case ALGO_S3:
+			rc = scanhash_s3(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
 			break;
 		case ALGO_X11:

@@ -23,6 +23,7 @@ Algorithms
  * ✓ __scrypt__ (Litecoin, Dogecoin, Feathercoin, etc..)
  * ✓ __scrypt:N__ (Vertcoin [VTC])
  * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, etc..)
+ * ✓ __s3__ (OneCoin)
  * ✓ __x11__ (Darkcoin [DRK], Hirocoin, Limecoin)
  * ✓ __x13__ (Sherlockcoin, [ACE], [B2B], [GRC], [XHC], etc..)
  * ✓ __x14__ (X14, Webcoin [WEB])

@@ -186,6 +186,7 @@
     <ClCompile Include="crypto\hash.c" />
     <ClCompile Include="crypto\oaes_lib.c" />
     <ClCompile Include="ink.c" />
+    <ClCompile Include="s3.c" />
     <ClCompile Include="sha3\blake2s.c" />
     <ClCompile Include="sha3\sph_hefty1.c" />
     <ClCompile Include="util.c">
