@@ -51,7 +51,7 @@ case $MINGW_TARGET in
     have_win32=true
     CFLAGS="-Icompat/pthreads $CFLAGS"
     PTHREAD_LDFLAGS="-Lcompat/pthreads/x86"
-    WS2_LIBS="-lws2_32 -fPIC"
+    WS2_LIBS="-lws2_32"
     ;;
   x86_64-*-mingw*|amd64-*-mingw*)
     have_x86_64=true
@@ -59,7 +59,7 @@ case $MINGW_TARGET in
     CFLAGS="-Icompat/pthreads $CFLAGS"
     PTHREAD_LDFLAGS="-Lcompat/pthreads/x64"
     # SHOULD BE AT END! after -lcrypto #
-    WS2_LIBS="-L/mingw/x86_64-w64-mingw32/lib -lws2_32 -fPIC"
+    WS2_LIBS="-L/mingw/x86_64-w64-mingw32/lib -lws2_32"
     ;;
   i*86-*-*)
     have_x86=true
