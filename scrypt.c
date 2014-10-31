@@ -158,7 +158,7 @@ static const uint32_t outerpad_4way[4 * 8] = {
 	0x00000000, 0x00000000, 0x00000000, 0x00000000,
 	0x00000300, 0x00000300, 0x00000300, 0x00000300
 };
-static const uint32_t finalblk_4way[4 * 16] __attribute__((aligned(16))) = {
+static const uint32_t _ALIGN(16) finalblk_4way[4 * 16] = {
 	0x00000001, 0x00000001, 0x00000001, 0x00000001,
 	0x80000000, 0x80000000, 0x80000000, 0x80000000,
 	0x00000000, 0x00000000, 0x00000000, 0x00000000,
@@ -180,8 +180,8 @@ static const uint32_t finalblk_4way[4 * 16] __attribute__((aligned(16))) = {
 static inline void HMAC_SHA256_80_init_4way(const uint32_t *key,
 	uint32_t *tstate, uint32_t *ostate)
 {
-	uint32_t ihash[4 * 8] __attribute__((aligned(16)));
-	uint32_t pad[4 * 16] __attribute__((aligned(16)));
+	uint32_t _ALIGN(16) ihash[4 * 8];
+	uint32_t _ALIGN(16) pad[4 * 16];
 	int i;
 
 	/* tstate is assumed to contain the midstate of key */
@@ -208,10 +208,10 @@ static inline void HMAC_SHA256_80_init_4way(const uint32_t *key,
 static inline void PBKDF2_SHA256_80_128_4way(const uint32_t *tstate,
 	const uint32_t *ostate, const uint32_t *salt, uint32_t *output)
 {
-	uint32_t istate[4 * 8] __attribute__((aligned(16)));
-	uint32_t ostate2[4 * 8] __attribute__((aligned(16)));
-	uint32_t ibuf[4 * 16] __attribute__((aligned(16)));
-	uint32_t obuf[4 * 16] __attribute__((aligned(16)));
+	uint32_t _ALIGN(16) istate[4 * 8];
+	uint32_t _ALIGN(16) ostate2[4 * 8];
+	uint32_t _ALIGN(16) ibuf[4 * 16];
+	uint32_t _ALIGN(16) obuf[4 * 16];
 	int i, j;
 
 	memcpy(istate, tstate, 4 * 32);
@@ -239,7 +239,7 @@ static inline void PBKDF2_SHA256_80_128_4way(const uint32_t *tstate,
 static inline void PBKDF2_SHA256_128_32_4way(uint32_t *tstate,
 	uint32_t *ostate, const uint32_t *salt, uint32_t *output)
 {
-	uint32_t buf[4 * 16] __attribute__((aligned(16)));
+	uint32_t _ALIGN(16) buf[4 * 16];
 	int i;
 	
 	sha256_transform_4way(tstate, salt, 1);
@@ -531,10 +531,10 @@ static void scrypt_1024_1_1_256(const uint32_t *input, uint32_t *output,
 static void scrypt_1024_1_1_256_4way(const uint32_t *input,
 	uint32_t *output, uint32_t *midstate, unsigned char *scratchpad, int N)
 {
-	uint32_t tstate[4 * 8] __attribute__((aligned(128)));
-	uint32_t ostate[4 * 8] __attribute__((aligned(128)));
-	uint32_t W[4 * 32] __attribute__((aligned(128)));
-	uint32_t X[4 * 32] __attribute__((aligned(128)));
+	uint32_t _ALIGN(128) tstate[4 * 8];
+	uint32_t _ALIGN(128) ostate[4 * 8];
+	uint32_t _ALIGN(128) W[4 * 32];
+	uint32_t _ALIGN(128) X[4 * 32];
 	uint32_t *V;
 	int i, k;
 	

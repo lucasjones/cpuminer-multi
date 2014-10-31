@@ -919,7 +919,7 @@ static void share_result(int result, struct work *work, const char *reason)
 				100. * accepted_count / (accepted_count + rejected_count), s,
 				(((double) 0xffffffff) / (work ? work->target[7] : rpc2_target)),
 				use_colors ?
-					(result ? CL_GRN "(yay!!!)" : CL_RED "(booooo)")
+					(result ? CL_GRN "yay!!!" : CL_RED "booooo")
 				:	(result ? "(yay!!!)" : "(booooo)"));
 		break;
 	default:
@@ -2078,7 +2078,15 @@ out:
 
 static void show_version_and_exit(void)
 {
-	printf(PACKAGE_STRING "\n built on " __DATE__ "\n features:"
+	printf("\n built on " __DATE__
+#ifdef _MSC_VER
+	 " with VC++ 2013\n");
+#elif defined(__GNUC__)
+	 " with GCC");
+	printf(" %d.%d.%d\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+#endif
+
+	printf(" features:"
 #if defined(USE_ASM) && defined(__i386__)
 		" i386"
 #endif
@@ -2113,12 +2121,19 @@ static void show_version_and_exit(void)
 		" NEON"
 #endif
 #endif
-		"\n");
+		"\n\n");
 
+	/* dependencies versions */
 	printf("%s\n", curl_version());
 #ifdef JANSSON_VERSION
-	printf("libjansson %s\n", JANSSON_VERSION);
+	printf("libjansson/%s ", JANSSON_VERSION);
+#else
+	printf("libjansson/1.3 "); /* windows */
 #endif
+#ifdef PTW32_VERSION
+	printf("pthreads/%d.%d.%d.%d ", PTW32_VERSION);
+#endif
+	printf("\n");
 	exit(0);
 }
 
@@ -2525,11 +2540,7 @@ static bool has_aes_ni()
 static void show_credits()
 {
 	printf(PROGRAM_NAME " by Lucas Jones and Tanguy Pruvot\n");
-#ifdef _MSC_VER
-	printf(CL_GRY " This is version " PACKAGE_VERSION ", built with VC++ 2013" CL_N "\n");
-#else
 	printf(CL_GRY " This is version " PACKAGE_VERSION CL_N "\n");
-#endif
 	printf(CL_GRY " based on pooler cpuminer 2.4" CL_N "\n");
 }
 
@@ -2713,7 +2724,7 @@ int main(int argc, char *argv[]) {
 	/* main loop - simply wait for workio thread to exit */
 	pthread_join(thr_info[work_thr_id].pth, NULL);
 
-	applog(LOG_INFO, "workio thread dead, exiting.");
+	applog(LOG_WARNING, "workio thread dead, exiting.");
 
 	return 0;
 }

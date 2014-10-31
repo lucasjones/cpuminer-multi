@@ -39,7 +39,6 @@ void *alloca (size_t);
 #endif
 
 #ifdef _MSC_VER
-#define strncasecmp(x,y,z) _strnicmp(x,y,z)
 	#define strncasecmp(x,y,z) _strnicmp(x,y,z)
 	#define strcasecmp(x,y) _stricmp(x,y)
 	typedef int ssize_t;

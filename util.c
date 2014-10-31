@@ -117,7 +117,7 @@ void applog(int prio, const char *fmt, ...)
 			case LOG_WARNING: color = CL_YLW; break;
 			case LOG_NOTICE:  color = CL_WHT; break;
 			case LOG_INFO:    color = ""; break;
-			case LOG_DEBUG:   color = ""; break;
+			case LOG_DEBUG:   color = CL_GRY; break;
 
 			case LOG_BLUE:
 				prio = LOG_NOTICE;
