@@ -1,3 +1,7 @@
+Version multi 1.0.6 (Tanguy Pruvot)
+- Fix scrypt algo
+- More work on VC2013
+
 Version multi 1.0.5 (Tanguy Pruvot)
 
 - Merge remaining v2.4 cpu-miner changes

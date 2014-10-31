@@ -2635,6 +2635,8 @@ int main(int argc, char *argv[]) {
 		num_processors = 1;
 	if (!opt_n_threads)
 		opt_n_threads = num_processors - 1;
+	if (!opt_n_threads)
+		opt_n_threads = 1;
 
 #ifdef HAVE_SYSLOG_H
 	if (use_syslog)
