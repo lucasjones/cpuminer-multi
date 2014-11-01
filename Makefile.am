@@ -88,3 +88,20 @@ minerd_CFLAGS   = -Wno-pointer-sign
 if HAVE_WINDOWS
 minerd_CFLAGS += -Wl,--stack,10485760
 endif
+
+if HAVE_WINDOWS
+# use to profile an object
+# gprof_cflags = -pg -g3
+# minerd_LDFLAGS += -pg
+# minerd_CFLAGS += -fno-inline-functions -static
+
+# copy/paste from generated Makefile
+common_ccflags = $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(minerd_CPPFLAGS) $(CPPFLAGS) $(minerd_CFLAGS) $(CFLAGS)
+
+# special CFLAGS (if you find a simpler way to do that tell me ;)
+minerd-neoscrypt.o: neoscrypt.c
+	@echo "CUSTOM ${@}: ${filter %.o,${^}} ${filter %.c,${^}}"
+	$(CC) $(common_ccflags) -g -O3 $(gprof_cflags) -MT $@ -MD -MP -c -o $@ $<
+
+
+endif

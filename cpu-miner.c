@@ -163,7 +163,7 @@ static const char *algo_names[] = {
 
 bool opt_debug = false;
 bool opt_protocol = false;
-static bool opt_benchmark = false;
+bool opt_benchmark = false;
 bool opt_redirect = true;
 bool want_longpoll = true;
 bool have_longpoll = false;
@@ -1669,6 +1669,7 @@ static void *miner_thread(void *userdata)
 				max64 = 0x40LL;
 				break;
 			case ALGO_FRESH:
+			case ALGO_X11:
 				max64 = 0x3ffff;
 				break;
 			case ALGO_X13:

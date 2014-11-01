@@ -1,6 +1,8 @@
 minerd
 *.exe
 *.o
+*.d
+gmon.out
 
 autom4te.cache
 .deps

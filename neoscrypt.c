@@ -38,8 +38,12 @@
 
 #define STACK_ALIGN 0x40
 
-#ifdef _MSC_VER // tofix: win32 msvc */
+#ifdef _MSC_VER // todo: msvc
 #define ASM 0
+#endif
+
+#ifdef __GNUC__
+#define ASM 1
 #endif
 
 #if (WINDOWS)

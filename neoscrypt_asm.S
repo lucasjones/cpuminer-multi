@@ -29,6 +29,11 @@
 #include "miner.h"
 #endif
 
+#ifdef __GNUC__
+#define ASM 1
+/* #define WIN64 0 */
+#endif
+
 #if (ASM) && (__x86_64__)
 
 /* neoscrypt_blkcpy(dst, src, len) = SSE2 based block memcpy();
