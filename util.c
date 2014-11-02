@@ -1230,6 +1230,36 @@ static bool stratum_2_job(struct stratum_ctx *sctx, json_t *params)
 	return ret;
 }
 
+/**
+ * Extract bloc height     L H... here len=3, height=0x1333e8
+ * "...0000000000ffffffff2703e83313062f503253482f043d61105408"
+ */
+static uint32_t getblocheight(struct stratum_ctx *sctx)
+{
+	uint32_t height = 0;
+	uint8_t hlen = 0, *p, *m;
+
+	// find 0xffff tag
+	p = (uint8_t*) sctx->job.coinbase + 32;
+	m = p + 128;
+	while (*p != 0xff && p < m) p++;
+	while (*p == 0xff && p < m) p++;
+	if (*(p-1) == 0xff && *(p-2) == 0xff) {
+		p++; hlen = *p;
+		p++; height = le16dec(p);
+		p += 2;
+		switch (hlen) {
+			case 4:
+				height += 0x10000UL * le16dec(p);
+				break;
+			case 3:
+				height += 0x10000UL * (*p);
+				break;
+		}
+	}
+	return height;
+}
+
 static bool stratum_notify(struct stratum_ctx *sctx, json_t *params)
 {
 	const char *job_id, *prevhash, *coinb1, *coinb2, *version, *nbits, *ntime;
@@ -1289,6 +1319,8 @@ static bool stratum_notify(struct stratum_ctx *sctx, json_t *params)
 	free(sctx->job.job_id);
 	sctx->job.job_id = strdup(job_id);
 	hex2bin(sctx->job.prevhash, prevhash, 32);
+
+	sctx->bloc_height = getblocheight(sctx);
 
 	for (i = 0; i < sctx->job.merkle_count; i++)
 		free(sctx->job.merkle[i]);

@@ -194,6 +194,7 @@ static int num_processors;
 static char *rpc_url;
 static char *rpc_userpass;
 static char *rpc_user, *rpc_pass;
+static char *short_url = NULL;
 static int pk_script_size;
 static unsigned char pk_script[25];
 static char coinbase_sig[101] = "";
@@ -1555,6 +1556,9 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_NEOSCRYPT:
 				diff_to_target(work->target, sctx->job.diff / (65536.0 * opt_diff_factor));
 				break;
+			case ALGO_QUBIT:
+				diff_to_target(work->target, sctx->job.diff / (256.0 * opt_diff_factor));
+				break;
 			default:
 				diff_to_target(work->target, sctx->job.diff / opt_diff_factor);
 		}
@@ -2064,29 +2068,22 @@ static void *stratum_thread(void *userdata)
 			}
 		}
 
-		if (jsonrpc_2) {
-			if (stratum.work.job_id
-					&& (!g_work_time
-							|| strcmp(stratum.work.job_id, g_work.job_id))) {
-				pthread_mutex_lock(&g_work_lock);
-				stratum_gen_work(&stratum, &g_work);
-				time(&g_work_time);
-				pthread_mutex_unlock(&g_work_lock);
-				applog(LOG_BLUE, "Stratum requested work restart");
+		if (stratum.job.job_id &&
+			(!g_work_time || strcmp(stratum.job.job_id, g_work.job_id)) )
+		{
+			pthread_mutex_lock(&g_work_lock);
+			stratum_gen_work(&stratum, &g_work);
+			time(&g_work_time);
+			pthread_mutex_unlock(&g_work_lock);
+
+			if (stratum.job.clean || jsonrpc_2) {
+				if (!opt_quiet)
+					applog(LOG_BLUE, "%s sent %s block %d", short_url, algo_names[opt_algo],
+						stratum.bloc_height);
 				restart_threads();
-			}
-		} else {
-			if (stratum.job.job_id
-					&& (!g_work_time
-							|| strcmp(stratum.job.job_id, g_work.job_id))) {
-				pthread_mutex_lock(&g_work_lock);
-				stratum_gen_work(&stratum, &g_work);
-				time(&g_work_time);
-				pthread_mutex_unlock(&g_work_lock);
-				if (stratum.job.clean) {
-					applog(LOG_BLUE, "Stratum requested work restart");
-					restart_threads();
-				}
+			} else if (opt_debug && !opt_quiet) {
+					applog(LOG_BLUE, "%s asks job %d for block %d", short_url,
+						strtoul(stratum.job.job_id, NULL, 16), stratum.bloc_height);
 			}
 		}
 
@@ -2339,6 +2336,7 @@ static void parse_arg(int key, char *arg, char *pname)
 			free(rpc_url);
 			rpc_url = strdup(arg);
 			strcpy(rpc_url + (ap - arg), hp);
+			short_url = &rpc_url[(ap - arg) + 3];
 		} else {
 			if (*hp == '\0' || *hp == '/') {
 				fprintf(stderr, "%s: invalid URL -- '%s'\n",
@@ -2348,6 +2346,7 @@ static void parse_arg(int key, char *arg, char *pname)
 			free(rpc_url);
 			rpc_url = (char*) malloc(strlen(hp) + 8);
 			sprintf(rpc_url, "http://%s", hp);
+			short_url = &rpc_url[sizeof("http://")-1];
 		}
 		have_stratum = !opt_benchmark && !strncasecmp(rpc_url, "stratum", 7);
 		break;

@@ -27,9 +27,9 @@ Algorithms
  * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
  * ✓ __fresh__ (FreshCoin)
  * ✓ __neoscrypt__ (Feathercoin)
- * ✓ __nist5__
+ * ✓ __nist5__ (TalkCoin [TAC], [UPM])
  * ✓ __pentablake__ (Joincoin)
- * ✓ __qubit__
+ * ✓ __qubit__ (MyriadCoin [MYR])
  * ✓ __s3__ (OneCoin)
  * ✓ __x11__ (Darkcoin [DRK], Hirocoin, Limecoin)
  * ✓ __x13__ (Sherlockcoin, [ACE], [B2B], [GRC], [XHC], etc..)

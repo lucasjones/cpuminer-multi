@@ -154,6 +154,23 @@ static inline void le32enc(void *pp, uint32_t x)
 }
 #endif
 
+#if !HAVE_DECL_LE16DEC
+static inline uint16_t le16dec(const void *pp)
+{
+	const uint8_t *p = (uint8_t const *)pp;
+	return ((uint16_t)(p[0]) + ((uint16_t)(p[1]) << 8));
+}
+#endif
+
+#if !HAVE_DECL_LE16ENC
+static inline void le16enc(void *pp, uint16_t x)
+{
+	uint8_t *p = (uint8_t *)pp;
+	p[0] = x & 0xff;
+	p[1] = (x >> 8) & 0xff;
+}
+#endif
+
 #if JANSSON_MAJOR_VERSION >= 2
 #define JSON_LOADS(str, err_ptr) json_loads(str, 0, err_ptr)
 #define JSON_LOAD_FILE(path, err_ptr) json_load_file(path, 0, err_ptr)
@@ -375,6 +392,8 @@ struct stratum_ctx {
 	struct stratum_job job;
 	struct work work;
 	pthread_mutex_t work_lock;
+
+	int bloc_height;
 };
 
 bool stratum_socket_full(struct stratum_ctx *sctx, int timeout);
