@@ -1701,6 +1701,9 @@ static void *miner_thread(void *userdata)
 			case ALGO_PENTABLAKE:
 				max64 = 0x3ffff;
 				break;
+			case ALGO_BLAKE:
+				max64 = 0x7ffffLL;
+				break;
 			default:
 				max64 = 0x1fffffLL;
 				break;
@@ -1721,32 +1724,26 @@ static void *miner_thread(void *userdata)
 			rc = scanhash_scrypt(thr_id, work.data, scratchbuf, work.target,
 					max_nonce, &hashes_done, opt_scrypt_n);
 			break;
-
 		case ALGO_SHA256D:
 			rc = scanhash_sha256d(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
 			break;
-
 		case ALGO_KECCAK:
 			rc = scanhash_keccak(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
 			break;
-
 		case ALGO_HEAVY:
 			rc = scanhash_heavy(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
 			break;
-
 		case ALGO_NEOSCRYPT:
 			rc = scanhash_neoscrypt(thr_id, work.data, work.target,
 					max_nonce, &hashes_done, 0x80000020 | (opt_nfactor << 8));
 			break;
-
 		case ALGO_QUARK:
 			rc = scanhash_quark(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
 			break;
-
 		case ALGO_SKEIN:
 			rc = scanhash_skein(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
@@ -2341,7 +2338,7 @@ static void parse_arg(int key, char *arg, char *pname)
 			free(rpc_url);
 			rpc_url = strdup(arg);
 			strcpy(rpc_url + (ap - arg), hp);
-			short_url = &rpc_url[(ap - arg) + 3];
+			short_url = &rpc_url[ap - arg];
 		} else {
 			if (*hp == '\0' || *hp == '/') {
 				fprintf(stderr, "%s: invalid URL -- '%s'\n",
@@ -2605,15 +2602,12 @@ int main(int argc, char *argv[]) {
 
 	if (opt_algo == ALGO_QUARK) {
 		init_quarkhash_contexts();
-	} else if (opt_algo == ALGO_BLAKE) {
-		init_blakehash_contexts();
 	} else if(opt_algo == ALGO_CRYPTONIGHT) {
 		jsonrpc_2 = true;
 		aes_ni_supported = has_aes_ni();
 		applog(LOG_INFO, "Using JSON-RPC 2.0");
 		applog(LOG_INFO, "CPU Supports AES-NI: %s", aes_ni_supported ? "YES" : "NO");
 	}
-
 
 	if (!opt_benchmark && !rpc_url) {
 		fprintf(stderr, "%s: no URL supplied\n", argv[0]);

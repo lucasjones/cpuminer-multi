@@ -7,132 +7,81 @@
 #include <memory.h>
 
 /* Move init out of loop, so init once externally,
- * and then use one single memcpy with that bigger memory block */
-typedef struct {
-	sph_blake256_context 	blake1;
-} blakehash_context_holder;
-static blakehash_context_holder base_contexts;
-static bool ctx_init_made = false;
+ * and then use one single memcpy */
+static sph_blake256_context blake_mid;
+static bool ctx_midstate_done = false;
 
-void init_blakehash_contexts(void)
+static void init_blake_hash(void)
 {
-	sph_blake256_init(&base_contexts.blake1);
-	ctx_init_made = true;
+	sph_blake256_init(&blake_mid);
+	ctx_midstate_done = true;
 }
 
-extern void blakehash(void *state, const void *input)
+void blakehash(void *state, const void *input)
 {
-	blakehash_context_holder ctx;
+	sph_blake256_context ctx;
 
-	uint32_t hashA[16];
+	uchar hash[64];
 
-	// do one memcopy to get fresh contexts,
-	// its faster even with a larger block then issuing 9 memcopies
-	if (!ctx_init_made)
-		init_blakehash_contexts();
-	memcpy(&ctx, &base_contexts, sizeof(base_contexts));
+	// do one memcopy to get a fresh context
+	if (!ctx_midstate_done) {
+		init_blake_hash();
+		sph_blake256(&blake_mid, input, 64);
+	}
+	memcpy(&ctx, &blake_mid, sizeof(blake_mid));
 
-	sph_blake256(&ctx.blake1, input, 80);
-	sph_blake256_close (&ctx.blake1, hashA);
-	memcpy(state, hashA, 32);
+	sph_blake256(&ctx, input + 64, 16);
+	sph_blake256_close(&ctx, hash);
+
+	memcpy(state, hash, 32);
 }
 
-extern int scanhash_blake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-	uint32_t max_nonce, uint64_t *hashes_done)
+int scanhash_blake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+					uint32_t max_nonce, uint64_t *hashes_done)
 {
-	uint32_t n = pdata[19] - 1;
 	const uint32_t first_nonce = pdata[19];
-	//const uint32_t Htarg = ptarget[7];
-#ifdef WIN32
-	uint32_t __declspec(align(32)) hash64[8];
-#else
-	uint32_t hash64[8] __attribute__((aligned(32)));
-#endif
-	uint32_t endiandata[32];
+	uint32_t HTarget = ptarget[7];
 
+	uint32_t _ALIGN(32) hash64[8];
+	uint32_t _ALIGN(32) endiandata[32];
+
+	uint32_t n = pdata[19];
+
+	ctx_midstate_done = false;
+
+	if (opt_benchmark)
+		HTarget = 0x7f;
+
+	// we need big endian data...
 	for (int kk=0; kk < 32; kk++) {
 		be32enc(&endiandata[kk], ((uint32_t*)pdata)[kk]);
-	}
+	};
 
-	if (ptarget[7]==0) {
-		do {
-			pdata[19] = ++n;
-			be32enc(&endiandata[19], n);
-			blakehash(hash64, endiandata);
-			if (((hash64[7]&0xFFFFFFFF)==0) &&
-					fulltest(hash64, ptarget)) {
-				*hashes_done = n - first_nonce + 1;
-				return true;
-			}
-		} while (n < max_nonce && !work_restart[thr_id].restart);
-	}
-	else if (ptarget[7]<=0xF)
-	{
-		do {
-			pdata[19] = ++n;
-			be32enc(&endiandata[19], n);
-			blakehash(hash64, endiandata);
-			if (((hash64[7]&0xFFFFFFF0)==0) &&
-					fulltest(hash64, ptarget)) {
-				*hashes_done = n - first_nonce + 1;
-				return true;
-			}
-		} while (n < max_nonce && !work_restart[thr_id].restart);
-	}
-	else if (ptarget[7]<=0xFF)
-	{
-		do {
-			pdata[19] = ++n;
-			be32enc(&endiandata[19], n);
-			blakehash(hash64, endiandata);
-			if (((hash64[7]&0xFFFFFF00)==0) &&
-					fulltest(hash64, ptarget)) {
-				*hashes_done = n - first_nonce + 1;
-				return true;
-			}
-		} while (n < max_nonce && !work_restart[thr_id].restart);
-	}
-	else if (ptarget[7]<=0xFFF)
-	{
-		do {
-			pdata[19] = ++n;
-			be32enc(&endiandata[19], n);
-			blakehash(hash64, endiandata);
-			if (((hash64[7]&0xFFFFF000)==0) &&
-					fulltest(hash64, ptarget)) {
-				*hashes_done = n - first_nonce + 1;
-				return true;
-			}
-		} while (n < max_nonce && !work_restart[thr_id].restart);
+#ifdef DEBUG_ALGO
+	applog(LOG_DEBUG,"[%d] Target=%08x %08x", thr_id, ptarget[6], ptarget[7]);
+#endif
 
-	}
-	else if (ptarget[7]<=0xFFFF)
-	{
-		do {
-			pdata[19] = ++n;
-			be32enc(&endiandata[19], n);
-			blakehash(hash64, endiandata);
-			if (((hash64[7]&0xFFFF0000)==0) &&
-					fulltest(hash64, ptarget)) {
-				*hashes_done = n - first_nonce + 1;
-				return true;
-			}
-		} while (n < max_nonce && !work_restart[thr_id].restart);
-
-	}
-	else
-	{
-		do {
-			pdata[19] = ++n;
-			be32enc(&endiandata[19], n);
-			blakehash(hash64, endiandata);
+	do {
+		be32enc(&endiandata[19], n);
+		blakehash(hash64, endiandata);
+#ifndef DEBUG_ALGO
+		if (hash64[7] <= HTarget && fulltest(hash64, ptarget)) {
+			*hashes_done = n - first_nonce + 1;
+			return true;
+		}
+#else
+		if (!(n % 0x1000) && !thr_id) printf(".");
+		if (hash64[7] == 0) {
+			printf("[%d]",thr_id);
 			if (fulltest(hash64, ptarget)) {
 				*hashes_done = n - first_nonce + 1;
 				return true;
 			}
-		} while (n < max_nonce && !work_restart[thr_id].restart);
-	}
+		}
+#endif
+		n++; pdata[19] = n;
 
+	} while (n < max_nonce && !work_restart[thr_id].restart);
 
 	*hashes_done = n - first_nonce + 1;
 	pdata[19] = n;

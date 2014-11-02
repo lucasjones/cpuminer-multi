@@ -1,3 +1,6 @@
+Version 1.0.8 (Tanguy Pruvot)
+- Rewrite blake algo (speed x2)
+
 Version 1.0.7 (Tanguy Pruvot)
 - Add NIST5 and QUBIT algos
 - Show current stratum bloc height
