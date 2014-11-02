@@ -47,10 +47,12 @@
 #include "miner.h"
 
 #ifdef WIN32
-#include <Mmsystem.h>
-#pragma comment(lib, "winmm.lib")
 #include "compat/winansi.h"
 BOOL WINAPI ConsoleHandler(DWORD);
+#endif
+#ifdef _MSC_VER
+#include <Mmsystem.h>
+#pragma comment(lib, "winmm.lib")
 #endif
 
 #define PROGRAM_NAME	"cpuminer-multi"
@@ -130,6 +132,8 @@ enum algos {
 	ALGO_SHAVITE3,    /* Shavite3 */
 	ALGO_BLAKE,       /* Blake */
 	ALGO_FRESH,       /* Fresh */
+	ALGO_NIST5,       /* Nist5 */
+	ALGO_QUBIT,       /* Qubit */
 	ALGO_S3,          /* S3 */
 	ALGO_X11,         /* X11 */
 	ALGO_X13,         /* X13 */
@@ -151,6 +155,8 @@ static const char *algo_names[] = {
 	"shavite3",
 	"blake",
 	"fresh",
+	"nist5",
+	"qubit",
 	"s3",
 	"x11",
 	"x13",
@@ -235,21 +241,23 @@ Options:\n\
                           scrypt       scrypt(1024, 1, 1) (default)\n\
                           scrypt:N     scrypt(N, 1, 1)\n\
                           sha256d      SHA-256d\n\
-                          keccak       Keccak\n\
-                          quark        Quark\n\
-                          heavy        Heavy\n\
-                          neoscrypt    NeoScrypt(128, 2, 1)\n\
-                          skein        Skein\n\
-                          shavite3     Shavite3\n\
                           blake        Blake\n\
+                          cryptonight  CryptoNight\n\
                           fresh        Fresh\n\
+                          heavy        Heavy\n\
+                          keccak       Keccak\n\
+                          neoscrypt    NeoScrypt(128, 2, 1)\n\
+                          nist5        Nist5\n\
+                          pentablake   Pentablake\n\
+                          quark        Quark\n\
+                          qubit        Qubit\n\
+                          shavite3     Shavite3\n\
+                          skein        Skein\n\
                           s3           S3\n\
                           x11          X11\n\
                           x13          X13\n\
                           x14          X14\n\
                           x15          X15\n\
-                          pentablake   Pentablake\n\
-                          cryptonight  CryptoNight\n\
   -o, --url=URL         URL of mining server\n\
   -O, --userpass=U:P    username:password pair for mining server\n\
   -u, --user=USERNAME   username for mining server\n\
@@ -1744,6 +1752,14 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_FRESH:
 			rc = scanhash_fresh(thr_id, work.data, work.target, max_nonce,
+					&hashes_done);
+			break;
+		case ALGO_NIST5:
+			rc = scanhash_nist5(thr_id, work.data, work.target, max_nonce,
+					&hashes_done);
+			break;
+		case ALGO_QUBIT:
+			rc = scanhash_qubit(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
 			break;
 		case ALGO_S3:

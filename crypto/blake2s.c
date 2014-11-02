@@ -16,7 +16,7 @@
 #include <stdio.h>
 
 #include "sha3/sph_types.h"
-#include "sha3/blake2s.h"
+#include "crypto/blake2s.h"
 
 static const uint32_t blake2s_IV[8] =
 {

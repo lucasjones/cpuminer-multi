@@ -186,7 +186,7 @@
     <ClCompile Include="crypto\oaes_lib.c" />
     <ClCompile Include="ink.c" />
     <ClCompile Include="s3.c" />
-    <ClCompile Include="sha3\blake2s.c" />
+    <ClCompile Include="crypto\blake2s.c" />
     <ClCompile Include="sha3\sph_hefty1.c" />
     <ClCompile Include="util.c">
       <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
@@ -197,8 +197,10 @@
     <ClCompile Include="heavy.c" />
     <ClCompile Include="keccak.c" />
     <ClCompile Include="neoscrypt.c" />
+    <ClCompile Include="nist5.c" />
     <ClCompile Include="pentablake.c" />
     <ClCompile Include="quark.c" />
+    <ClCompile Include="qubit.c" />
     <ClCompile Include="sha2.c" />
     <ClCompile Include="scrypt.c">
       <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
@@ -244,6 +246,7 @@
     <ClInclude Include="compat\unistd.h" />
     <ClInclude Include="compat\winansi.h" />
     <ClInclude Include="cpuminer-config.h" />
+    <ClInclude Include="crypto\blake2s.h" />
     <ClInclude Include="crypto\c_blake256.h" />
     <ClInclude Include="crypto\c_groestl.h" />
     <ClInclude Include="crypto\c_jh.h" />
@@ -272,7 +275,6 @@
     <ClInclude Include="scryptjane\scrypt-jane-romix.h" />
     <ClInclude Include="scryptjane\scrypt-jane-salsa.h" />
     <ClInclude Include="scryptjane\scrypt-jane-test-vectors.h" />
-    <ClInclude Include="sha3\blake2s.h" />
     <ClInclude Include="sha3\sph_blake.h" />
     <ClInclude Include="sha3\sph_bmw.h" />
     <ClInclude Include="sha3\sph_cubehash.h" />

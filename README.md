@@ -1,4 +1,4 @@
-CPUMiner-Multi
+﻿CPUMiner-Multi
 ==============
 
 [![Build Status](https://travis-ci.org/tpruvot/cpuminer-multi.svg)](https://travis-ci.org/tpruvot/cpuminer-multi)
@@ -23,16 +23,18 @@ Algorithms
  * ✓ __scrypt__ (Litecoin, Dogecoin, Feathercoin, etc..)
  * ✓ __scrypt:N__ (Vertcoin [VTC])
  * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, etc..)
+ * ✓ __blake__ (Neos/Saffron Blake-256)
+ * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
+ * ✓ __fresh__ (FreshCoin)
+ * ✓ __neoscrypt__ (Feathercoin)
+ * ✓ __nist5__
+ * ✓ __pentablake__ (Joincoin)
+ * ✓ __qubit__
  * ✓ __s3__ (OneCoin)
  * ✓ __x11__ (Darkcoin [DRK], Hirocoin, Limecoin)
  * ✓ __x13__ (Sherlockcoin, [ACE], [B2B], [GRC], [XHC], etc..)
  * ✓ __x14__ (X14, Webcoin [WEB])
  * ✓ __x15__ (RadianceCoin [RCE])
- * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
- * ✓ __fresh__ (FreshCoin)
- * ✓ __blake__ (Neos/Saffron Blake-256)
- * ✓ __neoscrypt__ (Feathercoin)
- * ✓ __pentablake__ (Joincoin)
 
 #### Implemented, but untested
  * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)

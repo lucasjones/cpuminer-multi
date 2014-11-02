@@ -100,7 +100,7 @@
       <Filter>jansson</Filter>
     </ClCompile>
     <ClCompile Include="ink.c" />
-    <ClCompile Include="sha3\blake2s.c">
+    <ClCompile Include="crypto\blake2s.c">
       <Filter>crypto</Filter>
     </ClCompile>
     <ClCompile Include="crypto\c_skein.c">
@@ -242,7 +242,7 @@
     <ClInclude Include="..\ccminer\compat\jansson\config.h">
       <Filter>jansson</Filter>
     </ClInclude>
-    <ClInclude Include="sha3\blake2s.h">
+    <ClInclude Include="crypto\blake2s.h">
       <Filter>crypto</Filter>
     </ClInclude>
     <ClInclude Include="crypto\c_skein.h">

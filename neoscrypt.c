@@ -34,7 +34,7 @@
 
 #define USE_CUSTOM_BLAKE2S
 // TODO: try blake2sp
-//#include "sha3/blake2s.h"
+//#include "crypto/blake2s.h"
 
 #define STACK_ALIGN 0x40
 

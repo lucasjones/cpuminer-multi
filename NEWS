@@ -1,10 +1,13 @@
-Version multi 1.0.6 (Tanguy Pruvot)
+Version 1.0.7 (Tanguy Pruvot)
+- Add NIST5 and QUBIT algos
+
+Version 1.0.6 (Tanguy Pruvot)
 - Fix scrypt algo
 - More work on VC2013
 - Add -f tuning option to test with reduced difficulty
 - Add S3 algo
 
-Version multi 1.0.5 (Tanguy Pruvot)
+Version 1.0.5 (Tanguy Pruvot)
 
 - Merge remaining v2.4 cpu-miner changes
 - Add colored output (disable with --no-color)
@@ -14,7 +17,7 @@ Version multi 1.0.5 (Tanguy Pruvot)
 - Windows (VC++ 2013 and MinGW64 build support)
 - Enhance --version informations (compiler + lib versions)
 
-Version multi 1.0.4 (Tanguy Pruvot)
+Version 1.0.4 (Tanguy Pruvot)
 
 - Add x13 x14 and x15 algos (Sherlockcoin, X14Coin, Webcoin..)
 - Add scrypt:N variants (Vertcoin)

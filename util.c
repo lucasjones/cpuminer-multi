@@ -333,12 +333,13 @@ out:
 static int sockopt_keepalive_cb(void *userdata, curl_socket_t fd,
 	curlsocktype purpose)
 {
-	int keepalive = 1;
+#ifdef __linux
 	int tcp_keepcnt = 3;
-	int tcp_keepidle = 50;
+#endif
 	int tcp_keepintvl = 50;
-
+	int tcp_keepidle = 50;
 #ifndef WIN32
+	int keepalive = 1;
 	if (unlikely(setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &keepalive,
 		sizeof(keepalive))))
 		return 1;
@@ -1606,6 +1607,14 @@ void print_hash_tests(void)
 	printpfx("SHA 256D", hash);
 
 	memset(hash, 0, sizeof hash);
+	blakehash(&hash[0], &buf[0]);
+	printpfx("Blake", hash);
+
+	memset(hash, 0, sizeof hash);
+	freshhash(&hash[0], &buf[0], 80);
+	printpfx("Fresh", hash);
+
+	memset(hash, 0, sizeof hash);
 	heavyhash((uint8_t*) &hash[0], (uint8_t*) &buf[0], 32);
 	printpfx("Heavy", hash);
 
@@ -1618,28 +1627,28 @@ void print_hash_tests(void)
 	printpfx("Neoscrypt", hash);
 
 	memset(hash, 0, sizeof hash);
-	quarkhash(&hash[0], &buf[0]);
-	printpfx("Quark", hash);
-
-	memset(hash, 0, sizeof hash);
-	skeinhash(&hash[0], &buf[0]);
-	printpfx("Skein", hash);
-
-	memset(hash, 0, sizeof hash);
-	blakehash(&hash[0], &buf[0]);
-	printpfx("Blake", hash);
+	nist5hash(&hash[0], &buf[0]);
+	printpfx("Nist5", hash);
 
 	memset(hash, 0, sizeof hash);
 	pentablakehash(&hash[0], &buf[0]);
 	printpfx("Pentablake", hash);
 
 	memset(hash, 0, sizeof hash);
+	quarkhash(&hash[0], &buf[0]);
+	printpfx("Quark", hash);
+
+	memset(hash, 0, sizeof hash);
+	qubithash(&hash[0], &buf[0]);
+	printpfx("Qubit", hash);
+
+	memset(hash, 0, sizeof hash);
 	inkhash(&hash[0], &buf[0]);
 	printpfx("Shavite", hash);
 
 	memset(hash, 0, sizeof hash);
-	freshhash(&hash[0], &buf[0], 80);
-	printpfx("Fresh", hash);
+	skeinhash(&hash[0], &buf[0]);
+	printpfx("Skein", hash);
 
 	memset(hash, 0, sizeof hash);
 	s3hash(&hash[0], &buf[0]);
