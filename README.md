@@ -20,19 +20,19 @@ fork of [pooler](//github.com/pooler)'s cpuminer (see AUTHORS for list of contri
 Algorithms
 ==========
 #### Currently supported
- * ✓ __scrypt__ (Litecoin, Dogecoin, Feathercoin, etc..)
+ * ✓ __scrypt__ (Litecoin, Dogecoin, Feathercoin, ...)
  * ✓ __scrypt:N__ (Vertcoin [VTC])
- * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, etc..)
- * ✓ __blake__ (Neos/Saffron Blake-256)
+ * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, ...)
+ * ✓ __blake__ (Neos/Saffron [SFR] Blake-256)
  * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
  * ✓ __fresh__ (FreshCoin)
  * ✓ __neoscrypt__ (Feathercoin)
- * ✓ __nist5__ (TalkCoin [TAC], [UPM])
+ * ✓ __nist5__ (MistCoin [MIC], TalkCoin [TAC], ...)
  * ✓ __pentablake__ (Joincoin)
  * ✓ __qubit__ (MyriadCoin [MYR])
  * ✓ __s3__ (OneCoin)
- * ✓ __x11__ (Darkcoin [DRK], Hirocoin, Limecoin)
- * ✓ __x13__ (Sherlockcoin, [ACE], [B2B], [GRC], [XHC], etc..)
+ * ✓ __x11__ (Darkcoin [DRK], Hirocoin, Limecoin, ...)
+ * ✓ __x13__ (Sherlockcoin, [ACE], [B2B], [GRC], [XHC], ...)
  * ✓ __x14__ (X14, Webcoin [WEB])
  * ✓ __x15__ (RadianceCoin [RCE])
 

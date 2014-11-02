@@ -682,6 +682,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 		goto out;
 	}
 	work->height = json_integer_value(tmp);
+	applog(LOG_BLUE, "Current block is %d", work->height);
 
 	tmp = json_object_get(val, "version");
 	if (!tmp || !json_is_integer(tmp)) {
@@ -692,8 +693,8 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 	if (version > 2) {
 		if (version_reduce) {
 			version = 2;
-		} else if (have_gbt && allow_getwork && !version_force && version == 1024) {
-			applog(LOG_DEBUG, "Switching to getwork");
+		} else if (have_gbt && allow_getwork && !version_force) {
+			applog(LOG_DEBUG, "Switching to getwork (gbt version: %d)", version);
 			have_gbt = false;
 			goto out;
 		} else if (!version_force) {
