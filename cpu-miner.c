@@ -692,6 +692,10 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 	if (version > 2) {
 		if (version_reduce) {
 			version = 2;
+		} else if (have_gbt && allow_getwork && !version_force && version == 1024) {
+			applog(LOG_DEBUG, "Switching to getwork");
+			have_gbt = false;
+			goto out;
 		} else if (!version_force) {
 			applog(LOG_ERR, "Unrecognized block version: %u", version);
 			goto out;
@@ -1222,10 +1226,10 @@ start:
 	} else
 		rc = work_decode(json_object_get(val, "result"), work);
 
-	if (opt_debug && rc) {
+	if (opt_protocol && rc) {
 		timeval_subtract(&diff, &tv_end, &tv_start);
-		applog(LOG_DEBUG, "DEBUG: got new work in %d ms",
-		       diff.tv_sec * 1000 + diff.tv_usec / 1000);
+		applog(LOG_DEBUG, "got new work in %.2f ms",
+		       (1000.0 * diff.tv_sec) + (0.001 * diff.tv_usec));
 	}
 
 	json_decref(val);
@@ -1386,7 +1390,7 @@ static void *workio_thread(void *userdata)
 		return NULL;
 	}
 
-	if(!have_stratum) {
+	if(jsonrpc_2 && !have_stratum) {
 		ok = workio_login(curl);
 	}
 

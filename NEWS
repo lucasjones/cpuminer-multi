@@ -1,6 +1,7 @@
 Version 1.0.7 (Tanguy Pruvot)
 - Add NIST5 and QUBIT algos
 - Show current stratum bloc height
+- Fix wallet solo mining
 
 Version 1.0.6 (Tanguy Pruvot)
 - Fix scrypt algo
