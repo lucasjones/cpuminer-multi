@@ -21,7 +21,9 @@ void blakehash(void *state, const void *input)
 {
 	sph_blake256_context ctx;
 
-	uchar hash[64];
+	uint8_t hash[64];
+	uint8_t *ending = input;
+	ending += 64;
 
 	// do one memcopy to get a fresh context
 	if (!ctx_midstate_done) {
@@ -30,7 +32,7 @@ void blakehash(void *state, const void *input)
 	}
 	memcpy(&ctx, &blake_mid, sizeof(blake_mid));
 
-	sph_blake256(&ctx, input + 64, 16);
+	sph_blake256(&ctx, ending, 16);
 	sph_blake256_close(&ctx, hash);
 
 	memcpy(state, hash, 32);
@@ -43,7 +45,7 @@ int scanhash_blake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	uint32_t HTarget = ptarget[7];
 
 	uint32_t _ALIGN(32) hash64[8];
-	uint32_t _ALIGN(32) endiandata[32];
+	uint32_t _ALIGN(32) endiandata[20];
 
 	uint32_t n = pdata[19];
 
@@ -53,7 +55,7 @@ int scanhash_blake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 		HTarget = 0x7f;
 
 	// we need big endian data...
-	for (int kk=0; kk < 32; kk++) {
+	for (int kk=0; kk < 19; kk++) {
 		be32enc(&endiandata[kk], ((uint32_t*)pdata)[kk]);
 	};
 
