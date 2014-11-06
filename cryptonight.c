@@ -69,7 +69,7 @@ static void do_skein_hash(const void* input, size_t len, char* output) {
 
 extern int aesb_single_round(const uint8_t *in, uint8_t*out, const uint8_t *expandedKey);
 extern int aesb_pseudo_round_mut(uint8_t *val, uint8_t *expandedKey);
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(NOASM)
 extern int fast_aesb_single_round(const uint8_t *in, uint8_t*out, const uint8_t *expandedKey);
 extern int fast_aesb_pseudo_round_mut(uint8_t *val, uint8_t *expandedKey);
 #else

@@ -43,7 +43,11 @@
 #endif
 
 #ifdef __GNUC__
+#ifdef NOASM
+#define ASM 0
+#else
 #define ASM 1
+#endif
 #endif
 
 #if (WINDOWS)

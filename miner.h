@@ -9,6 +9,10 @@
 #undef USE_ASM  /* to fix */
 #endif
 
+#ifdef NOASM
+#undef USE_ASM
+#endif
+
 /* missing arch defines for msvc */
 #if defined(_M_X64)
 #define __i386__ 1

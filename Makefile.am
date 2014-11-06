@@ -61,6 +61,8 @@ minerd_SOURCES = \
   x14.c \
   x15.c
 
+disable_flags =
+
 if USE_ASM
    minerd_SOURCES += neoscrypt_asm.S
 if ARCH_x86
@@ -72,6 +74,9 @@ endif
 if ARCH_ARM
    minerd_SOURCES += sha2-arm.S scrypt-arm.S
 endif
+else
+   disable_flags += -DNOASM
+   minerd_SOURCES += crypto/aesb-x86-impl.c
 endif
 
 if HAVE_WINDOWS
@@ -81,7 +86,7 @@ endif
 minerd_LDFLAGS	= @LDFLAGS@
 minerd_LDADD	= @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@
 minerd_CPPFLAGS = @LIBCURL_CPPFLAGS@
-minerd_CFLAGS   = -Wno-pointer-sign -Wno-pointer-to-int-cast
+minerd_CFLAGS   = -Wno-pointer-sign -Wno-pointer-to-int-cast $(disable_flags)
 
 if HAVE_WINDOWS
 minerd_CFLAGS += -Wl,--stack,10485760
