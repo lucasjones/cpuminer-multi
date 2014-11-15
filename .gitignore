@@ -1,4 +1,4 @@
-minerd
+minerd*
 *.exe
 *.o
 *.d
@@ -40,3 +40,5 @@ Debug/
 x64/Release/
 x64/Debug/
 *.pdb/
+
+compat/curl-for-windows/
