@@ -1,5 +1,6 @@
 Version 1.0.8 (Tanguy Pruvot)
 - API Monitoring Support
+- Enhance config values support (int/real/bool)
 - Rewrite blake algo (speed x2)
 
 Version 1.0.7 (Tanguy Pruvot)

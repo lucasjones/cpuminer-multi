@@ -2,12 +2,17 @@
 	"_comment1" : "Any long-format command line argument ",
 	"_comment2" : "may be used in this JSON configuration file",
 
-	"url" : "http://127.0.0.1:9332/",
-	"user" : "rpcuser",
-	"pass" : "rpcpass",
+	"api-bind" : "127.0.0.1:4048",
 
-	"algo" : "scrypt",
-	"threads" : "4",
+	"url" : "stratum+tcp://mine.xpool.ca:8888",
+	"user" : "tpruvot",
+	"pass" : "cpuminer",
 
-	"quiet" : true
+	"algo" : "x11",
+	"threads" : 4,
+
+	"benchmark" : false,
+	"debug" : false,
+	"protocol": false,
+	"quiet" : false
 }

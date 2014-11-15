@@ -195,7 +195,7 @@ static char *rpc_url;
 static char *rpc_userpass;
 static char *rpc_user, *rpc_pass;
 static char *short_url = NULL;
-static int pk_script_size;
+static size_t pk_script_size;
 static unsigned char pk_script[25];
 static char coinbase_sig[101] = "";
 char *opt_cert;
@@ -211,7 +211,7 @@ static struct stratum_ctx stratum;
 bool jsonrpc_2 = false;
 static char rpc2_id[64] = "";
 static char *rpc2_blob = NULL;
-static int rpc2_bloblen = 0;
+static size_t rpc2_bloblen = 0;
 static uint32_t rpc2_target = 0;
 static char *rpc2_job_id = NULL;
 bool aes_ni_supported = false;
@@ -533,9 +533,9 @@ bool rpc2_job_decode(const json_t *job, struct work *work)
 		uint32_t target;
 		jobj_binary(job, "target", &target, 4);
 		if(rpc2_target != target) {
-			float hashrate = 0.;
+			double hashrate = 0.0;
 			pthread_mutex_lock(&stats_lock);
-			for (size_t i = 0; i < opt_n_threads; i++)
+			for (int i = 0; i < opt_n_threads; i++)
 				hashrate += thr_hashrates[i];
 			pthread_mutex_unlock(&stats_lock);
 			double difficulty = (((double) 0xffffffff) / target);
@@ -748,14 +748,14 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 			applog(LOG_ERR, "JSON invalid transactions");
 			goto out;
 		}
-		tx_size += strlen(tx_hex) / 2;
+		tx_size += (int) (strlen(tx_hex) / 2);
 	}
 
 	/* build coinbase transaction */
 	tmp = json_object_get(val, "coinbasetxn");
 	if (tmp) {
 		const char *cbtx_hex = json_string_value(json_object_get(tmp, "data"));
-		cbtx_size = cbtx_hex ? strlen(cbtx_hex) / 2 : 0;
+		cbtx_size = cbtx_hex ? (int) strlen(cbtx_hex) / 2 : 0;
 		cbtx = (uchar*) malloc(cbtx_size + 100);
 		if (cbtx_size < 60 || !hex2bin(cbtx, cbtx_hex, cbtx_size)) {
 			applog(LOG_ERR, "JSON invalid coinbasetxn");
@@ -776,7 +776,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 			applog(LOG_ERR, "JSON invalid coinbasevalue");
 			goto out;
 		}
-		cbvalue = json_is_integer(tmp) ? json_integer_value(tmp) : json_number_value(tmp);
+		cbvalue = (int64_t) (json_is_integer(tmp) ? json_integer_value(tmp) : json_number_value(tmp));
 		cbtx = (uchar*) malloc(256);
 		le32enc((uint32_t *)cbtx, 1); /* version */
 		cbtx[4] = 1; /* in-counter */
@@ -794,9 +794,9 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 		le32enc((uint32_t *)(cbtx+cbtx_size), (uint32_t)cbvalue); /* value */
 		le32enc((uint32_t *)(cbtx+cbtx_size+4), cbvalue >> 32);
 		cbtx_size += 8;
-		cbtx[cbtx_size++] = pk_script_size; /* txout-script length */
+		cbtx[cbtx_size++] = (uint8_t) pk_script_size; /* txout-script length */
 		memcpy(cbtx+cbtx_size, pk_script, pk_script_size);
-		cbtx_size += pk_script_size;
+		cbtx_size += (int) pk_script_size;
 		le32enc((uint32_t *)(cbtx+cbtx_size), 0); /* lock time */
 		cbtx_size += 4;
 		coinbase_append = true;
@@ -805,7 +805,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 		unsigned char xsig[100];
 		int xsig_len = 0;
 		if (*coinbase_sig) {
-			n = strlen(coinbase_sig);
+			n = (int) strlen(coinbase_sig);
 			if (cbtx[41] + xsig_len + n <= 100) {
 				memcpy(xsig+xsig_len, coinbase_sig, n);
 				xsig_len += n;
@@ -819,7 +819,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 			while (iter) {
 				unsigned char buf[100];
 				const char *s = json_string_value(json_object_iter_value(iter));
-				n = s ? strlen(s) / 2 : 0;
+				n = s ? (int) (strlen(s) / 2) : 0;
 				if (!s || n > 100 || !hex2bin(buf, s, n)) {
 					applog(LOG_ERR, "JSON invalid coinbaseaux");
 					break;
@@ -858,7 +858,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 	for (i = 0; i < tx_count; i++) {
 		tmp = json_array_get(txa, i);
 		const char *tx_hex = json_string_value(json_object_get(tmp, "data"));
-		const size_t tx_size = tx_hex ? strlen(tx_hex) / 2 : 0;
+		const int tx_size = tx_hex ? (int) (strlen(tx_hex) / 2) : 0;
 		unsigned char *tx = (uchar*) malloc(tx_size);
 		if (!tx_hex || !hex2bin(tx, tx_hex, tx_size)) {
 			applog(LOG_ERR, "JSON invalid transactions");
@@ -1449,9 +1449,10 @@ static bool get_work(struct thr_info *thr, struct work *work)
 	struct work *work_heap;
 
 	if (opt_benchmark) {
+		uint32_t ts = (uint32_t) time(NULL);
 		for (int n=0; n<74; n++) ((char*)work->data)[n] = n;
 		//memset(work->data, 0x55, 76);
-		work->data[17] = swab32(time(NULL));
+		work->data[17] = swab32(ts);
 		memset(work->data + 19, 0x00, 52);
 		work->data[20] = 0x80000000;
 		work->data[31] = 0x00000280;
@@ -1533,14 +1534,14 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 		memcpy(work->xnonce2, sctx->job.xnonce2, sctx->xnonce2_size);
 
 		/* Generate merkle root */
-		sha256d(merkle_root, sctx->job.coinbase, sctx->job.coinbase_size);
+		sha256d(merkle_root, sctx->job.coinbase, (int) sctx->job.coinbase_size);
 		for (i = 0; i < sctx->job.merkle_count; i++) {
 			memcpy(merkle_root + 32, sctx->job.merkle[i], 32);
 			sha256d(merkle_root, merkle_root, 64);
 		}
 
 		/* Increment extranonce2 */
-		for (i = 0; i < sctx->xnonce2_size && !++sctx->job.xnonce2[i]; i++)
+		for (size_t t = 0; t < sctx->xnonce2_size && !(++sctx->job.xnonce2[t]); t++)
 			;
 
 		/* Assemble block header */
@@ -1687,7 +1688,7 @@ static void *miner_thread(void *userdata)
 		else
 			max64 = g_work_time + (have_longpoll ? LP_SCANTIME : opt_scantime)
 					- time(NULL);
-		max64 *= thr_hashrates[thr_id];
+		max64 *= (int64_t) thr_hashrates[thr_id];
 
 		if (max64 <= 0) {
 			switch (opt_algo) {
@@ -2202,9 +2203,9 @@ static void strhide(char *s)
 	while (*s) *s++ = '\0';
 }
 
-static void parse_config(json_t *config, char *pname, char *ref);
+static void parse_config(json_t *config, char *ref);
 
-static void parse_arg(int key, char *arg, char *pname)
+static void parse_arg(int key, char *arg)
 {
 	char *p;
 	int v, i;
@@ -2213,7 +2214,7 @@ static void parse_arg(int key, char *arg, char *pname)
 	switch(key) {
 	case 'a':
 		for (i = 0; i < ARRAY_SIZE(algo_names); i++) {
-			v = strlen(algo_names[i]);
+			v = (int) strlen(algo_names[i]);
 			if (!strncmp(arg, algo_names[i], v)) {
 				if (arg[v] == '\0') {
 					opt_algo = (enum algos) i;
@@ -2231,8 +2232,7 @@ static void parse_arg(int key, char *arg, char *pname)
 			}
 		}
 		if (i == ARRAY_SIZE(algo_names)) {
-			fprintf(stderr, "%s: unknown algorithm -- '%s'\n",
-				pname, arg);
+			fprintf(stderr, "unknown algorithm -- '%s'\n", arg);
 			show_usage_and_exit(1);
 		}
 		if (opt_algo == ALGO_SCRYPT)
@@ -2256,7 +2256,7 @@ static void parse_arg(int key, char *arg, char *pname)
 			v = atoi(arg);
 			/* Nfactor = lb(N) - 1; N = (1 << (Nfactor + 1)) */
 			if ((v < 0) || (v > 30)) {
-				fprintf(stderr, "%s: incorrect Nfactor %d\n", pname, v);
+				fprintf(stderr, "incorrect Nfactor %d\n", v);
 				show_usage_and_exit(1);
 			}
 			opt_nfactor = v;
@@ -2270,13 +2270,13 @@ static void parse_arg(int key, char *arg, char *pname)
 		json_t *config = JSON_LOAD_FILE(arg, &err);
 		if (!json_is_object(config)) {
 			if (err.line < 0)
-				fprintf(stderr, "%s: %s\n", pname, err.text);
+				fprintf(stderr, "%s\n", err.text);
 			else
-				fprintf(stderr, "%s: %s:%d: %s\n",
-					pname, arg, err.line, err.text);
+				fprintf(stderr, "%s:%d: %s\n",
+					arg, err.line, err.text);
 			exit(1);
 		}
-		parse_config(config, pname, arg);
+		parse_config(config, arg);
 		json_decref(config);
 		break;
 	}
@@ -2347,7 +2347,7 @@ static void parse_arg(int key, char *arg, char *pname)
 				free(rpc_pass);
 				rpc_pass = strdup(++p);
 				if (*p) *p++ = 'x';
-				v = strlen(hp + 1) + 1;
+				v = (int) strlen(hp + 1) + 1;
 				memmove(p + 1, hp + 1, v);
 				memset(p + v, 0, hp - p);
 				hp = p;
@@ -2362,8 +2362,7 @@ static void parse_arg(int key, char *arg, char *pname)
 			if (strncasecmp(arg, "http://", 7) &&
 			    strncasecmp(arg, "https://", 8) &&
 			    strncasecmp(arg, "stratum+tcp://", 14)) {
-				fprintf(stderr, "%s: unknown protocol -- '%s'\n",
-					pname, arg);
+				fprintf(stderr, "unknown protocol -- '%s'\n", arg);
 				show_usage_and_exit(1);
 			}
 			free(rpc_url);
@@ -2372,8 +2371,8 @@ static void parse_arg(int key, char *arg, char *pname)
 			short_url = &rpc_url[ap - arg];
 		} else {
 			if (*hp == '\0' || *hp == '/') {
-				fprintf(stderr, "%s: invalid URL -- '%s'\n",
-					pname, arg);
+				fprintf(stderr, "invalid URL -- '%s'\n",
+					arg);
 				show_usage_and_exit(1);
 			}
 			free(rpc_url);
@@ -2387,8 +2386,7 @@ static void parse_arg(int key, char *arg, char *pname)
 	case 'O':			/* --userpass */
 		p = strchr(arg, ':');
 		if (!p) {
-			fprintf(stderr, "%s: invalid username:password pair -- '%s'\n",
-				pname, arg);
+			fprintf(stderr, "invalid username:password pair -- '%s'\n", arg);
 			show_usage_and_exit(1);
 		}
 		free(rpc_userpass);
@@ -2450,14 +2448,13 @@ static void parse_arg(int key, char *arg, char *pname)
 	case 1013:			/* --coinbase-addr */
 		pk_script_size = address_to_script(pk_script, sizeof(pk_script), arg);
 		if (!pk_script_size) {
-			fprintf(stderr, "%s: invalid address -- '%s'\n",
-				pname, arg);
+			fprintf(stderr, "invalid address -- '%s'\n", arg);
 			show_usage_and_exit(1);
 		}
 		break;
 	case 1015:			/* --coinbase-sig */
 		if (strlen(arg) + 1 > sizeof(coinbase_sig)) {
-			fprintf(stderr, "%s: coinbase signature too long\n", pname);
+			fprintf(stderr, "coinbase signature too long\n");
 			show_usage_and_exit(1);
 		}
 		strcpy(coinbase_sig, arg);
@@ -2481,10 +2478,9 @@ static void parse_arg(int key, char *arg, char *pname)
 	}
 }
 
-static void parse_config(json_t *config, char *pname, char *ref)
+static void parse_config(json_t *config, char *ref)
 {
 	int i;
-	char *s;
 	json_t *val;
 
 	for (i = 0; i < ARRAY_SIZE(options); i++) {
@@ -2494,25 +2490,30 @@ static void parse_config(json_t *config, char *pname, char *ref)
 		val = json_object_get(config, options[i].name);
 		if (!val)
 			continue;
-
 		if (options[i].has_arg && json_is_string(val)) {
-			if (!strcmp(options[i].name, "config")) {
-				fprintf(stderr, "%s: %s: option '%s' not allowed here\n",
-					pname, ref, options[i].name);
-				exit(1);
-			}
-			s = strdup(json_string_value(val));
+			char *s = strdup(json_string_value(val));
 			if (!s)
 				break;
-			parse_arg(options[i].val, s, pname);
+			parse_arg(options[i].val, s);
 			free(s);
-		} else if (!options[i].has_arg && json_is_true(val)) {
-			parse_arg(options[i].val, "", pname);
-		} else {
-			fprintf(stderr, "%s: invalid argument for option '%s'\n",
-				pname, options[i].name);
-			exit(1);
 		}
+		else if (options[i].has_arg && json_is_integer(val)) {
+			char buf[16];
+			sprintf(buf, "%d", (int)json_integer_value(val));
+			parse_arg(options[i].val, buf);
+		}
+		else if (options[i].has_arg && json_is_real(val)) {
+			char buf[16];
+			sprintf(buf, "%f", json_real_value(val));
+			parse_arg(options[i].val, buf);
+		}
+		else if (!options[i].has_arg) {
+			if (json_is_true(val))
+				parse_arg(options[i].val, "");
+		}
+		else
+			applog(LOG_ERR, "JSON option %s invalid",
+			options[i].name);
 	}
 }
 
@@ -2529,7 +2530,7 @@ static void parse_cmdline(int argc, char *argv[])
 		if (key < 0)
 			break;
 
-		parse_arg(key, optarg, argv[0]);
+		parse_arg(key, optarg);
 	}
 	if (optind < argc) {
 		fprintf(stderr, "%s: unsupported non-option argument -- '%s'\n",
@@ -2608,12 +2609,11 @@ static bool has_aes_ni()
 	return cpu_info[2] & (1 << 25);
 }
 
-
 static void show_credits()
 {
-	printf(PROGRAM_NAME " by Lucas Jones and Tanguy Pruvot\n");
-	printf(CL_GRY " This is version " PACKAGE_VERSION CL_N "\n");
-	printf(CL_GRY " based on pooler cpuminer 2.4" CL_N "\n");
+	printf("** " PROGRAM_NAME " " PACKAGE_VERSION " by Tanguy Pruvot (tpruvot@github) **\n");
+	printf(CL_GRY " based on Lucas Jones fork of pooler cpuminer 2.4" CL_N "\n\n");
+	printf("BTC donation address: 1FhDPLPpw18X4srecguG3MxJYe4a1JsZnd\n\n");
 }
 
 int main(int argc, char *argv[]) {
