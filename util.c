@@ -143,7 +143,7 @@ void applog(int prio, const char *fmt, ...)
 		pthread_mutex_lock(&applog_lock);
 		vfprintf(stderr, f, ap);	/* atomic write to stderr */
 		fflush(stderr);
-		free(f),
+		free(f);
 		pthread_mutex_unlock(&applog_lock);
 	}
 	va_end(ap);
@@ -1354,6 +1354,9 @@ static bool stratum_set_difficulty(struct stratum_ctx *sctx, json_t *params)
 	pthread_mutex_lock(&sctx->work_lock);
 	sctx->next_diff = diff;
 	pthread_mutex_unlock(&sctx->work_lock);
+
+	/* store for api stats */
+	global_diff = diff;
 
 	applog(LOG_WARNING, "Stratum difficulty set to %g", diff);
 

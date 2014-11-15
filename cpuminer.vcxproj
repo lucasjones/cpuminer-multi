@@ -175,6 +175,8 @@
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
       <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
     </ClCompile>
+    <ClCompile Include="api.c" />
+    <ClCompile Include="sensors.c" />
     <ClCompile Include="crypto\aesb-x86-impl.c" />
     <ClCompile Include="crypto\aesb.c" />
     <ClCompile Include="crypto\c_blake256.c" />

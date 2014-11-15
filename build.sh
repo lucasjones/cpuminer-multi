@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "$OS" = "Windows_NT" ]; then
+    ./mingw64.sh
+    exit 0
+fi
+
 # Linux build
 
 make clean || echo clean
@@ -13,6 +18,6 @@ extracflags="-O3 -march=native -Wall -D_REENTRANT -funroll-loops -fvariable-expa
 # Debian 7.7 / Ubuntu 14.04 (gcc 4.7+)
 extracflags="$extracflags -Ofast -flto -fuse-linker-plugin -ftree-loop-if-convert-stores"
 
-./configure --with-crypto --with-curl CFLAGS="$extracflags"
+./configure --with-crypto --with-curl CFLAGS="$extracflags -DUSE_ASM -pg"
 
 make -j 4

@@ -17,6 +17,7 @@ dist_man_MANS	= minerd.1
 
 minerd_SOURCES = \
   cpu-miner.c util.c \
+  api.c sensors.c \
   sha3/sph_keccak.c \
   sha3/sph_hefty1.c \
   sha3/sph_groestl.c \

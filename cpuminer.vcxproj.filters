@@ -153,6 +153,9 @@
       <Filter>arch\x86</Filter>
     </ClCompile>
     <ClCompile Include="s3.c" />
+    <ClCompile Include="nist5.c" />
+    <ClCompile Include="qubit.c" />
+    <ClCompile Include="api.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sha3\sph_blake.h">

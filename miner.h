@@ -267,10 +267,32 @@ extern void cryptonight_hash(void* output, const void* input, size_t input_len);
 extern int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
+/* api related */
+void *api_thread(void *userdata);
+
+struct cpu_info {
+	int thr_id;
+	int accepted;
+	int rejected;
+	double khashes;
+	bool has_monitoring;
+	float cpu_temp;
+	int cpu_fan;
+	uint32_t cpu_clock;
+};
+
+struct thr_api {
+	int id;
+	pthread_t pth;
+	struct thread_q	*q;
+};
+/* end of api */
+
 struct thr_info {
 	int		id;
 	pthread_t	pth;
 	struct thread_q	*q;
+	struct cpu_info cpu;
 };
 
 struct work_restart {
@@ -281,6 +303,7 @@ struct work_restart {
 extern bool opt_debug;
 extern bool opt_benchmark;
 extern bool opt_protocol;
+extern bool opt_quiet;
 extern bool opt_redirect;
 extern int opt_timeout;
 extern bool want_longpoll;
@@ -298,9 +321,14 @@ extern pthread_mutex_t applog_lock;
 extern struct thr_info *thr_info;
 extern int longpoll_thr_id;
 extern int stratum_thr_id;
+extern int api_thr_id;
 extern struct work_restart *work_restart;
 extern bool jsonrpc_2;
 extern bool aes_ni_supported;
+
+extern uint32_t opt_work_size;
+extern uint64_t global_hashrate;
+extern double   global_diff;
 
 #define JSON_RPC_LONGPOLL	(1 << 0)
 #define JSON_RPC_QUIET_404	(1 << 1)
@@ -345,6 +373,7 @@ extern int timeval_subtract(struct timeval *result, struct timeval *x,
 	struct timeval *y);
 extern bool fulltest(const uint32_t *hash, const uint32_t *target);
 extern void diff_to_target(uint32_t *target, double diff);
+extern void get_currentalgo(char* buf, int sz);
 
 struct work {
 	uint32_t data[32];
@@ -419,8 +448,9 @@ extern void *tq_pop(struct thread_q *tq, const struct timespec *abstime);
 extern void tq_freeze(struct thread_q *tq);
 extern void tq_thaw(struct thread_q *tq);
 
-void applog_hash(void *hash);
+void proper_exit(int reason);
 
+void applog_hash(void *hash);
 void print_hash_tests(void);
 void sha256d(unsigned char *hash, const unsigned char *data, int len);
 void blakehash(void *state, const void *input);

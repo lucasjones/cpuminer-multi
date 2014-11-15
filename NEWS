@@ -1,4 +1,5 @@
 Version 1.0.8 (Tanguy Pruvot)
+- API Monitoring Support
 - Rewrite blake algo (speed x2)
 
 Version 1.0.7 (Tanguy Pruvot)

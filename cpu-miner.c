@@ -180,7 +180,7 @@ bool have_stratum = false;
 bool use_syslog = false;
 bool use_colors = true;
 static bool opt_background = false;
-static bool opt_quiet = false;
+bool opt_quiet = false;
 static int opt_retries = -1;
 static int opt_fail_pause = 10;
 int opt_timeout = 0;
@@ -189,8 +189,8 @@ static const bool opt_time = true;
 static enum algos opt_algo = ALGO_SCRYPT;
 static int opt_scrypt_n = 1024;
 static unsigned int opt_nfactor = 6;
-static int opt_n_threads;
-static int num_processors;
+int opt_n_threads;
+int num_processors;
 static char *rpc_url;
 static char *rpc_userpass;
 static char *rpc_user, *rpc_pass;
@@ -205,6 +205,7 @@ struct thr_info *thr_info;
 static int work_thr_id;
 int longpoll_thr_id = -1;
 int stratum_thr_id = -1;
+int api_thr_id = -1;
 struct work_restart *work_restart = NULL;
 static struct stratum_ctx stratum;
 bool jsonrpc_2 = false;
@@ -220,9 +221,15 @@ static pthread_mutex_t rpc2_login_lock;
 pthread_mutex_t applog_lock;
 static pthread_mutex_t stats_lock;
 
-static unsigned long accepted_count = 0L;
-static unsigned long rejected_count = 0L;
-static double *thr_hashrates;
+uint32_t accepted_count = 0L;
+uint32_t rejected_count = 0L;
+double *thr_hashrates;
+uint64_t global_hashrate = 0;
+double   global_diff = 0.0;
+int opt_intensity = 0;
+uint32_t opt_work_size = 0; /* default */
+char *opt_api_allow = "127.0.0.1"; /* 0.0.0.0 for all ips */
+int opt_api_listen = 4048; /* 0 to disable */
 
 #ifdef HAVE_GETOPT_LONG
 #include <getopt.h>
@@ -309,10 +316,11 @@ static char const short_options[] =
 #ifdef HAVE_SYSLOG_H
 	"S"
 #endif
-	"a:c:CDhp:Px:qr:R:s:t:T:o:u:O:Vn:f:";
+	"a:b:c:CDhp:Px:qr:R:s:t:T:o:u:O:Vn:f:";
 
 static struct option const options[] = {
 	{ "algo", 1, NULL, 'a' },
+	{ "api-bind", 1, NULL, 'b' },
 #ifndef WIN32
 	{ "background", 0, NULL, 'B' },
 #endif
@@ -359,6 +367,11 @@ static char *lp_id;
 
 static bool rpc2_login(CURL *curl);
 static void workio_cmd_free(struct workio_cmd *wc);
+
+void get_currentalgo(char* buf, int sz)
+{
+	snprintf(buf, sz, "%s", algo_names[opt_algo]);
+}
 
 void proper_exit(int reason)
 {
@@ -433,10 +446,10 @@ json_t *json_rpc2_call(CURL *curl, const char *url,
 
 static inline void work_free(struct work *w)
 {
-	free(w->txs);
-	free(w->workid);
-	free(w->job_id);
-	free(w->xnonce2);
+	if (w->txs) free(w->txs);
+	if (w->workid) free(w->workid);
+	if (w->job_id) free(w->job_id);
+	if (w->xnonce2) free(w->xnonce2);
 }
 
 static inline void work_copy(struct work *dest, const struct work *src)
@@ -495,7 +508,7 @@ bool rpc2_job_decode(const json_t *job, struct work *work)
 		goto err_out;
 	}
 	const char *hexblob = json_string_value(tmp);
-	int blobLen = strlen(hexblob);
+	size_t blobLen = strlen(hexblob);
 	if (blobLen % 2 != 0 || ((blobLen / 2) < 40 && blobLen != 0) || (blobLen / 2) > 128) {
 		applog(LOG_ERR, "JSON invalid blob length");
 		goto err_out;
@@ -845,7 +858,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 	for (i = 0; i < tx_count; i++) {
 		tmp = json_array_get(txa, i);
 		const char *tx_hex = json_string_value(json_object_get(tmp, "data"));
-		const int tx_size = tx_hex ? strlen(tx_hex) / 2 : 0;
+		const size_t tx_size = tx_hex ? strlen(tx_hex) / 2 : 0;
 		unsigned char *tx = (uchar*) malloc(tx_size);
 		if (!tx_hex || !hex2bin(tx, tx_hex, tx_size)) {
 			applog(LOG_ERR, "JSON invalid transactions");
@@ -929,6 +942,8 @@ static int share_result(int result, struct work *work, const char *reason)
 		hashrate += thr_hashrates[i];
 	result ? accepted_count++ : rejected_count++;
 	pthread_mutex_unlock(&stats_lock);
+
+	global_hashrate = (uint64_t) hashrate;
 
 	switch (opt_algo) {
 	case ALGO_CRYPTONIGHT:
@@ -1574,12 +1589,14 @@ static void *miner_thread(void *userdata)
 {
 	struct thr_info *mythr = (struct thr_info *) userdata;
 	int thr_id = mythr->id;
-	struct work work = {{0}};
+	struct work work;
 	uint32_t max_nonce;
 	uint32_t end_nonce = 0xffffffffU / opt_n_threads * (thr_id + 1) - 0x20;
 	unsigned char *scratchbuf = NULL;
 	char s[16];
 	int i;
+
+	memset(&work, 0, sizeof(work));
 
 	/* Set worker threads to nice 19 and then preferentially to SCHED_IDLE
 	 * and if that fails, then SCHED_BATCH. No need for this to be an
@@ -1840,6 +1857,7 @@ static void *miner_thread(void *userdata)
 					applog(LOG_NOTICE, "Total: %s khash/s", s);
 					break;
 				}
+				global_hashrate = (uint64_t) hashrate;
 			}
 		}
 
@@ -2219,6 +2237,19 @@ static void parse_arg(int key, char *arg, char *pname)
 		}
 		if (opt_algo == ALGO_SCRYPT)
 			opt_nfactor = 9;
+		break;
+	case 'b':
+		p = strstr(arg, ":");
+		if (p) {
+			/* ip:port */
+			if (p - arg > 0) {
+				opt_api_allow = strdup(arg);
+				opt_api_allow[p - arg] = '\0';
+			}
+			opt_api_listen = atoi(p + 1);
+		}
+		else if (arg)
+			opt_api_listen = atoi(arg);
 		break;
 	case 'n':
 		if (opt_algo == ALGO_NEOSCRYPT) {
@@ -2685,7 +2716,7 @@ int main(int argc, char *argv[]) {
 	if (!work_restart)
 		return 1;
 
-	thr_info = (struct thr_info*) calloc(opt_n_threads + 3, sizeof(*thr));
+	thr_info = (struct thr_info*) calloc(opt_n_threads + 4, sizeof(*thr));
 	if (!thr_info)
 		return 1;
 
@@ -2739,6 +2770,21 @@ int main(int argc, char *argv[]) {
 
 		if (have_stratum)
 			tq_push(thr_info[stratum_thr_id].q, strdup(rpc_url));
+	}
+
+	if (opt_api_listen) {
+		/* api thread */
+		api_thr_id = opt_n_threads + 3;
+		thr = &thr_info[api_thr_id];
+		thr->id = api_thr_id;
+		thr->q = tq_new();
+		if (!thr->q)
+			return 1;
+
+		if (unlikely(pthread_create(&thr->pth, NULL, api_thread, thr))) {
+			applog(LOG_ERR, "api thread create failed");
+			return 1;
+		}
 	}
 
 	/* start mining threads */

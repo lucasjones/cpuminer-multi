@@ -11,7 +11,7 @@ enum {
 	PRIO_PROCESS		= 0,
 };
 
-static inline int setpriority(int which, int who, int prio)
+static __inline int setpriority(int which, int who, int prio)
 {
 	return -!SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
 }
