@@ -7,8 +7,8 @@ $configs = array(
 	//'EPSYTOUR'=>'epsytour.php', /* copy local.php file and edit target IP:PORT */
 );
 
-// 5 seconds max.
-set_time_limit(5);
+// 3 seconds max.
+set_time_limit(3);
 error_reporting(0);
 
 function getdataFromPears()
@@ -26,7 +26,7 @@ function getdataFromPears()
 
 function ignoreField($key)
 {
-	$ignored = array('API','VER','GPU','CARD');
+	$ignored = array('API','VER','GPU','CARD','GPUS','CPU');
 	return in_array($key, $ignored);
 }
 
@@ -37,6 +37,7 @@ function translateField($key)
 	$intl['VER'] = 'Version';
 
 	$intl['ALGO'] = 'Algorithm';
+	$intl['GPUS'] = 'GPUs';
 	$intl['CPUS'] = 'Threads';
 	$intl['KHS'] = 'Hash rate (kH/s)';
 	$intl['ACC'] = 'Accepted shares';
@@ -49,6 +50,7 @@ function translateField($key)
 	$intl['TEMP'] = 'T°c';
 	$intl['FAN'] = 'Fan %';
 	$intl['FREQ'] = 'Freq.';
+	$intl['PST'] = 'P-State';
 
 	if (isset($intl[$key]))
 		return $intl[$key];
@@ -62,10 +64,18 @@ function translateValue($key,$val,$data=array())
 		case 'UPTIME':
 			$min = floor(intval($val) / 60);
 			$sec = intval($val) % 60;
-			$val = "${min}mn ${sec}s";
+			$val = "${min}mn${sec}s";
+			if ($min > 180) {
+				$hrs = floor($min / 60);
+				$min = $min % 60;
+				$val = "${hrs}h${min}mn";
+			}
 			break;
 		case 'NAME':
 			$val = $data['NAME'].'&nbsp;'.$data['VER'];
+			break;
+		case 'FREQ':
+			$val = sprintf("%d MHz", round(floatval($val)/1000.0));
 			break;
 		case 'TS':
 			$val = strftime("%H:%M:%S", (int) $val);
@@ -82,17 +92,18 @@ function displayData($data)
 		$htm .= '<table id="tb_'.$name.'" class="stats">'."\n";
 		$htm .= '<tr><th class="machine" colspan="2">'.$name."</th></tr>\n";
 		if (!empty($stats)) {
-			$summary = $stats['summary'];
+			$summary = (array) $stats['summary'];
 			foreach ($summary as $key=>$val) {
 				if (!empty($val) && !ignoreField($key))
 					$htm .= '<tr><td class="key">'.translateField($key).'</td>'.
 						'<td class="val">'.translateValue($key, $val, $summary)."</td></tr>\n";
 			}
 			if (isset($summary['KHS']))
-				$totals[$summary['ALGO']] += floatval($summary['KHS']);
-			foreach ($stats['threads'] as $g=>$cpu) {
-				$htm .= '<tr><th class="cpu" colspan="2">'.$g."</th></tr>\n";
-				foreach ($cpu as $key=>$val) {
+				@ $totals[$summary['ALGO']] += floatval($summary['KHS']);
+			foreach ($stats['threads'] as $g=>$gpu) {
+				$card = isset($gpu['CARD']) ? $gpu['CARD'] : '';
+				$htm .= '<tr><th class="gpu" colspan="2">'.$g." $card</th></tr>\n";
+				foreach ($gpu as $key=>$val) {
 					if (!empty($val) && !ignoreField($key))
 					$htm .= '<tr><td class="key">'.translateField($key).'</td>'.
 						'<td class="val">'.translateValue($key, $val)."</td></tr>\n";
@@ -158,14 +169,14 @@ div#footer {
 
 table.stats { width: 280px; margin: 4px 16px; display: inline-block; }
 th.machine { color: darkcyan; padding: 16px 0px 0px 0px; text-align: left; border-bottom: 1px solid gray; }
-th.cpu { color: white; padding: 3px 3px; font: bolder; text-align: left; background: rgba(65, 65, 65, 0.85); }
+th.gpu { color: white; padding: 3px 3px; font: bolder; text-align: left; background: rgba(65, 65, 65, 0.85); }
 td.key { width: 99px; max-width: 180px; }
 td.val { width: 40px; max-width: 100px; color: white; }
 
-div.totals { margin: 16px; }
+div.totals { margin: 16px; padding-bottom: 16px; }
 div.totals h2 { color: darkcyan; font-size: 16px; margin-bottom: 4px; }
 div.totals li { list-style-type: none; font-size: 16px; margin-left: 4px; margin-bottom: 8px; }
-li span.algo { display: inline-block; width: 50px; max-width: 120px; }
+li span.algo { display: inline-block; width: 100px; max-width: 180px; }
 
 </style>
 </head>
