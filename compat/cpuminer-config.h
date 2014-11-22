@@ -1,5 +1,4 @@
-/* cpuminer-config.h.  Generated from cpuminer-config.h.in by configure.  */
-/* cpuminer-config.h.in.  Generated from configure.ac by autoheader.  */
+/* Generated on windows by mingw for VStudio */
 
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
    systems. This function is required for `alloca.c' support on those systems.
@@ -95,7 +94,7 @@
 #define PACKAGE_NAME "cpuminer-multi"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "cpuminer-multi 1.0.8"
+#define PACKAGE_STRING "cpuminer-multi 1.0.9"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "cpuminer-multi"
@@ -104,7 +103,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.0.8"
+#define PACKAGE_VERSION "1.0.9"
 
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
@@ -133,7 +132,7 @@
 #define USE_XOP 1
 
 /* Version number of package */
-#define VERSION "1.0.8"
+#define VERSION "1.0.9"
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 /* #undef size_t */
