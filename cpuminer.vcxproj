@@ -165,9 +165,13 @@
     <ClCompile Include="compat\getopt\getopt_long.c" />
     <ClCompile Include="compat\gettimeofday.c" />
     <ClCompile Include="compat\jansson\dump.c" />
+    <ClCompile Include="compat\jansson\error.c" />
     <ClCompile Include="compat\jansson\hashtable.c" />
     <ClCompile Include="compat\jansson\load.c" />
+    <ClCompile Include="compat\jansson\memory.c" />
+    <ClCompile Include="compat\jansson\pack_unpack.c" />
     <ClCompile Include="compat\jansson\strbuffer.c" />
+    <ClCompile Include="compat\jansson\strconv.c" />
     <ClCompile Include="compat\jansson\utf.c" />
     <ClCompile Include="compat\jansson\value.c" />
     <ClCompile Include="compat\winansi.c" />

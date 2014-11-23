@@ -156,6 +156,19 @@
     <ClCompile Include="nist5.c" />
     <ClCompile Include="qubit.c" />
     <ClCompile Include="api.c" />
+    <ClCompile Include="sensors.c" />
+    <ClCompile Include="compat\jansson\error.c">
+      <Filter>jansson</Filter>
+    </ClCompile>
+    <ClCompile Include="compat\jansson\memory.c">
+      <Filter>jansson</Filter>
+    </ClCompile>
+    <ClCompile Include="compat\jansson\pack_unpack.c">
+      <Filter>jansson</Filter>
+    </ClCompile>
+    <ClCompile Include="compat\jansson\strconv.c">
+      <Filter>jansson</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sha3\sph_blake.h">
