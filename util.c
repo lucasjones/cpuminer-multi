@@ -1254,18 +1254,20 @@ bool stratum_authorize(struct stratum_ctx *sctx, const char *user, const char *p
 	sret = stratum_recv_line(sctx);
 	if (sret) {
 		json_t *extra = JSON_LOADS(sret, &err);
-		free(sret);
 		if (!extra) {
 			applog(LOG_WARNING, "JSON decode failed(%d): %s", err.line, err.text);
 		} else {
 			if (json_integer_value(json_object_get(extra, "id")) != 3) {
-				applog(LOG_WARNING, "Stratum answer id is not correct!");
+				// we receive a standard method if extranonce is ignored
+				if (!stratum_handle_method(sctx, sret))
+					applog(LOG_WARNING, "Stratum answer id is not correct!");
 			}
 			res_val = json_object_get(extra, "result");
 			if (opt_debug && (!res_val || json_is_false(res_val)))
 				applog(LOG_DEBUG, "extranonce subscribe not supported");
 			json_decref(extra);
 		}
+		free(sret);
 	}
 
 out:
