@@ -22,7 +22,7 @@ void blakehash(void *state, const void *input)
 	sph_blake256_context ctx;
 
 	uint8_t hash[64];
-	uint8_t *ending = input;
+	uint8_t *ending = (uint8_t*) input;
 	ending += 64;
 
 	// do one memcopy to get a fresh context

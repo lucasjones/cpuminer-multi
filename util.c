@@ -238,7 +238,7 @@ static size_t upload_data_cb(void *ptr, size_t size, size_t nmemb,
 			     void *user_data)
 {
 	struct upload_buffer *ub = (struct upload_buffer *) user_data;
-	int len = size * nmemb;
+	size_t len = size * nmemb;
 
 	if (len > ub->len - ub->pos)
 		len = ub->len - ub->pos;
@@ -538,8 +538,7 @@ err_out:
 
 void bin2hex(char *s, const unsigned char *p, size_t len)
 {
-	int i;
-	for (i = 0; i < len; i++)
+	for (size_t i = 0; i < len; i++)
 		sprintf(s + (i * 2), "%02x", (unsigned int) p[i]);
 }
 
@@ -584,13 +583,13 @@ int varint_encode(unsigned char *p, uint64_t n)
 {
 	int i;
 	if (n < 0xfd) {
-		p[0] = n;
+		p[0] = (uchar) n;
 		return 1;
 	}
 	if (n <= 0xffff) {
 		p[0] = 0xfd;
 		p[1] = n & 0xff;
-		p[2] = n >> 8;
+		p[2] = (uchar) (n >> 8);
 		return 3;
 	}
 	if (n <= 0xffffffff) {

@@ -5,9 +5,9 @@
 
 #ifdef _MSC_VER
 
-#ifdef _MSC_VER
+#define snprintf(...) _snprintf(__VA_ARGS__)
+
 #undef USE_ASM  /* to fix */
-#endif
 
 #ifdef NOASM
 #undef USE_ASM
