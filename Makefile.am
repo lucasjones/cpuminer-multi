@@ -11,11 +11,11 @@ SUBDIRS		= compat
 
 INCLUDES	= @PTHREAD_FLAGS@ -fno-strict-aliasing $(JANSSON_INCLUDES)
 
-bin_PROGRAMS	= minerd
+bin_PROGRAMS	= cpuminer
 
-dist_man_MANS	= minerd.1
+dist_man_MANS	= cpuminer.1
 
-minerd_SOURCES = \
+cpuminer_SOURCES = \
   cpu-miner.c util.c \
   api.c sensors.c \
   sha3/sph_keccak.c \
@@ -67,45 +67,45 @@ minerd_SOURCES = \
 disable_flags =
 
 if USE_ASM
-   minerd_SOURCES += neoscrypt_asm.S
+   cpuminer_SOURCES += neoscrypt_asm.S
 if ARCH_x86
-   minerd_SOURCES += sha2-x86.S scrypt-x86.S aesb-x86.S crypto/aesb-x86-impl.c
+   cpuminer_SOURCES += sha2-x86.S scrypt-x86.S aesb-x86.S crypto/aesb-x86-impl.c
 endif
 if ARCH_x86_64
-   minerd_SOURCES += sha2-x64.S scrypt-x64.S aesb-x64.S
+   cpuminer_SOURCES += sha2-x64.S scrypt-x64.S aesb-x64.S
 endif
 if ARCH_ARM
-   minerd_SOURCES += sha2-arm.S scrypt-arm.S
+   cpuminer_SOURCES += sha2-arm.S scrypt-arm.S
 endif
 else
    disable_flags += -DNOASM
-   minerd_SOURCES += crypto/aesb-x86-impl.c
+   cpuminer_SOURCES += crypto/aesb-x86-impl.c
 endif
 
 if HAVE_WINDOWS
-   minerd_SOURCES += compat/winansi.c
+   cpuminer_SOURCES += compat/winansi.c
 endif
 
-minerd_LDFLAGS	= @LDFLAGS@
-minerd_LDADD	= @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@
-minerd_CPPFLAGS = @LIBCURL_CPPFLAGS@
-minerd_CFLAGS   = -Wno-pointer-sign -Wno-pointer-to-int-cast $(disable_flags)
+cpuminer_LDFLAGS	= @LDFLAGS@
+cpuminer_LDADD	= @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@
+cpuminer_CPPFLAGS = @LIBCURL_CPPFLAGS@
+cpuminer_CFLAGS   = -Wno-pointer-sign -Wno-pointer-to-int-cast $(disable_flags)
 
 if HAVE_WINDOWS
-minerd_CFLAGS += -Wl,--stack,10485760
+cpuminer_CFLAGS += -Wl,--stack,10485760
 endif
 
 if HAVE_WINDOWS
 # use to profile an object
 # gprof_cflags = -pg -g3
-# minerd_LDFLAGS += -pg
-# minerd_CFLAGS += -fno-inline-functions -static
+# cpuminer_LDFLAGS += -pg
+# cpuminer_CFLAGS += -fno-inline-functions -static
 
 # copy/paste from generated Makefile
-common_ccflags = $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(minerd_CPPFLAGS) $(CPPFLAGS) $(minerd_CFLAGS) $(CFLAGS)
+common_ccflags = $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cpuminer_CPPFLAGS) $(CPPFLAGS) $(cpuminer_CFLAGS) $(CFLAGS)
 
 # special CFLAGS (if you find a simpler way to do that tell me ;)
-minerd-neoscrypt.o: neoscrypt.c
+cpuminer-neoscrypt.o: neoscrypt.c
 	@echo "CUSTOM ${@}: ${filter %.o,${^}} ${filter %.c,${^}}"
 	$(CC) $(common_ccflags) -g -O3 $(gprof_cflags) -MT $@ -MD -MP -c -o $@ $<
 

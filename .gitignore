@@ -1,4 +1,5 @@
 minerd*
+cpuminer
 *.exe
 *.o
 *.d

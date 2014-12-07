@@ -22,4 +22,4 @@ RUN		cd cpuminer && ./configure CFLAGS="-O3"
 RUN		cd cpuminer && make
 
 WORKDIR		/cpuminer
-ENTRYPOINT	["./minerd"]
+ENTRYPOINT	["./cpuminer"]

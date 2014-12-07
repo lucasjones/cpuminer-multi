@@ -21,11 +21,12 @@ Algorithms
 ==========
 #### Currently supported
  * ✓ __scrypt__ (Litecoin, Dogecoin, Feathercoin, ...)
- * ✓ __scrypt:N__ (Vertcoin [VTC])
+ * ✓ __scrypt:N__
  * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, ...)
  * ✓ __blake__ (Neos/Saffron [SFR] Blake-256)
  * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
  * ✓ __fresh__ (FreshCoin)
+ * ✓ __lyra2__ (VertCoin [VTC])
  * ✓ __neoscrypt__ (Feathercoin)
  * ✓ __nist5__ (MistCoin [MIC], TalkCoin [TAC], ...)
  * ✓ __pentablake__ (Joincoin)
@@ -112,7 +113,7 @@ Build
 
 Usage instructions
 ==================
-Run "minerd --help" to see options.
+Run "cpuminer --help" to see options.
 
 ### Connecting through a proxy
 
