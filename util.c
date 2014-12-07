@@ -665,7 +665,7 @@ static int b58check(unsigned char *bin, size_t binsz, const char *b58)
 	unsigned char buf[32];
 	int i;
 
-	sha256d(buf, bin, binsz - 4);
+	sha256d(buf, bin, (int) (binsz - 4));
 	if (memcmp(&bin[binsz - 4], buf, 4))
 		return -1;
 
@@ -801,14 +801,15 @@ void diff_to_target(uint32_t *target, double diff)
 
 static bool send_line(curl_socket_t sock, char *s)
 {
-	ssize_t len, sent = 0;
-	
-	len = strlen(s);
+	size_t sent = 0;
+	int len;
+
+	len = (int) strlen(s);
 	s[len++] = '\n';
 
 	while (len > 0) {
 		struct timeval timeout = {0, 0};
-		ssize_t n;
+		int n;
 		fd_set wd;
 
 		FD_ZERO(&wd);
@@ -916,14 +917,14 @@ char *stratum_recv_line(struct stratum_ctx *sctx)
 		}
 	}
 
-	buflen = strlen(sctx->sockbuf);
+	buflen = (ssize_t) strlen(sctx->sockbuf);
 	tok = strtok(sctx->sockbuf, "\n");
 	if (!tok) {
 		applog(LOG_ERR, "stratum_recv_line failed to parse a newline-terminated string");
 		goto out;
 	}
 	sret = strdup(tok);
-	len = strlen(sret);
+	len = (ssize_t) strlen(sret);
 
 	if (buflen > len + 1)
 		memmove(sctx->sockbuf, sctx->sockbuf + len + 1, buflen - len + 1);
@@ -1033,7 +1034,7 @@ static const char *get_stratum_session_id(json_t *val)
 	arr_val = json_array_get(val, 0);
 	if (!arr_val || !json_is_array(arr_val))
 		return NULL;
-	n = json_array_size(arr_val);
+	n = (int) json_array_size(arr_val);
 	for (i = 0; i < n; i++) {
 		const char *notify;
 		json_t *arr = json_array_get(arr_val, i);
@@ -1059,7 +1060,7 @@ static bool stratum_parse_extranonce(struct stratum_ctx *sctx, json_t *params, i
 		applog(LOG_ERR, "Failed to get extranonce1");
 		goto out;
 	}
-	xn2_size = json_integer_value(json_array_get(params, pndx+1));
+	xn2_size = (int) json_integer_value(json_array_get(params, pndx+1));
 	if (!xn2_size) {
 		applog(LOG_ERR, "Failed to get extranonce2_size");
 		goto out;
@@ -1332,7 +1333,7 @@ static bool stratum_notify(struct stratum_ctx *sctx, json_t *params)
 	merkle_arr = json_array_get(params, 4);
 	if (!merkle_arr || !json_is_array(merkle_arr))
 		goto out;
-	merkle_count = json_array_size(merkle_arr);
+	merkle_count = (int) json_array_size(merkle_arr);
 	version = json_string_value(json_array_get(params, 5));
 	nbits = json_string_value(json_array_get(params, 6));
 	ntime = json_string_value(json_array_get(params, 7));
@@ -1431,7 +1432,7 @@ static bool stratum_reconnect(struct stratum_ctx *sctx, json_t *params)
 	if (json_is_string(port_val))
 		port = atoi(json_string_value(port_val));
 	else
-		port = json_integer_value(port_val);
+		port = (int) json_integer_value(port_val);
 	if (!host || !port)
 		return false;
 

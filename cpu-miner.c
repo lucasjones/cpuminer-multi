@@ -1011,7 +1011,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			}
 			char *hashhex = abin2hex(hash, 32);
 			snprintf(s, JSON_BUF_LEN,
-					"{\"method\": \"submit\", \"params\": {\"id\": \"%s\", \"job_id\": \"%s\", \"nonce\": \"%s\", \"result\": \"%s\"}, \"id\":1}\r\n",
+					"{\"method\": \"submit\", \"params\": {\"id\": \"%s\", \"job_id\": \"%s\", \"nonce\": \"%s\", \"result\": \"%s\"}, \"id\":4}\r\n",
 					rpc2_id, work->job_id, noncestr, hashhex);
 			free(hashhex);
 		} else {
@@ -1054,13 +1054,13 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			json_decref(val);
 			req = (char*) malloc(128 + 2 * 80 + strlen(work->txs) + strlen(params));
 			sprintf(req,
-				"{\"method\": \"submitblock\", \"params\": [\"%s%s\", %s], \"id\":1}\r\n",
+				"{\"method\": \"submitblock\", \"params\": [\"%s%s\", %s], \"id\":4}\r\n",
 				data_str, work->txs, params);
 			free(params);
 		} else {
 			req = (char*) malloc(128 + 2 * 80 + strlen(work->txs));
 			sprintf(req,
-				"{\"method\": \"submitblock\", \"params\": [\"%s%s\"], \"id\":1}\r\n",
+				"{\"method\": \"submitblock\", \"params\": [\"%s%s\"], \"id\":4}\r\n",
 				data_str, work->txs);
 		}
 
@@ -1107,7 +1107,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			}
 			hashhex = abin2hex(&hash[0], 32);
 			snprintf(s, JSON_BUF_LEN,
-					"{\"method\": \"submit\", \"params\": {\"id\": \"%s\", \"job_id\": \"%s\", \"nonce\": \"%s\", \"result\": \"%s\"}, \"id\":1}\r\n",
+					"{\"method\": \"submit\", \"params\": {\"id\": \"%s\", \"job_id\": \"%s\", \"nonce\": \"%s\", \"result\": \"%s\"}, \"id\":4}\r\n",
 					rpc2_id, work->job_id, noncestr, hashhex);
 			free(hashhex);
 
@@ -1138,7 +1138,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 
 			/* build JSON-RPC request */
 			snprintf(s, JSON_BUF_LEN,
-				"{\"method\": \"getwork\", \"params\": [ \"%s\" ], \"id\":1}\r\n",
+				"{\"method\": \"getwork\", \"params\": [\"%s\"], \"id\":4}\r\n",
 				data_str);
 
 			/* Issue a JSON-RPC request */
@@ -1163,7 +1163,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 
 			/* build JSON-RPC request */
 			snprintf(s, JSON_BUF_LEN,
-				"{\"method\": \"getwork\", \"params\": [ \"%s\" ], \"id\":1}\r\n",
+				"{\"method\": \"getwork\", \"params\": [\"%s\"], \"id\":4}\r\n",
 				data_str);
 
 			/* issue JSON-RPC request */
@@ -2052,7 +2052,7 @@ static bool stratum_handle_response(char *buf)
 			valid = json_is_null(err_val);
 		}
 	} else {
-		if (!res_val)
+		if (!res_val || json_integer_value(id_val) < 4)
 			goto out;
 
 		valid = json_is_true(res_val);
