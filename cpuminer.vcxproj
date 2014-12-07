@@ -190,7 +190,10 @@
     <ClCompile Include="crypto\c_skein.c" />
     <ClCompile Include="crypto\hash.c" />
     <ClCompile Include="crypto\oaes_lib.c" />
+    <ClCompile Include="lyra2\Lyra2.c" />
+    <ClCompile Include="lyra2\Sponge.c" />
     <ClCompile Include="ink.c" />
+    <ClCompile Include="lyra2re.c" />
     <ClCompile Include="s3.c" />
     <ClCompile Include="crypto\blake2s.c" />
     <ClCompile Include="sha3\sph_hefty1.c" />
@@ -261,6 +264,8 @@
     <ClInclude Include="crypto\hash-ops.h" />
     <ClInclude Include="crypto\oaes_lib.h" />
     <ClInclude Include="elist.h" />
+    <ClInclude Include="lyra2\Lyra2.h" />
+    <ClInclude Include="lyra2\Sponge.h" />
     <ClInclude Include="miner.h" />
     <ClInclude Include="scryptjane\scrypt-jane-chacha.h" />
     <ClInclude Include="scryptjane\scrypt-jane-hash.h" />

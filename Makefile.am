@@ -43,11 +43,13 @@ minerd_SOURCES = \
   crypto/c_skein.c \
   crypto/hash.c \
   crypto/aesb.c \
+  lyra2/Lyra2.c lyra2/Sponge.c \
   blake.c \
   cryptonight.c \
   fresh.c \
   heavy.c \
   ink.c \
+  lyra2re.c \
   keccak.c \
   pentablake.c \
   quark.c \

@@ -1,5 +1,7 @@
 version 1.0.9 (Tanguy Pruvot)
 - pool extranonce subscribe
+- lyra2 algo
+- fix for solo mining
 
 Version 1.0.8 (Tanguy Pruvot)
 - API Monitoring Support

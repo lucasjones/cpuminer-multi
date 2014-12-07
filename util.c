@@ -1718,6 +1718,10 @@ void print_hash_tests(void)
 	printpfx("Keccak", hash);
 
 	memset(hash, 0, sizeof hash);
+	lyra2_hash(&hash[0], &buf[0]);
+	printpfx("Lyra2", hash);
+
+	memset(hash, 0, sizeof hash);
 	neoscrypt((uchar*) &hash[0], (uchar*)&buf[0], 80000620);
 	printpfx("Neoscrypt", hash);
 

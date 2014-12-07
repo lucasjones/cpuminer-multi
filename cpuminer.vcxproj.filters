@@ -133,6 +133,13 @@
     <ClCompile Include="crypto\aesb-x86-impl.c">
       <Filter>arch\x86</Filter>
     </ClCompile>
+    <ClCompile Include="lyra2\Lyra2.c">
+      <Filter>crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="lyra2\Sponge.c">
+      <Filter>crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="lyra2re.c" />
     <ClCompile Include="neoscrypt_asm.S" />
     <ClCompile Include="scrypt-x86.S">
       <Filter>arch\x86</Filter>
@@ -283,6 +290,12 @@
       <Filter>crypto</Filter>
     </ClInclude>
     <ClInclude Include="crypto\hash-ops.h">
+      <Filter>crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="lyra2\Lyra2.h">
+      <Filter>crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="lyra2\Sponge.h">
       <Filter>crypto</Filter>
     </ClInclude>
     <ClInclude Include="scryptjane\scrypt-jane-mix_salsa.h">

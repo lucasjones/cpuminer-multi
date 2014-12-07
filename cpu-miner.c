@@ -122,7 +122,7 @@ struct workio_cmd {
 };
 
 enum algos {
-	ALGO_SCRYPT,      /* scrypt(1024,1,1) */
+	ALGO_SCRYPT,      /* scrypt */
 	ALGO_SHA256D,     /* SHA-256d */
 	ALGO_KECCAK,      /* Keccak */
 	ALGO_HEAVY,       /* Heavy */
@@ -132,6 +132,7 @@ enum algos {
 	ALGO_SHAVITE3,    /* Shavite3 */
 	ALGO_BLAKE,       /* Blake */
 	ALGO_FRESH,       /* Fresh */
+	ALGO_LYRA2,       /* Lyra2RE (Vertcoin) */
 	ALGO_NIST5,       /* Nist5 */
 	ALGO_QUBIT,       /* Qubit */
 	ALGO_S3,          /* S3 */
@@ -155,6 +156,7 @@ static const char *algo_names[] = {
 	"shavite3",
 	"blake",
 	"fresh",
+	"lyra2",
 	"nist5",
 	"qubit",
 	"s3",
@@ -254,6 +256,7 @@ Options:\n\
                           fresh        Fresh\n\
                           heavy        Heavy\n\
                           keccak       Keccak\n\
+                          lyra2        Lyra2RE\n\
                           neoscrypt    NeoScrypt(128, 2, 1)\n\
                           nist5        Nist5\n\
                           pentablake   Pentablake\n\
@@ -673,7 +676,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 
 	tmp = json_object_get(val, "mutable");
 	if (tmp && json_is_array(tmp)) {
-		n = json_array_size(tmp);
+		n = (int) json_array_size(tmp);
 		for (i = 0; i < n; i++) {
 			const char *s = json_string_value(json_array_get(tmp, i));
 			if (!s)
@@ -694,7 +697,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 		applog(LOG_ERR, "JSON invalid height");
 		goto out;
 	}
-	work->height = json_integer_value(tmp);
+	work->height = (int) json_integer_value(tmp);
 	applog(LOG_BLUE, "Current block is %d", work->height);
 
 	tmp = json_object_get(val, "version");
@@ -702,12 +705,12 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 		applog(LOG_ERR, "JSON invalid version");
 		goto out;
 	}
-	version = json_integer_value(tmp);
+	version = (uint32_t) json_integer_value(tmp);
 	if (version > 2) {
 		if (version_reduce) {
 			version = 2;
 		} else if (have_gbt && allow_getwork && !version_force) {
-			applog(LOG_DEBUG, "Switching to getwork (gbt version: %d)", version);
+			applog(LOG_DEBUG, "Switching to getwork, gbt version %d", version);
 			have_gbt = false;
 			goto out;
 		} else if (!version_force) {
@@ -726,7 +729,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 		applog(LOG_ERR, "JSON invalid curtime");
 		goto out;
 	}
-	curtime = json_integer_value(tmp);
+	curtime = (uint32_t) json_integer_value(tmp);
 
 	if (unlikely(!jobj_binary(val, "bits", &bits, sizeof(bits)))) {
 		applog(LOG_ERR, "JSON invalid bits");
@@ -739,7 +742,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 		applog(LOG_ERR, "JSON invalid transactions");
 		goto out;
 	}
-	tx_count = json_array_size(txa);
+	tx_count = (int) json_array_size(txa);
 	tx_size = 0;
 	for (i = 0; i < tx_count; i++) {
 		const json_t *tx = json_array_get(txa, i);
@@ -1157,6 +1160,11 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 				le32enc(work->data + i, work->data[i]);
 
 			bin2hex(data_str, (unsigned char *)work->data, sizeof(work->data));
+
+			/* build JSON-RPC request */
+			snprintf(s, JSON_BUF_LEN,
+				"{\"method\": \"getwork\", \"params\": [ \"%s\" ], \"id\":1}\r\n",
+				data_str);
 
 			/* issue JSON-RPC request */
 			val = json_rpc_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
@@ -1703,12 +1711,15 @@ static void *miner_thread(void *userdata)
 			case ALGO_CRYPTONIGHT:
 				max64 = 0x40LL;
 				break;
+			case ALGO_LYRA2:
+				max64 = 0xffff;
+				break;
 			case ALGO_FRESH:
 			case ALGO_X11:
 				max64 = 0x3ffff;
 				break;
 			case ALGO_X13:
-				max64 = 0x1ffff;
+				max64 = 0x3ffff;
 				break;
 			case ALGO_X14:
 				max64 = 0x3ffff;
@@ -1777,6 +1788,10 @@ static void *miner_thread(void *userdata)
 		case ALGO_FRESH:
 			rc = scanhash_fresh(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
+			break;
+		case ALGO_LYRA2:
+			rc = scanhash_lyra2(thr_id, work.data, work.target, max_nonce,
+				&hashes_done);
 			break;
 		case ALGO_NIST5:
 			rc = scanhash_nist5(thr_id, work.data, work.target, max_nonce,
