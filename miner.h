@@ -355,7 +355,11 @@ extern double   global_diff;
 #define CL_CY2  "\x1B[22;36m" /* cyan */
 #define CL_SIL  "\x1B[22;37m" /* gray */
 
+#ifdef WIN32
 #define CL_GRY  "\x1B[01;30m" /* dark gray */
+#else
+#define CL_GRY  "\x1B[90m"    /* dark gray selectable in putty */
+#endif
 #define CL_LRD  "\x1B[01;31m" /* light red */
 #define CL_LGR  "\x1B[01;32m" /* light green */
 #define CL_YL2  "\x1B[01;33m" /* yellow */

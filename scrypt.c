@@ -481,16 +481,16 @@ static inline void xor_salsa8(uint32_t B[16], const uint32_t Bx[16])
 
 static inline void scrypt_core(uint32_t *X, uint32_t *V, int N)
 {
-	uint32_t i, j, k;
-	
+	int i;
+
 	for (i = 0; i < N; i++) {
 		memcpy(&V[i * 32], X, 128);
 		xor_salsa8(&X[0], &X[16]);
 		xor_salsa8(&X[16], &X[0]);
 	}
 	for (i = 0; i < N; i++) {
-		j = 32 * (X[16] & (N - 1));
-		for (k = 0; k < 32; k++)
+		uint32_t j = 32 * (X[16] & (N - 1));
+		for (uint8_t k = 0; k < 32; k++)
 			X[k] ^= V[j + k];
 		xor_salsa8(&X[0], &X[16]);
 		xor_salsa8(&X[16], &X[0]);

@@ -45,6 +45,7 @@ static const char _NR[] = {
 
 #ifdef WIN32
 #include <process.h>
+#define getpid _getpid
 #else
 #include <sys/types.h>
 #include <unistd.h>
@@ -483,7 +484,7 @@ static uint32_t oaes_get_seed(void)
 	_test = (char *) calloc( sizeof( char ), timer.millitm );
 	_ret = gmTimer->tm_year + 1900 + gmTimer->tm_mon + 1 + gmTimer->tm_mday +
 			gmTimer->tm_hour + gmTimer->tm_min + gmTimer->tm_sec + timer.millitm +
-			(uintptr_t) ( _test + timer.millitm ) + getpid();
+			(uint32_t) ( _test + timer.millitm ) + getpid();
 
 	if( _test )
 		free( _test );

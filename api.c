@@ -224,14 +224,14 @@ static char *gethelp(char *params)
 
 static int send_result(SOCKETTYPE c, char *result)
 {
-	size_t n;
+	int n;
 	if (!result) {
-		n = send(c, "", 1, 0);
+		n = (int) send(c, "", 1, 0);
 	} else {
 		// ignore failure - it's closed immediately anyway
-		n = send(c, result, strlen(result) + 1, 0);
+		n = (int) send(c, result, (int) strlen(result) + 1, 0);
 	}
-	return (int) n;
+	return n;
 }
 
 /*
@@ -457,7 +457,7 @@ static void api()
 		counter++;
 
 		clisiz = sizeof(cli);
-		if (SOCKETFAIL(c = accept(*apisock, (struct sockaddr *)(&cli), &clisiz))) {
+		if (SOCKETFAIL(c = accept((SOCKETTYPE)*apisock, (struct sockaddr *)(&cli), &clisiz))) {
 			applog(LOG_ERR, "API failed (%s)%s", strerror(errno), UNAVAILABLE);
 			CLOSESOCKET(*apisock);
 			free(apisock);

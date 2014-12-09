@@ -321,8 +321,8 @@ void HEFTY1_Update(HEFTY1_CTX *ctx, const void *buf, size_t len)
 
     uint64_t read = 0;
     while (len) {
-        uint64_t end = ctx->written % HEFTY1_BLOCK_BYTES;
-        uint64_t count = Min(len, HEFTY1_BLOCK_BYTES - end);
+        size_t end = (size_t)(ctx->written % HEFTY1_BLOCK_BYTES);
+        size_t count = Min(len, HEFTY1_BLOCK_BYTES - end);
         memcpy(&ctx->block[end], &((unsigned char *)buf)[read], count);
         len -= count;
         read += count;
@@ -338,7 +338,7 @@ void HEFTY1_Final(unsigned char *digest, HEFTY1_CTX *ctx)
     assert(ctx);
 
     /* Pad message (FIPS 180 Section 5.1.1) */
-    uint64_t used = ctx->written % HEFTY1_BLOCK_BYTES;
+    size_t used = (size_t)(ctx->written % HEFTY1_BLOCK_BYTES);
     ctx->block[used++] = 0x80; /* Append 1 to end of message */
     if (used > HEFTY1_BLOCK_BYTES - 8) {
         /* We have already written into the last 64bits, so
