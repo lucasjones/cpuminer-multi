@@ -3,6 +3,7 @@ version 1.0.9 (Tanguy Pruvot)
 - upgrade jansson
 - lyra2 algo
 - fix for solo mining
+- API websocket support
 
 Version 1.0.8 (Tanguy Pruvot)
 - API Monitoring Support

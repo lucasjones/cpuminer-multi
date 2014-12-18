@@ -78,12 +78,9 @@ struct IP4ACCESS {
 static int ips = 1;
 static struct IP4ACCESS *ipaccess = NULL;
 
-// Big enough for largest API request
-//  though a PC with 100s of CPUs may exceed the size ...
-// Current code assumes it can socket send this size also
+// Socket data buffers
 #define MYBUFSIZ	16384
-
-#define SOCK_REC_BUFSZ  256
+#define SOCK_REC_BUFSZ	1024
 
 // Socket is on 127.0.0.1
 #define QUEUE	10
@@ -194,6 +191,7 @@ static char *gethelp(char *params)
 	char * p = buffer;
 	for (int i = 0; i < CMDMAX-1; i++)
 		p += sprintf(p, "%s\n", cmds[i].name);
+	sprintf(p, "|");
 	return buffer;
 }
 
@@ -208,6 +206,150 @@ static int send_result(SOCKETTYPE c, char *result)
 		n = (int) send(c, result, (int) strlen(result) + 1, 0);
 	}
 	return n;
+}
+
+/* ---- Base64 Encoding/Decoding Table --- */
+static const char table64[]=
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+static size_t base64_encode(const uchar *indata, size_t insize, char *outptr, size_t outlen)
+{
+	uchar ibuf[3];
+	uchar obuf[4];
+	int i, inputparts, inlen = (int) insize;
+	size_t len = 0;
+	char *output, *outbuf;
+
+	memset(outptr, 0, outlen);
+
+	outbuf = output = (char*)calloc(1, inlen * 4 / 3 + 4);
+	if (outbuf == NULL) {
+		return -1;
+	}
+
+	while (inlen > 0) {
+		for (i = inputparts = 0; i < 3; i++) {
+			if (inlen  > 0) {
+				inputparts++;
+				ibuf[i] = (uchar) *indata;
+				indata++; inlen--;
+			}
+			else
+				ibuf[i] = 0;
+		}
+
+		obuf[0] = (uchar)  ((ibuf[0] & 0xFC) >> 2);
+		obuf[1] = (uchar) (((ibuf[0] & 0x03) << 4) | ((ibuf[1] & 0xF0) >> 4));
+		obuf[2] = (uchar) (((ibuf[1] & 0x0F) << 2) | ((ibuf[2] & 0xC0) >> 6));
+		obuf[3] = (uchar)   (ibuf[2] & 0x3F);
+
+		switch(inputparts) {
+		case 1: /* only one byte read */
+			snprintf(output, 5, "%c%c==",
+				table64[obuf[0]],
+				table64[obuf[1]]);
+			break;
+		case 2: /* two bytes read */
+			snprintf(output, 5, "%c%c%c=",
+				table64[obuf[0]],
+				table64[obuf[1]],
+				table64[obuf[2]]);
+			break;
+		default:
+			snprintf(output, 5, "%c%c%c%c",
+				table64[obuf[0]],
+				table64[obuf[1]],
+				table64[obuf[2]],
+				table64[obuf[3]] );
+			break;
+		}
+		if ((len+4) > outlen)
+			break;
+		output += 4; len += 4;
+	}
+	len = snprintf(outptr, len, "%s", outbuf);
+	// todo: seems to be missing on linux
+	if (strlen(outptr) == 27)
+		strcat(outptr, "=");
+	free(outbuf);
+
+	return len;
+}
+
+#include "compat/curl-for-windows/openssl/openssl/crypto/sha/sha.h"
+
+/* websocket handshake (tested in Chrome) */
+static int websocket_handshake(SOCKETTYPE c, char *result, char *clientkey)
+{
+	char answer[256];
+	char inpkey[128] = { 0 };
+	char seckey[64];
+	uchar sha1[20];
+	SHA_CTX ctx;
+
+	if (opt_protocol)
+		applog(LOG_DEBUG, "clientkey: %s", clientkey);
+
+	sprintf(inpkey, "%s258EAFA5-E914-47DA-95CA-C5AB0DC85B11", clientkey);
+
+	// SHA-1 test from rfc, returns in base64 "s3pPLMBiTxaQ9kYGzzhZRbK+xOo="
+	//sprintf(inpkey, "dGhlIHNhbXBsZSBub25jZQ==258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+
+	SHA1_Init(&ctx);
+	SHA1_Update(&ctx, inpkey, strlen(inpkey));
+	SHA1_Final(sha1, &ctx);
+
+	base64_encode(sha1, 20, seckey, sizeof(seckey));
+
+	sprintf(answer,
+		"HTTP/1.1 101 Switching Protocol\r\n"
+		"Upgrade: WebSocket\r\nConnection: Upgrade\r\n"
+		"Sec-WebSocket-Accept: %s\r\n"
+		"Sec-WebSocket-Protocol: text\r\n"
+		"\r\n", seckey);
+
+	// data result as tcp frame
+
+	uchar hd[10] = { 0 };
+	hd[0] = 129; // 0x1 text frame (FIN + opcode)
+	uint64_t datalen = (uint64_t) strlen(result);
+	uint8_t frames = 2;
+	if (datalen <= 125) {
+		hd[1] = (uchar) (datalen);
+	} else if (datalen <= 65535) {
+		hd[1] = (uchar) 126;
+		hd[2] = (uchar) (datalen >> 8);
+		hd[3] = (uchar) (datalen);
+		frames = 4;
+	} else {
+		hd[1] = (uchar) 127;
+		hd[2] = (uchar) (datalen >> 56);
+		hd[3] = (uchar) (datalen >> 48);
+		hd[4] = (uchar) (datalen >> 40);
+		hd[5] = (uchar) (datalen >> 32);
+		hd[6] = (uchar) (datalen >> 24);
+		hd[7] = (uchar) (datalen >> 16);
+		hd[8] = (uchar) (datalen >> 8);
+		hd[9] = (uchar) (datalen);
+		frames = 10;
+	}
+
+	size_t handlen = strlen(answer);
+	uchar *data = (uchar*) calloc(1, handlen + frames + (size_t) datalen + 1);
+	if (data == NULL)
+		return -1;
+	else {
+		uchar *p = data;
+		// HTTP header 101
+		memcpy(p, answer, handlen);
+		p += handlen;
+		// WebSocket Frame - Header + Data
+		memcpy(p, hd, frames);
+		memcpy(p + frames, result, (size_t)datalen);
+		send(c, (const char*)data, strlen(answer) + frames + (size_t)datalen + 1, 0);
+		free(data);
+	}
+	return 0;
 }
 
 /*
@@ -448,6 +590,7 @@ static void api()
 
 		if (addrok) {
 			bool fail;
+			char *wskey = NULL;
 			n = recv(c, &buf[0], SOCK_REC_BUFSZ, 0);
 
 			fail = SOCKETFAIL(n);
@@ -466,6 +609,28 @@ static void api()
 			//	applog(LOG_DEBUG, "API: recv command: (%d) '%s'+char(%x)", n, buf, buf[n-1]);
 
 			if (!fail) {
+				char *msg = NULL;
+				/* Websocket requests compat. */
+				if ((msg = strstr(buf, "GET /")) && strlen(msg) > 5) {
+					char cmd[256] = { 0 };
+					sscanf(&msg[5], "%s\n", cmd);
+					params = strchr(cmd, '/');
+					if (params)
+						*(params++) = '|';
+					params = strchr(cmd, '/');
+					if (params)
+						*(params++) = '\0';
+					wskey = strstr(msg, "Sec-WebSocket-Key");
+					if (wskey) {
+						char *eol = strchr(wskey, '\r');
+						if (eol) *eol = '\0';
+						wskey = strchr(wskey, ':');
+						wskey++;
+						while ((*wskey) == ' ') wskey++; // ltrim
+					}
+					n = sprintf(buf, "%s", cmd);
+				}
+
 				params = strchr(buf, '|');
 				if (params != NULL)
 					*(params++) = '\0';
@@ -476,6 +641,10 @@ static void api()
 				for (i = 0; i < CMDMAX; i++) {
 					if (strcmp(buf, cmds[i].name) == 0) {
 						result = (cmds[i].func)(params);
+						if (wskey) {
+							websocket_handshake(c, result, wskey);
+							break;
+						}
 						send_result(c, result);
 						break;
 					}
