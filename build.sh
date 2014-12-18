@@ -21,3 +21,5 @@ extracflags="$extracflags -Ofast -flto -fuse-linker-plugin -ftree-loop-if-conver
 ./configure --with-crypto --with-curl CFLAGS="$extracflags -DUSE_ASM -pg"
 
 make -j 4
+
+strip --strip-unneeded cpuminer
