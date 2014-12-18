@@ -230,7 +230,7 @@ uint64_t global_hashrate = 0;
 double   global_diff = 0.0;
 int opt_intensity = 0;
 uint32_t opt_work_size = 0; /* default */
-char *opt_api_allow = "127.0.0.1"; /* 0.0.0.0 for all ips */
+char *opt_api_allow = NULL;
 int opt_api_listen = 4048; /* 0 to disable */
 
 #ifdef HAVE_GETOPT_LONG
@@ -1588,6 +1588,9 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_QUBIT:
 				diff_to_target(work->target, sctx->job.diff / (256.0 * opt_diff_factor));
 				break;
+			case ALGO_LYRA2:
+				diff_to_target(work->target, sctx->job.diff / (128.0 * opt_diff_factor));
+				break;
 			default:
 				diff_to_target(work->target, sctx->job.diff / opt_diff_factor);
 		}
@@ -2258,13 +2261,21 @@ static void parse_arg(int key, char *arg)
 		if (p) {
 			/* ip:port */
 			if (p - arg > 0) {
+				free(opt_api_allow);
 				opt_api_allow = strdup(arg);
 				opt_api_allow[p - arg] = '\0';
 			}
 			opt_api_listen = atoi(p + 1);
 		}
-		else if (arg)
+		else if (arg && strstr(arg, ".")) {
+			/* ip only */
+			free(opt_api_allow);
+			opt_api_allow = strdup(arg);
+		}
+		else if (arg) {
+			/* port or 0 to disable */
 			opt_api_listen = atoi(arg);
+		}
 		break;
 	case 'n':
 		if (opt_algo == ALGO_NEOSCRYPT) {
@@ -2642,6 +2653,7 @@ int main(int argc, char *argv[]) {
 
 	rpc_user = strdup("");
 	rpc_pass = strdup("");
+	opt_api_allow = strdup("127.0.0.1"); /* 0.0.0.0 for all ips */
 
 	/* parse command line */
 	parse_cmdline(argc, argv);

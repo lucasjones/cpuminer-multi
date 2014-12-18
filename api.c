@@ -176,29 +176,6 @@ static char *getthreads(char *params)
 	return buffer;
 }
 
-/**
- * Returns the last 20 scans stats (not implemented)
- * optional param thread id (default all)
- */
-static char *gethistory(char *params)
-{
-	*buffer = '\0';
-#if 0
-	struct stats_data data[20];
-	int thr = params ? atoi(params) : -1;
-	char *p = buffer;
-	int records = stats_get_history(thr, data, ARRAY_SIZE(data));
-	for (int i = 0; i < records; i++) {
-		time_t ts = data[i].tm_stat;
-		p += sprintf(p, "CPU=%d;KHS=%.2f;DIFF=%.6f;"
-				"COUNT=%u;FOUND=%u;TS=%u|",
-			data[i].cpu_id, data[i].hashrate, data[i].difficulty,
-			data[i].hashcount, data[i].hashfound, (uint32_t)ts);
-	}
-#endif
-	return buffer;
-}
-
 static char *gethelp(char *params);
 struct CMDS {
 	const char *name;
@@ -206,7 +183,6 @@ struct CMDS {
 } cmds[] = {
 	{ "summary", getsummary },
 	{ "threads", getthreads },
-	//{ "histo", gethistory },
 	/* keep it the last */
 	{ "help",    gethelp },
 };
@@ -429,8 +405,8 @@ static void api()
 				break;
 			else {
 				if (!opt_quiet || opt_debug)
-					applog(LOG_WARNING, "API bind to port %d failed - trying again in 15sec", port);
-				sleep(15);
+					applog(LOG_WARNING, "API bind to port %d failed - trying again in 20sec", port);
+				sleep(20);
 			}
 		}
 		else
