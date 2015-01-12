@@ -2601,40 +2601,6 @@ BOOL WINAPI ConsoleHandler(DWORD dwType)
 }
 #endif
 
-static inline void cpuid(int functionnumber, int output[4]) {
-#if defined (_MSC_VER) || defined (__INTEL_COMPILER)
-	// Microsoft or Intel compiler, intrin.h included
-	__cpuidex(output, functionnumber, 0);
-#elif defined(__GNUC__) || defined(__clang__)
-	// use inline assembly, Gnu/AT&T syntax
-	int a, b, c, d;
-	asm volatile("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "a"(functionnumber), "c"(0));
-	output[0] = a;
-	output[1] = b;
-	output[2] = c;
-	output[3] = d;
-#else
-	// unknown platform. try inline assembly with masm/intel syntax
-	__asm {
-		mov eax, functionnumber
-		xor ecx, ecx
-		cpuid;
-		mov esi, output
-		mov[esi], eax
-		mov[esi + 4], ebx
-		mov[esi + 8], ecx
-		mov[esi + 12], edx
-	}
-#endif
-}
-
-static bool has_aes_ni()
-{
-	int cpu_info[4];
-	cpuid(1, cpu_info);
-	return cpu_info[2] & (1 << 25);
-}
-
 static void show_credits()
 {
 	printf("** " PROGRAM_NAME " " PACKAGE_VERSION " by Tanguy Pruvot (tpruvot@github) **\n");

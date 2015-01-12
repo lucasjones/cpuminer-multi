@@ -3,6 +3,8 @@
 
 #include "cpuminer-config.h"
 
+#define USER_AGENT PACKAGE_NAME "/" PACKAGE_VERSION
+
 #ifdef _MSC_VER
 
 #define snprintf(...) _snprintf(__VA_ARGS__)
@@ -183,8 +185,6 @@ static inline void le16enc(void *pp, uint16_t x)
 #define JSON_LOADS(str, err_ptr) json_loads(str, err_ptr)
 #define JSON_LOAD_FILE(path, err_ptr) json_load_file(path, err_ptr)
 #endif
-
-#define USER_AGENT PACKAGE_NAME "/" PACKAGE_VERSION
 
 void sha256_init(uint32_t *state);
 void sha256_transform(uint32_t *state, const uint32_t *block, int swap);
@@ -382,6 +382,7 @@ extern int timeval_subtract(struct timeval *result, struct timeval *x,
 extern bool fulltest(const uint32_t *hash, const uint32_t *target);
 extern void diff_to_target(uint32_t *target, double diff);
 extern void get_currentalgo(char* buf, int sz);
+bool has_aes_ni(void);
 
 struct work {
 	uint32_t data[32];

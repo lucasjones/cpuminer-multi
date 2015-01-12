@@ -17,7 +17,7 @@ dist_man_MANS	= cpuminer.1
 
 cpuminer_SOURCES = \
   cpu-miner.c util.c \
-  api.c sensors.c \
+  api.c sysinfos.c \
   sha3/sph_keccak.c \
   sha3/sph_hefty1.c \
   sha3/sph_groestl.c \
@@ -79,7 +79,6 @@ if ARCH_ARM
 endif
 else
    disable_flags += -DNOASM
-   cpuminer_SOURCES += crypto/aesb-x86-impl.c
 endif
 
 if HAVE_WINDOWS

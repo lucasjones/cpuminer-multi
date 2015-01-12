@@ -40,6 +40,8 @@
 
 #ifdef _MSC_VER // todo: msvc
 #define ASM 0
+#elif defined(__arm__)
+#define ASM 0
 #endif
 
 #ifdef __GNUC__
