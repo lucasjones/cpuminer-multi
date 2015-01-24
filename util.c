@@ -1710,6 +1710,10 @@ void print_hash_tests(void)
 	printpfx("Fresh", hash);
 
 	memset(hash, 0, sizeof hash);
+	groestlhash(&hash[0], &buf[0]);
+	printpfx("Groestl", hash);
+
+	memset(hash, 0, sizeof hash);
 	heavyhash((uint8_t*) &hash[0], (uint8_t*) &buf[0], 32);
 	printpfx("Heavy", hash);
 

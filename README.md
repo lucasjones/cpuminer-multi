@@ -23,9 +23,11 @@ Algorithms
  * ✓ __scrypt__ (Litecoin, Dogecoin, Feathercoin, ...)
  * ✓ __scrypt:N__
  * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, ...)
- * ✓ __blake__ (Neos/Saffron [SFR] Blake-256)
+ * ✓ __blake__ (Saffron [SFR] Blake-256)
  * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
+ * ✓ __dmd-gr__ (Diamond-Groestl)
  * ✓ __fresh__ (FreshCoin)
+ * ✓ __groestl__ (Groestlcoin)
  * ✓ __lyra2__ (VertCoin [VTC])
  * ✓ __neoscrypt__ (Feathercoin)
  * ✓ __nist5__ (MistCoin [MIC], TalkCoin [TAC], ...)
@@ -41,14 +43,13 @@ Algorithms
  * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
  * ? hefty1 (Heavycoin)
  * ? quark (Quarkcoin)
+ * ? qubit* (Qubitcoin, Myriadcoin)
  * ? skein (Skeincoin, Myriadcoin)
  * ? shavite3 (INKcoin)
 
 #### Planned support for
  * *scrypt-jane* (YaCoin, CopperBars, Pennies, Tickets, etc..)
- * *qubit* (Qubitcoin, Myriadcoin)
- * *groestl* (Groestlcoin)
-
+ 
 Dependencies
 ============
 * libcurl http://curl.haxx.se/libcurl/

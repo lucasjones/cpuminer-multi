@@ -191,33 +191,34 @@
     <ClCompile Include="crypto\oaes_lib.c" />
     <ClCompile Include="lyra2\Lyra2.c" />
     <ClCompile Include="lyra2\Sponge.c" />
-    <ClCompile Include="ink.c" />
-    <ClCompile Include="lyra2re.c" />
-    <ClCompile Include="s3.c" />
     <ClCompile Include="crypto\blake2s.c" />
     <ClCompile Include="sha3\sph_hefty1.c" />
     <ClCompile Include="util.c">
       <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
     </ClCompile>
-    <ClCompile Include="blake.c" />
-    <ClCompile Include="cryptonight.c" />
-    <ClCompile Include="fresh.c" />
-    <ClCompile Include="heavy.c" />
-    <ClCompile Include="keccak.c" />
-    <ClCompile Include="neoscrypt.c" />
-    <ClCompile Include="nist5.c" />
-    <ClCompile Include="pentablake.c" />
-    <ClCompile Include="quark.c" />
-    <ClCompile Include="qubit.c" />
-    <ClCompile Include="sha2.c" />
-    <ClCompile Include="scrypt.c">
+    <ClCompile Include="algo\ink.c" />
+    <ClCompile Include="algo\lyra2re.c" />
+    <ClCompile Include="algo\s3.c" />
+    <ClCompile Include="algo\blake.c" />
+    <ClCompile Include="algo\cryptonight.c" />
+    <ClCompile Include="algo\fresh.c" />
+    <ClCompile Include="algo\groestl.c" />
+    <ClCompile Include="algo\heavy.c" />
+    <ClCompile Include="algo\keccak.c" />
+    <ClCompile Include="algo\neoscrypt.c" />
+    <ClCompile Include="algo\nist5.c" />
+    <ClCompile Include="algo\pentablake.c" />
+    <ClCompile Include="algo\quark.c" />
+    <ClCompile Include="algo\qubit.c" />
+    <ClCompile Include="algo\sha2.c" />
+    <ClCompile Include="algo\scrypt.c">
       <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
     </ClCompile>
-    <ClCompile Include="skein.c" />
-    <ClCompile Include="x11.c" />
-    <ClCompile Include="x13.c" />
-    <ClCompile Include="x14.c" />
-    <ClCompile Include="x15.c" />
+    <ClCompile Include="algo\skein.c" />
+    <ClCompile Include="algo\x11.c" />
+    <ClCompile Include="algo\x13.c" />
+    <ClCompile Include="algo\x14.c" />
+    <ClCompile Include="algo\x15.c" />
     <ClCompile Include="sha3\aes_helper.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -305,28 +306,28 @@
     <ClInclude Include="sha3\sph_whirlpool.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="neoscrypt_asm.S">
+    <ClCompile Include="asm\neoscrypt_asm.S">
     </ClCompile>
-    <ClCompile Include="aesb-x86.SS">
+    <ClCompile Include="asm\aesb-x86.SS">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="scrypt-x86.S">
+    <ClCompile Include="asm\scrypt-x86.S">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="sha2-x86.S">
+    <ClCompile Include="asm\sha2-x86.S">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="aesb-x64.S">
+    <ClCompile Include="asm\aesb-x64.S">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="scrypt-x64.S">
+    <ClCompile Include="asm\scrypt-x64.S">
       <ExcludedFromBuild Condition="'$(Platform)'=='Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="sha2-x64.S">
+    <ClCompile Include="asm\sha2-x64.S">
       <ExcludedFromBuild Condition="'$(Platform)'=='Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <None Include="scrypt-arm.S" />
-    <None Include="sha2-arm.S" />
+    <None Include="asm\scrypt-arm.S" />
+    <None Include="asm\sha2-arm.S" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <!-- Copy the required dlls -->

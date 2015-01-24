@@ -129,6 +129,8 @@ enum algos {
 	ALGO_SHAVITE3,    /* Shavite3 */
 	ALGO_BLAKE,       /* Blake */
 	ALGO_FRESH,       /* Fresh */
+	ALGO_DMD_GR,      /* Diamond */
+	ALGO_GROESTL,     /* Groestl */
 	ALGO_LYRA2,       /* Lyra2RE (Vertcoin) */
 	ALGO_NIST5,       /* Nist5 */
 	ALGO_QUBIT,       /* Qubit */
@@ -153,6 +155,8 @@ static const char *algo_names[] = {
 	"shavite3",
 	"blake",
 	"fresh",
+	"dmd-gr",
+	"groestl",
 	"lyra2",
 	"nist5",
 	"qubit",
@@ -250,7 +254,9 @@ Options:\n\
                           sha256d      SHA-256d\n\
                           blake        Blake\n\
                           cryptonight  CryptoNight\n\
+                          dmd-gr       Diamond-Groestl\n\
                           fresh        Fresh\n\
+                          groestl      GroestlCoin\n\
                           heavy        Heavy\n\
                           keccak       Keccak\n\
                           lyra2        Lyra2RE\n\
@@ -854,6 +860,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 
 	/* generate merkle root */
 	merkle_tree = (unsigned char**) malloc(32 * ((1 + tx_count + 1) & ~1));
+
 	sha256d(merkle_tree[0], cbtx, cbtx_size);
 	for (i = 0; i < tx_count; i++) {
 		tmp = json_array_get(txa, i);
@@ -1539,10 +1546,25 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 		memcpy(work->xnonce2, sctx->job.xnonce2, sctx->xnonce2_size);
 
 		/* Generate merkle root */
-		sha256d(merkle_root, sctx->job.coinbase, (int) sctx->job.coinbase_size);
+		switch (opt_algo) {
+			case ALGO_HEAVY:
+				heavyhash(merkle_root, sctx->job.coinbase, (int)sctx->job.coinbase_size);
+				break;
+			case ALGO_GROESTL:
+			case ALGO_KECCAK:
+			//case ALGO_BLAKECOIN:
+				SHA256(sctx->job.coinbase, (int) sctx->job.coinbase_size, merkle_root);
+				break;
+			default:
+				sha256d(merkle_root, sctx->job.coinbase, (int) sctx->job.coinbase_size);
+		}
+
 		for (i = 0; i < sctx->job.merkle_count; i++) {
 			memcpy(merkle_root + 32, sctx->job.merkle[i], 32);
-			sha256d(merkle_root, merkle_root, 64);
+			if (opt_algo == ALGO_HEAVY)
+				heavyhash(merkle_root, merkle_root, 64);
+			else
+				sha256d(merkle_root, merkle_root, 64);
 		}
 
 		/* Increment extranonce2 */
@@ -1582,9 +1604,13 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_NEOSCRYPT:
 				diff_to_target(work->target, sctx->job.diff / (65536.0 * opt_diff_factor));
 				break;
+			case ALGO_FRESH:
+			case ALGO_DMD_GR:
+			case ALGO_GROESTL:
 			case ALGO_QUBIT:
 				diff_to_target(work->target, sctx->job.diff / (256.0 * opt_diff_factor));
 				break;
+			case ALGO_KECCAK:
 			case ALGO_LYRA2:
 				diff_to_target(work->target, sctx->job.diff / (128.0 * opt_diff_factor));
 				break;
@@ -1714,6 +1740,8 @@ static void *miner_thread(void *userdata)
 			case ALGO_LYRA2:
 				max64 = 0xffff;
 				break;
+			case ALGO_DMD_GR:
+			case ALGO_GROESTL:
 			case ALGO_FRESH:
 			case ALGO_X11:
 				max64 = 0x3ffff;
@@ -1787,6 +1815,11 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_FRESH:
 			rc = scanhash_fresh(thr_id, work.data, work.target, max_nonce,
+					&hashes_done);
+			break;
+		case ALGO_DMD_GR:
+		case ALGO_GROESTL:
+			rc = scanhash_groestl(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
 			break;
 		case ALGO_LYRA2:

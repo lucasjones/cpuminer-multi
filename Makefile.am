@@ -44,38 +44,40 @@ cpuminer_SOURCES = \
   crypto/hash.c \
   crypto/aesb.c \
   lyra2/Lyra2.c lyra2/Sponge.c \
-  blake.c \
-  cryptonight.c \
-  fresh.c \
-  heavy.c \
-  ink.c \
-  lyra2re.c \
-  keccak.c \
-  pentablake.c \
-  quark.c \
-  neoscrypt.c \
-  nist5.c \
-  qubit.c \
-  scrypt.c sha2.c \
-  skein.c \
-  s3.c \
-  x11.c \
-  x13.c \
-  x14.c \
-  x15.c
+  algo/blake.c \
+  algo/cryptonight.c \
+  algo/fresh.c \
+  algo/groestl.c \
+  algo/heavy.c \
+  algo/ink.c \
+  algo/lyra2re.c \
+  algo/keccak.c \
+  algo/pentablake.c \
+  algo/quark.c \
+  algo/neoscrypt.c \
+  algo/nist5.c \
+  algo/qubit.c \
+  algo/scrypt.c \
+  algo/sha2.c \
+  algo/skein.c \
+  algo/s3.c \
+  algo/x11.c \
+  algo/x13.c \
+  algo/x14.c \
+  algo/x15.c
 
 disable_flags =
 
 if USE_ASM
-   cpuminer_SOURCES += neoscrypt_asm.S
+   cpuminer_SOURCES += asm/neoscrypt_asm.S
 if ARCH_x86
-   cpuminer_SOURCES += sha2-x86.S scrypt-x86.S aesb-x86.S crypto/aesb-x86-impl.c
+   cpuminer_SOURCES += asm/sha2-x86.S asm/scrypt-x86.S asm/aesb-x86.S
 endif
 if ARCH_x86_64
-   cpuminer_SOURCES += sha2-x64.S scrypt-x64.S aesb-x64.S
+   cpuminer_SOURCES += asm/sha2-x64.S asm/scrypt-x64.S asm/aesb-x64.S
 endif
 if ARCH_ARM
-   cpuminer_SOURCES += sha2-arm.S scrypt-arm.S
+   cpuminer_SOURCES += asm/sha2-arm.S asm/scrypt-arm.S
 endif
 else
    disable_flags += -DNOASM

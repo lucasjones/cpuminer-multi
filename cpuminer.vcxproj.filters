@@ -2,7 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="cpu-miner.c" />
-    <ClCompile Include="scrypt.c" />
     <ClCompile Include="util.c" />
     <ClCompile Include="sha3\sph_blake.c">
       <Filter>sph</Filter>
@@ -52,20 +51,21 @@
     <ClCompile Include="sha3\sph_whirlpool.c">
       <Filter>sph</Filter>
     </ClCompile>
-    <ClCompile Include="blake.c" />
-    <ClCompile Include="cryptonight.c" />
-    <ClCompile Include="fresh.c" />
-    <ClCompile Include="heavy.c" />
-    <ClCompile Include="keccak.c" />
-    <ClCompile Include="neoscrypt.c" />
-    <ClCompile Include="pentablake.c" />
-    <ClCompile Include="quark.c" />
-    <ClCompile Include="sha2.c" />
-    <ClCompile Include="skein.c" />
-    <ClCompile Include="x11.c" />
-    <ClCompile Include="x13.c" />
-    <ClCompile Include="x14.c" />
-    <ClCompile Include="x15.c" />
+    <ClCompile Include="algo\blake.c" />
+    <ClCompile Include="algo\cryptonight.c" />
+    <ClCompile Include="algo\fresh.c" />
+    <ClCompile Include="algo\heavy.c" />
+    <ClCompile Include="algo\keccak.c" />
+    <ClCompile Include="algo\neoscrypt.c" />
+    <ClCompile Include="algo\pentablake.c" />
+    <ClCompile Include="algo\quark.c" />
+    <ClCompile Include="algo\scrypt.c" />
+    <ClCompile Include="algo\sha2.c" />
+    <ClCompile Include="algo\skein.c" />
+    <ClCompile Include="algo\x11.c" />
+    <ClCompile Include="algo\x13.c" />
+    <ClCompile Include="algo\x14.c" />
+    <ClCompile Include="algo\x15.c" />
     <ClCompile Include="sha3\sph_x15_helper.c">
       <Filter>sph</Filter>
     </ClCompile>
@@ -137,28 +137,28 @@
       <Filter>crypto</Filter>
     </ClCompile>
     <ClCompile Include="lyra2re.c" />
-    <ClCompile Include="neoscrypt_asm.S" />
-    <ClCompile Include="scrypt-x86.S">
+    <ClCompile Include="asm\neoscrypt_asm.S" />
+    <ClCompile Include="asm\scrypt-x86.S">
       <Filter>arch\x86</Filter>
     </ClCompile>
-    <ClCompile Include="scrypt-x64.S">
+    <ClCompile Include="asm\scrypt-x64.S">
       <Filter>arch\x64</Filter>
     </ClCompile>
-    <ClCompile Include="sha2-x86.S">
+    <ClCompile Include="asm\sha2-x86.S">
       <Filter>arch\x86</Filter>
     </ClCompile>
-    <ClCompile Include="sha2-x64.S">
+    <ClCompile Include="asm\sha2-x64.S">
       <Filter>arch\x64</Filter>
     </ClCompile>
-    <ClCompile Include="aesb-x64.S">
+    <ClCompile Include="asm\aesb-x64.S">
       <Filter>arch\x64</Filter>
     </ClCompile>
-    <ClCompile Include="aesb-x86.SS">
+    <ClCompile Include="asm\aesb-x86.SS">
       <Filter>arch\x86</Filter>
     </ClCompile>
-    <ClCompile Include="s3.c" />
-    <ClCompile Include="nist5.c" />
-    <ClCompile Include="qubit.c" />
+    <ClCompile Include="algo\s3.c" />
+    <ClCompile Include="algo\nist5.c" />
+    <ClCompile Include="algo\qubit.c" />
     <ClCompile Include="api.c" />
     <ClCompile Include="sysinfos.c" />
     <ClCompile Include="compat\jansson\error.c">

@@ -191,7 +191,7 @@ extern int scanhash_sha256d(int thr_id, uint32_t *pdata, const uint32_t *ptarget
 extern unsigned char *scrypt_buffer_alloc(int N);
 extern int scanhash_scrypt(int thr_id, uint32_t *pdata,
                             unsigned char *scratchbuf, const uint32_t *ptarget,
-							uint32_t max_nonce, uint64_t *hashes_done, uint32_t N);
+                            uint32_t max_nonce, uint64_t *hashes_done, uint32_t N);
 
 extern int scanhash_keccak(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
@@ -214,6 +214,9 @@ extern int scanhash_blake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
 extern int scanhash_fresh(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
+
+extern int scanhash_groestl(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
 extern int scanhash_lyra2(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
@@ -444,6 +447,7 @@ void print_hash_tests(void);
 void sha256d(unsigned char *hash, const unsigned char *data, int len);
 void blakehash(void *state, const void *input);
 void cryptonight_hash(void* output, const void* input, size_t len);
+void groestlhash(void *output, const void *input);
 void heavyhash(unsigned char* output, const unsigned char* input, int len);
 void quarkhash(void *state, const void *input);
 void skeinhash(void *state, const void *input);
