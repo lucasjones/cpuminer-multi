@@ -1706,6 +1706,10 @@ void print_hash_tests(void)
 	printpfx("Blake", hash);
 
 	memset(hash, 0, sizeof hash);
+	blakecoinhash(&hash[0], &buf[0]);
+	printpfx("Blakecoin", hash);
+
+	memset(hash, 0, sizeof hash);
 	freshhash(&hash[0], &buf[0], 80);
 	printpfx("Fresh", hash);
 

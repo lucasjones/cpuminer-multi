@@ -26,6 +26,7 @@ cpuminer_SOURCES = \
   sha3/sph_jh.c \
   sha3/sph_shavite.c \
   sha3/sph_blake.c \
+  sha3/mod_blakecoin.c \
   sha3/sph_luffa.c \
   sha3/sph_cubehash.c \
   sha3/sph_simd.c \
@@ -47,6 +48,7 @@ cpuminer_SOURCES = \
   crypto/aesb.c \
   lyra2/Lyra2.c lyra2/Sponge.c \
   algo/blake.c \
+  algo/blakecoin.c \
   algo/cryptonight.c \
   algo/fresh.c \
   algo/groestl.c \

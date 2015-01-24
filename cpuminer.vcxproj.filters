@@ -6,6 +6,9 @@
     <ClCompile Include="sha3\sph_blake.c">
       <Filter>sph</Filter>
     </ClCompile>
+    <ClCompile Include="sha3\mod_blakecoin.c">
+      <Filter>sph</Filter>
+    </ClCompile>
     <ClCompile Include="sha3\sph_bmw.c">
       <Filter>sph</Filter>
     </ClCompile>
@@ -58,6 +61,7 @@
       <Filter>sph</Filter>
     </ClCompile>
     <ClCompile Include="algo\blake.c" />
+    <ClCompile Include="algo\blakecoin.c" />
     <ClCompile Include="algo\cryptonight.c" />
     <ClCompile Include="algo\fresh.c" />
     <ClCompile Include="algo\groestl.c" />

@@ -1,6 +1,11 @@
 #include "miner.h"
 
+#define BLAKE32_ROUNDS 8
 #include "sha3/sph_blake.h"
+
+void blakecoin_init(void *cc);
+void blakecoin(void *cc, const void *data, size_t len);
+void blakecoin_close(void *cc, void *dst);
 
 #include <string.h>
 #include <stdint.h>
@@ -13,11 +18,11 @@ static bool ctx_midstate_done = false;
 
 static void init_blake_hash(void)
 {
-	sph_blake256_init(&blake_mid);
+	blakecoin_init(&blake_mid);
 	ctx_midstate_done = true;
 }
 
-void blakehash(void *state, const void *input)
+void blakecoinhash(void *state, const void *input)
 {
 	sph_blake256_context ctx;
 
@@ -28,17 +33,17 @@ void blakehash(void *state, const void *input)
 	// do one memcopy to get a fresh context
 	if (!ctx_midstate_done) {
 		init_blake_hash();
-		sph_blake256(&blake_mid, input, 64);
+		blakecoin(&blake_mid, input, 64);
 	}
 	memcpy(&ctx, &blake_mid, sizeof(blake_mid));
 
-	sph_blake256(&ctx, ending, 16);
-	sph_blake256_close(&ctx, hash);
+	blakecoin(&ctx, ending, 16);
+	blakecoin_close(&ctx, hash);
 
 	memcpy(state, hash, 32);
 }
 
-int scanhash_blake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+int scanhash_blakecoin(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 					uint32_t max_nonce, uint64_t *hashes_done)
 {
 	const uint32_t first_nonce = pdata[19];
@@ -65,7 +70,7 @@ int scanhash_blake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 
 	do {
 		be32enc(&endiandata[19], n);
-		blakehash(hash64, endiandata);
+		blakecoinhash(hash64, endiandata);
 #ifndef DEBUG_ALGO
 		if (hash64[7] <= HTarget && fulltest(hash64, ptarget)) {
 			*hashes_done = n - first_nonce + 1;

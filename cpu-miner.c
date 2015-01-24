@@ -127,7 +127,8 @@ enum algos {
 	ALGO_QUARK,       /* Quark */
 	ALGO_SKEIN,       /* Skein */
 	ALGO_SHAVITE3,    /* Shavite3 */
-	ALGO_BLAKE,       /* Blake */
+	ALGO_BLAKE,       /* Blake 256 */
+	ALGO_BLAKECOIN,   /* Simplified 8 rounds Blake 256 */
 	ALGO_FRESH,       /* Fresh */
 	ALGO_DMD_GR,      /* Diamond */
 	ALGO_GROESTL,     /* Groestl */
@@ -155,6 +156,7 @@ static const char *algo_names[] = {
 	"skein",
 	"shavite3",
 	"blake",
+	"blakecoin",
 	"fresh",
 	"dmd-gr",
 	"groestl",
@@ -254,7 +256,8 @@ Options:\n\
                           scrypt       scrypt(1024, 1, 1) (default)\n\
                           scrypt:N     scrypt(N, 1, 1)\n\
                           sha256d      SHA-256d\n\
-                          blake        Blake\n\
+                          blake        Blake-256 (SFR)\n\
+                          blakecoin    Blakecoin\n\
                           cryptonight  CryptoNight\n\
                           dmd-gr       Diamond-Groestl\n\
                           fresh        Fresh\n\
@@ -1555,7 +1558,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 				break;
 			case ALGO_GROESTL:
 			case ALGO_KECCAK:
-			//case ALGO_BLAKECOIN:
+			case ALGO_BLAKECOIN:
 				SHA256(sctx->job.coinbase, (int) sctx->job.coinbase_size, merkle_root);
 				break;
 			default:
@@ -1763,6 +1766,7 @@ static void *miner_thread(void *userdata)
 				max64 = 0x3ffff;
 				break;
 			case ALGO_BLAKE:
+			case ALGO_BLAKECOIN:
 				max64 = 0x7ffffLL;
 				break;
 			default:
@@ -1815,6 +1819,10 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_BLAKE:
 			rc = scanhash_blake(thr_id, work.data, work.target, max_nonce,
+					&hashes_done);
+			break;
+		case ALGO_BLAKECOIN:
+			rc = scanhash_blakecoin(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
 			break;
 		case ALGO_FRESH:

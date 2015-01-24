@@ -185,6 +185,12 @@ void sha256_transform_8way(uint32_t *state, const uint32_t *block, int swap);
 #endif
 #endif
 
+extern int scanhash_blake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
+
+extern int scanhash_blakecoin(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
+
 extern int scanhash_sha256d(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
@@ -204,19 +210,13 @@ extern int scanhash_quark(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 
 extern void init_quarkhash_contexts();
 
-extern int scanhash_skein(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-                            uint32_t max_nonce, uint64_t *hashes_done);
-
-extern int scanhash_ink(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-                            uint32_t max_nonce, uint64_t *hashes_done);
-
-extern int scanhash_blake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-                            uint32_t max_nonce, uint64_t *hashes_done);
-
 extern int scanhash_fresh(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
 extern int scanhash_groestl(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
+
+extern int scanhash_ink(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
 extern int scanhash_lyra2(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
@@ -232,6 +232,9 @@ extern int scanhash_nist5(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
 extern int scanhash_qubit(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
+
+extern int scanhash_skein(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
 extern int scanhash_s3(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
@@ -449,6 +452,7 @@ void applog_hash(void *hash);
 void print_hash_tests(void);
 void sha256d(unsigned char *hash, const unsigned char *data, int len);
 void blakehash(void *state, const void *input);
+void blakecoinhash(void *state, const void *input);
 void cryptonight_hash(void* output, const void* input, size_t len);
 void groestlhash(void *output, const void *input);
 void heavyhash(unsigned char* output, const unsigned char* input, int len);

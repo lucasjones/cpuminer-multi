@@ -200,6 +200,7 @@
     <ClCompile Include="algo\lyra2re.c" />
     <ClCompile Include="algo\s3.c" />
     <ClCompile Include="algo\blake.c" />
+    <ClCompile Include="algo\blakecoin.c" />
     <ClCompile Include="algo\cryptonight.c" />
     <ClCompile Include="algo\fresh.c" />
     <ClCompile Include="algo\groestl.c" />
@@ -224,6 +225,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="sha3\sph_blake.c" />
+    <ClCompile Include="sha3\mod_blakecoin.c" />
     <ClCompile Include="sha3\sph_bmw.c" />
     <ClCompile Include="sha3\sph_cubehash.c" />
     <ClCompile Include="sha3\sph_echo.c" />
