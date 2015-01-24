@@ -7,9 +7,6 @@
 
 #ifdef _MSC_VER
 
-#define snprintf(...) _snprintf(__VA_ARGS__)
-#define strdup(...) _strdup(__VA_ARGS__)
-
 #undef USE_ASM  /* to fix */
 
 #ifdef NOASM
@@ -24,7 +21,7 @@
 #define __i386__ 1
 #endif
 
-#endif
+#endif /* _MSC_VER */
 
 #include <stdbool.h>
 #include <inttypes.h>
@@ -61,15 +58,6 @@ void *alloca (size_t);
 # endif
 #endif
 
-#ifdef _MSC_VER
-	#define strncasecmp(x,y,z) _strnicmp(x,y,z)
-	#define strcasecmp(x,y) _stricmp(x,y)
-	typedef int ssize_t;
-	#define _ALIGN(x) __declspec(align(x))
-#else
-	#define _ALIGN(x) __attribute__ ((aligned(x)))
-#endif
-
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
 #define LOG_BLUE 0x10 /* unique value */
@@ -85,15 +73,7 @@ enum {
 };
 #endif
 
-#undef unlikely
-#undef likely
-#if defined(__GNUC__) && (__GNUC__ > 2) && defined(__OPTIMIZE__)
-#define unlikely(expr) (__builtin_expect(!!(expr), 0))
-#define likely(expr) (__builtin_expect(!!(expr), 1))
-#else
-#define unlikely(expr) (expr)
-#define likely(expr) (expr)
-#endif
+#include "compat.h"
 
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))

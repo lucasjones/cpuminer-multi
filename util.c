@@ -34,7 +34,6 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #endif
-#include "compat.h"
 #include "miner.h"
 #include "elist.h"
 

@@ -31,7 +31,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "compat.h"
 #include "miner.h"
 
 #ifndef WIN32
@@ -346,7 +345,7 @@ static int websocket_handshake(SOCKETTYPE c, char *result, char *clientkey)
 		// WebSocket Frame - Header + Data
 		memcpy(p, hd, frames);
 		memcpy(p + frames, result, (size_t)datalen);
-		send(c, (const char*)data, strlen(answer) + frames + (size_t)datalen + 1, 0);
+		send(c, (const char*)data, (int) (strlen(answer) + frames + (size_t)datalen + 1), 0);
 		free(data);
 	}
 	return 0;
