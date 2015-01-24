@@ -1,7 +1,7 @@
 #ifndef __MINER_H__
 #define __MINER_H__
 
-#include "cpuminer-config.h"
+#include <cpuminer-config.h>
 
 #define USER_AGENT PACKAGE_NAME "/" PACKAGE_VERSION
 

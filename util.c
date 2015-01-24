@@ -10,7 +10,7 @@
  */
 
 #define _GNU_SOURCE
-#include "cpuminer-config.h"
+#include <cpuminer-config.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -814,7 +814,7 @@ static bool send_line(curl_socket_t sock, char *s)
 
 		FD_ZERO(&wd);
 		FD_SET(sock, &wd);
-		if (select(sock + 1, NULL, &wd, NULL, &timeout) < 1)
+		if (select((int) (sock + 1), NULL, &wd, NULL, &timeout) < 1)
 			return false;
 		n = send(sock, s + sent, len, 0);
 		if (n < 0) {
@@ -852,7 +852,7 @@ static bool socket_full(curl_socket_t sock, int timeout)
 	FD_SET(sock, &rd);
 	tv.tv_sec = timeout;
 	tv.tv_usec = 0;
-	if (select(sock + 1, &rd, NULL, NULL, &tv) > 0)
+	if (select((int)(sock + 1), &rd, NULL, NULL, &tv) > 0)
 		return true;
 	return false;
 }

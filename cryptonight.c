@@ -4,8 +4,6 @@
 
 // Modified for CPUminer by Lucas Jones
 
-#include "cpuminer-config.h"
-
 #include "miner.h"
 
 #if defined(__arm__) || defined(_MSC_VER)
@@ -27,6 +25,10 @@
 
 #if __GNUC__ == 4 && __GNUC_MINOR__ >= 4 && __GNUC_MINOR__ < 6
 typedef unsigned int uint128_t __attribute__ ((__mode__ (TI)));
+#elif defined (_MSC_VER)
+/* only for mingw64 on windows */
+#undef  USE_INT128
+#define USE_INT128 (0)
 #else
 typedef __uint128_t uint128_t;
 #endif

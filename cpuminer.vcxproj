@@ -180,8 +180,7 @@
       <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
     </ClCompile>
     <ClCompile Include="api.c" />
-    <ClCompile Include="sensors.c" />
-    <ClCompile Include="crypto\aesb-x86-impl.c" />
+    <ClCompile Include="sysinfos.c" />
     <ClCompile Include="crypto\aesb.c" />
     <ClCompile Include="crypto\c_blake256.c" />
     <ClCompile Include="crypto\c_groestl.c" />
@@ -254,7 +253,7 @@
     <ClInclude Include="compat\sys\time.h" />
     <ClInclude Include="compat\unistd.h" />
     <ClInclude Include="compat\winansi.h" />
-    <ClInclude Include="cpuminer-config.h" />
+    <ClInclude Include="compat\cpuminer-config.h" />
     <ClInclude Include="crypto\blake2s.h" />
     <ClInclude Include="crypto\c_blake256.h" />
     <ClInclude Include="crypto\c_groestl.h" />

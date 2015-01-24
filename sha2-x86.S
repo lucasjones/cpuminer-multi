@@ -7,7 +7,7 @@
  * any later version.  See COPYING for more details.
  */
 
-#include "cpuminer-config.h"
+#include <cpuminer-config.h>
 
 #if defined(__linux__) && defined(__ELF__)
 	.section .note.GNU-stack,"",%progbits

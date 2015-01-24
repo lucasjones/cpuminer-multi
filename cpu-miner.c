@@ -10,7 +10,7 @@
  * any later version.  See COPYING for more details.
  */
 
-#include "cpuminer-config.h"
+#include <cpuminer-config.h>
 #define _GNU_SOURCE
 
 #include <stdio.h>
@@ -54,8 +54,6 @@ BOOL WINAPI ConsoleHandler(DWORD);
 #include <Mmsystem.h>
 #pragma comment(lib, "winmm.lib")
 #endif
-
-#define PROGRAM_NAME	"cpuminer-multi"
 
 #define LP_SCANTIME		60
 #define JSON_BUF_LEN 345
@@ -245,7 +243,7 @@ struct option {
 #endif
 
 static char const usage[] = "\
-Usage: " PROGRAM_NAME " [OPTIONS]\n\
+Usage: " PACKAGE_NAME " [OPTIONS]\n\
 Options:\n\
   -a, --algo=ALGO       specify the algorithm to use\n\
                           scrypt       scrypt(1024, 1, 1) (default)\n\
@@ -2209,7 +2207,7 @@ static void show_version_and_exit(void)
 static void show_usage_and_exit(int status)
 {
 	if (status)
-		fprintf(stderr, "Try `" PROGRAM_NAME " --help' for more information.\n");
+		fprintf(stderr, "Try `" PACKAGE_NAME " --help' for more information.\n");
 	else
 		printf(usage);
 	exit(status);
@@ -2603,7 +2601,7 @@ BOOL WINAPI ConsoleHandler(DWORD dwType)
 
 static void show_credits()
 {
-	printf("** " PROGRAM_NAME " " PACKAGE_VERSION " by Tanguy Pruvot (tpruvot@github) **\n");
+	printf("** " PACKAGE_NAME " " PACKAGE_VERSION " by Tanguy Pruvot (tpruvot@github) **\n");
 	printf(CL_GRY " based on Lucas Jones fork of pooler cpuminer 2.4" CL_N "\n\n");
 	printf("BTC donation address: 1FhDPLPpw18X4srecguG3MxJYe4a1JsZnd\n\n");
 }
