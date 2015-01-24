@@ -132,6 +132,7 @@ enum algos {
 	ALGO_DMD_GR,      /* Diamond */
 	ALGO_GROESTL,     /* Groestl */
 	ALGO_LYRA2,       /* Lyra2RE (Vertcoin) */
+	ALGO_MYR_GR,      /* Myriad Groestl */
 	ALGO_NIST5,       /* Nist5 */
 	ALGO_QUBIT,       /* Qubit */
 	ALGO_S3,          /* S3 */
@@ -158,6 +159,7 @@ static const char *algo_names[] = {
 	"dmd-gr",
 	"groestl",
 	"lyra2",
+	"myr-gr",
 	"nist5",
 	"qubit",
 	"s3",
@@ -260,6 +262,7 @@ Options:\n\
                           heavy        Heavy\n\
                           keccak       Keccak\n\
                           lyra2        Lyra2RE\n\
+                          myr-gr       Myriad-Groestl\n\
                           neoscrypt    NeoScrypt(128, 2, 1)\n\
                           nist5        Nist5\n\
                           pentablake   Pentablake\n\
@@ -1741,8 +1744,9 @@ static void *miner_thread(void *userdata)
 				max64 = 0xffff;
 				break;
 			case ALGO_DMD_GR:
-			case ALGO_GROESTL:
 			case ALGO_FRESH:
+			case ALGO_GROESTL:
+			case ALGO_MYR_GR:
 			case ALGO_X11:
 				max64 = 0x3ffff;
 				break;
@@ -1824,6 +1828,10 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_LYRA2:
 			rc = scanhash_lyra2(thr_id, work.data, work.target, max_nonce,
+				&hashes_done);
+			break;
+		case ALGO_MYR_GR:
+			rc = scanhash_myriad(thr_id, work.data, work.target, max_nonce,
 				&hashes_done);
 			break;
 		case ALGO_NIST5:

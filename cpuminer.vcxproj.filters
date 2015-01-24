@@ -36,6 +36,12 @@
     <ClCompile Include="sha3\sph_luffa.c">
       <Filter>sph</Filter>
     </ClCompile>
+    <ClCompile Include="sha3\sph_sha2.c">
+      <Filter>sph</Filter>
+    </ClCompile>
+    <ClCompile Include="sha3\sph_sha2big.c">
+      <Filter>sph</Filter>
+    </ClCompile>
     <ClCompile Include="sha3\sph_shabal.c">
       <Filter>sph</Filter>
     </ClCompile>
@@ -54,8 +60,10 @@
     <ClCompile Include="algo\blake.c" />
     <ClCompile Include="algo\cryptonight.c" />
     <ClCompile Include="algo\fresh.c" />
+    <ClCompile Include="algo\groestl.c" />
     <ClCompile Include="algo\heavy.c" />
     <ClCompile Include="algo\keccak.c" />
+    <ClCompile Include="algo\myr-groestl.c" />
     <ClCompile Include="algo\neoscrypt.c" />
     <ClCompile Include="algo\pentablake.c" />
     <ClCompile Include="algo\quark.c" />
@@ -66,7 +74,7 @@
     <ClCompile Include="algo\x13.c" />
     <ClCompile Include="algo\x14.c" />
     <ClCompile Include="algo\x15.c" />
-    <ClCompile Include="sha3\sph_x15_helper.c">
+    <ClCompile Include="sha3\md_helper.c">
       <Filter>sph</Filter>
     </ClCompile>
     <ClCompile Include="sha3\aes_helper.c">
@@ -206,6 +214,9 @@
       <Filter>sph</Filter>
     </ClInclude>
     <ClInclude Include="sha3\sph_luffa.h">
+      <Filter>sph</Filter>
+    </ClInclude>
+    <ClInclude Include="sha3\sph_sha2.h">
       <Filter>sph</Filter>
     </ClInclude>
     <ClInclude Include="sha3\sph_shabal.h">

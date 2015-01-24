@@ -205,6 +205,7 @@
     <ClCompile Include="algo\groestl.c" />
     <ClCompile Include="algo\heavy.c" />
     <ClCompile Include="algo\keccak.c" />
+    <ClCompile Include="algo\myr-groestl.c" />
     <ClCompile Include="algo\neoscrypt.c" />
     <ClCompile Include="algo\nist5.c" />
     <ClCompile Include="algo\pentablake.c" />
@@ -231,6 +232,8 @@
     <ClCompile Include="sha3\sph_jh.c" />
     <ClCompile Include="sha3\sph_keccak.c" />
     <ClCompile Include="sha3\sph_luffa.c" />
+    <ClCompile Include="sha3\sph_sha2.c" />
+    <ClCompile Include="sha3\sph_sha2big.c" />
     <ClCompile Include="sha3\sph_shabal.c" />
     <ClCompile Include="sha3\sph_shavite.c" />
     <ClCompile Include="sha3\sph_simd.c" />
@@ -240,7 +243,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="sha3\sph_whirlpool.c" />
-    <ClCompile Include="sha3\sph_x15_helper.c">
+    <ClCompile Include="sha3\md_helper.c">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>
@@ -297,6 +300,7 @@
     <ClInclude Include="sha3\sph_jh.h" />
     <ClInclude Include="sha3\sph_keccak.h" />
     <ClInclude Include="sha3\sph_luffa.h" />
+    <ClInclude Include="sha3\sph_sha2.h" />
     <ClInclude Include="sha3\sph_shabal.h" />
     <ClInclude Include="sha3\sph_shavite.h" />
     <ClInclude Include="sha3\sph_simd.h" />

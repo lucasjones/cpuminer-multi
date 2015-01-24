@@ -29,6 +29,7 @@ Algorithms
  * ✓ __fresh__ (FreshCoin)
  * ✓ __groestl__ (Groestlcoin)
  * ✓ __lyra2__ (VertCoin [VTC])
+ * ✓ __myr-gr__ (Myriad-Groestl)
  * ✓ __neoscrypt__ (Feathercoin)
  * ✓ __nist5__ (MistCoin [MIC], TalkCoin [TAC], ...)
  * ✓ __pentablake__ (Joincoin)

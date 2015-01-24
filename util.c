@@ -1726,6 +1726,10 @@ void print_hash_tests(void)
 	printpfx("Lyra2", hash);
 
 	memset(hash, 0, sizeof hash);
+	myriadhash(&hash[0], &buf[0]);
+	printpfx("Myriad", hash);
+
+	memset(hash, 0, sizeof hash);
 	neoscrypt((uchar*) &hash[0], (uchar*)&buf[0], 80000620);
 	printpfx("Neoscrypt", hash);
 

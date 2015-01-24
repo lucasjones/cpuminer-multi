@@ -32,6 +32,8 @@ cpuminer_SOURCES = \
   sha3/sph_echo.c \
   sha3/sph_hamsi.c \
   sha3/sph_fugue.c \
+  sha3/sph_sha2.c \
+  sha3/sph_sha2big.c \
   sha3/sph_shabal.c \
   sha3/sph_whirlpool.c \
   crypto/blake2s \
@@ -51,6 +53,7 @@ cpuminer_SOURCES = \
   algo/heavy.c \
   algo/ink.c \
   algo/lyra2re.c \
+  algo/myr-groestl.c \
   algo/keccak.c \
   algo/pentablake.c \
   algo/quark.c \

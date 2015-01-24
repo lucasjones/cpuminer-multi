@@ -222,6 +222,9 @@ extern int scanhash_groestl(int thr_id, uint32_t *pdata, const uint32_t *ptarget
 extern int scanhash_lyra2(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
+extern int scanhash_myriad(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
+
 extern int scanhash_neoscrypt(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done, uint32_t profile);
 
@@ -455,6 +458,7 @@ void freshhash(void* output, const void* input, uint32_t len);
 void keccakhash(void *state, const void *input);
 void inkhash(void *state, const void *input); /* shavite */
 void lyra2_hash(void *state, const void *input);
+void myriadhash(void *output, const void *input);
 void neoscrypt(unsigned char *output, const unsigned char *password, uint32_t profile);
 void nist5hash(void *output, const void *input);
 void pentablakehash(void *output, const void *input);
