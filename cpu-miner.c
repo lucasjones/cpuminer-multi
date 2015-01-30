@@ -2751,7 +2751,7 @@ int main(int argc, char *argv[]) {
 	if (num_processors < 1)
 		num_processors = 1;
 	if (!opt_n_threads)
-		opt_n_threads = num_processors - 1;
+		opt_n_threads = num_processors;
 	if (!opt_n_threads)
 		opt_n_threads = 1;
 
