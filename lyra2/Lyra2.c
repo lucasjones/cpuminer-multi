@@ -195,7 +195,7 @@ int LYRA2(void *K, uint64_t kLen, const void *pwd, uint64_t pwdlen, const void *
 	absorbBlock(state, memMatrix[rowa]);
 
 	//Squeezes the key
-	squeeze(state, K, (size_t) kLen);
+	squeeze(state, K, (unsigned int) kLen);
 	//==========================================================================/
 
 	//========================= Freeing the memory =============================//

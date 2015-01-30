@@ -255,7 +255,7 @@ extern int scanhash_x15(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 extern int scanhash_pentablake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
-extern void cryptonight_hash(void* output, const void* input, size_t input_len);
+extern void cryptonight_hash(void* output, const void* input, int input_len);
 
 extern int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
@@ -282,8 +282,9 @@ struct thr_api {
 /* end of api */
 
 struct thr_info {
-	int		id;
-	pthread_t	pth;
+	int id;
+	pthread_t pth;
+	pthread_attr_t attr;
 	struct thread_q	*q;
 	struct cpu_info cpu;
 };
@@ -453,7 +454,7 @@ void print_hash_tests(void);
 void sha256d(unsigned char *hash, const unsigned char *data, int len);
 void blakehash(void *state, const void *input);
 void blakecoinhash(void *state, const void *input);
-void cryptonight_hash(void* output, const void* input, size_t len);
+void cryptonight_hash(void* output, const void* input, int len);
 void groestlhash(void *output, const void *input);
 void heavyhash(unsigned char* output, const unsigned char* input, int len);
 void quarkhash(void *state, const void *input);

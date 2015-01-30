@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #pragma once
+#ifndef INT_UTILS_H_
+#define INT_UTILS_H_
 
 #include <assert.h>
 #include <stdbool.h>
@@ -14,7 +16,7 @@
 #define inline __inline
 #endif
 
-#if defined(_WIN32)
+#if defined(WIN32)
 #include <stdlib.h>
 //#define IS_LITTLE_ENDIAN (1 == *(unsigned char *)&(const int){1})
 #define LITTLE_ENDIAN 1234
@@ -22,7 +24,6 @@
 #define BYTE_ORDER LITTLE_ENDIAN
 
 static inline uint32_t rol32(uint32_t x, int r) {
-  static_assert(sizeof(uint32_t) == sizeof(unsigned int), "this code assumes 32-bit integers");
   return _rotl(x, r);
 }
 
@@ -187,3 +188,5 @@ static_assert(false, "BYTE_ORDER is undefined. Perhaps, GNU extensions are not e
 #define memcpy_swap64be memcpy_ident64
 #define memcpy_swap64le memcpy_swap64
 #endif
+
+#endif /* INT_UTILS_H_ */

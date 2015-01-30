@@ -267,6 +267,7 @@
     <ClInclude Include="crypto\c_keccak.h" />
     <ClInclude Include="crypto\c_skein.h" />
     <ClInclude Include="crypto\hash-ops.h" />
+    <ClInclude Include="crypto\int-util.h" />
     <ClInclude Include="crypto\oaes_lib.h" />
     <ClInclude Include="elist.h" />
     <ClInclude Include="lyra2\Lyra2.h" />

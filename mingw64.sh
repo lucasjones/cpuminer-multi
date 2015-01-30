@@ -4,7 +4,7 @@ CURL_PREFIX=/usr/local
 SSL_PREFIX=/usr/local/ssl
 
 # gcc 4.4
-extracflags="-O2 -Wall -D_REENTRANT -fmerge-all-constants" # -funroll-loops -fvariable-expansion-in-unroller -fbranch-target-load-optimize2 -fsched2-use-superblocks -falign-loops=16 -falign-functions=16 -falign-jumps=16 -falign-labels=16"
+extracflags="-O3 -Wall -D_REENTRANT -fmerge-all-constants" # -funroll-loops -fvariable-expansion-in-unroller -fbranch-target-load-optimize2 -fsched2-use-superblocks -falign-loops=16 -falign-functions=16 -falign-jumps=16 -falign-labels=16"
 
 # gcc 4.8+
 # extracflags="$extracflags -Ofast -fuse-linker-plugin -ftree-loop-if-convert-stores" # -flto "
@@ -16,3 +16,6 @@ CFLAGS="-DCURL_STATICLIB -DOPENSSL_NO_ASM -DUSE_ASM $extracflags"
 ./configure --build=x86_64-w64-mingw32 --with-crypto=$SSL_PREFIX --with-curl=$CURL_PREFIX CFLAGS="$CFLAGS" CPPFLAGS="$CPPFLAGS"
 
 make
+
+strip -p --strip-debug --strip-unneeded cpuminer.exe
+

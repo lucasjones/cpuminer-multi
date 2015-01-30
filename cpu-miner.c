@@ -2173,7 +2173,7 @@ static void *stratum_thread(void *userdata)
 		}
 
 		if (!stratum_socket_full(&stratum, 120)) {
-			applog(LOG_ERR, "Stratum connection timed out");
+			applog(LOG_ERR, "Stratum connection timeout");
 			s = NULL;
 		} else
 			s = stratum_recv_line(&stratum);
@@ -2186,7 +2186,6 @@ static void *stratum_thread(void *userdata)
 			stratum_handle_response(s);
 		free(s);
 	}
-
 out:
 	return NULL;
 }
@@ -2647,6 +2646,15 @@ BOOL WINAPI ConsoleHandler(DWORD dwType)
 }
 #endif
 
+static int thread_create(struct thr_info *thr, void* func)
+{
+	int err = 0;
+	pthread_attr_init(&thr->attr);
+	err = pthread_create(&thr->pth, &thr->attr, func, thr);
+	pthread_attr_destroy(&thr->attr);
+	return err;
+}
+
 static void show_credits()
 {
 	printf("** " PACKAGE_NAME " " PACKAGE_VERSION " by Tanguy Pruvot (tpruvot@github) **\n");
@@ -2657,7 +2665,7 @@ static void show_credits()
 int main(int argc, char *argv[]) {
 	struct thr_info *thr;
 	long flags;
-	int i;
+	int i, err;
 
 	pthread_mutex_init(&applog_lock, NULL);
 
@@ -2772,11 +2780,12 @@ int main(int argc, char *argv[]) {
 		return 1;
 
 	/* start work I/O thread */
-	if (pthread_create(&thr->pth, NULL, workio_thread, thr)) {
-		applog(LOG_ERR, "workio thread create failed");
+	if (thread_create(thr, workio_thread)) {
+		applog(LOG_ERR, "work thread create failed");
 		return 1;
 	}
 
+	/* ESET-NOD32 Detects these 2 thread_create... */
 	if (want_longpoll && !have_stratum) {
 		/* init longpoll thread info */
 		longpoll_thr_id = opt_n_threads + 1;
@@ -2787,8 +2796,9 @@ int main(int argc, char *argv[]) {
 			return 1;
 
 		/* start longpoll thread */
-		if (unlikely(pthread_create(&thr->pth, NULL, longpoll_thread, thr))) {
-			applog(LOG_ERR, "longpoll thread create failed");
+		err = thread_create(thr, longpoll_thread);
+		if (err) {
+			applog(LOG_ERR, "long poll thread create failed");
 			return 1;
 		}
 	}
@@ -2802,11 +2812,11 @@ int main(int argc, char *argv[]) {
 			return 1;
 
 		/* start stratum thread */
-		if (unlikely(pthread_create(&thr->pth, NULL, stratum_thread, thr))) {
+		err = thread_create(thr, stratum_thread);
+		if (err) {
 			applog(LOG_ERR, "stratum thread create failed");
 			return 1;
 		}
-
 		if (have_stratum)
 			tq_push(thr_info[stratum_thr_id].q, strdup(rpc_url));
 	}
@@ -2819,8 +2829,8 @@ int main(int argc, char *argv[]) {
 		thr->q = tq_new();
 		if (!thr->q)
 			return 1;
-
-		if (unlikely(pthread_create(&thr->pth, NULL, api_thread, thr))) {
+		err = thread_create(thr, api_thread);
+		if (err) {
 			applog(LOG_ERR, "api thread create failed");
 			return 1;
 		}
@@ -2835,7 +2845,8 @@ int main(int argc, char *argv[]) {
 		if (!thr->q)
 			return 1;
 
-		if (unlikely(pthread_create(&thr->pth, NULL, miner_thread, thr))) {
+		err = thread_create(thr, miner_thread);
+		if (err) {
 			applog(LOG_ERR, "thread %d create failed", i);
 			return 1;
 		}
