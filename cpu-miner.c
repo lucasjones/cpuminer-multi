@@ -946,6 +946,7 @@ out:
 static int share_result(int result, struct work *work, const char *reason)
 {
 	char s[345];
+	const char *sres;
 	double hashrate;
 	int i;
 
@@ -958,25 +959,25 @@ static int share_result(int result, struct work *work, const char *reason)
 
 	global_hashrate = (uint64_t) hashrate;
 
+	if (use_colors)
+		sres = (result ? CL_GRN "yes!" : CL_RED "nooooo");
+	else
+		sres = (result ? "(yes!!!)" : "(nooooo)");
+
 	switch (opt_algo) {
 	case ALGO_CRYPTONIGHT:
 		sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate);
 		applog(LOG_NOTICE, "accepted: %lu/%lu (%.2f%%), %s H/s at diff %g %s",
-				accepted_count, accepted_count + rejected_count,
-				100. * accepted_count / (accepted_count + rejected_count), s,
-				(((double) 0xffffffff) / (work ? work->target[7] : rpc2_target)),
-				use_colors ?
-					(result ? CL_GRN "yay!!!" : CL_RED "booooo")
-				:	(result ? "(yay!!!)" : "(booooo)"));
+			accepted_count, accepted_count + rejected_count,
+			100. * accepted_count / (accepted_count + rejected_count), s,
+			(((double) 0xffffffff) / (work ? work->target[7] : rpc2_target)),
+			sres);
 		break;
 	default:
 		sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate / 1000.0);
-		applog(LOG_NOTICE, "accepted: %lu/%lu (%.2f%%), %s khash/s %s",
-				accepted_count, accepted_count + rejected_count,
-				100. * accepted_count / (accepted_count + rejected_count), s,
-				use_colors ?
-					(result ? CL_GRN "yay!!!" : CL_RED "booooo")
-				:	(result ? "(yay!!!)" : "(booooo)"));
+		applog(LOG_NOTICE, "accepted: %lu/%lu (%.2f%%), %s kH/s %s",
+			accepted_count, accepted_count + rejected_count,
+			100. * accepted_count / (accepted_count + rejected_count), s, sres);
 		break;
 	}
 
@@ -1896,14 +1897,12 @@ static void *miner_thread(void *userdata)
 		if (!opt_quiet) {
 			switch(opt_algo) {
 			case ALGO_CRYPTONIGHT:
-				applog(LOG_INFO, "thread %d: %lu hashes, %.2f H/s", thr_id,
-						hashes_done, thr_hashrates[thr_id]);
+				applog(LOG_INFO, "CPU #%d: %.2f H/s", thr_id, thr_hashrates[thr_id]);
 				break;
 			default:
 				sprintf(s, thr_hashrates[thr_id] >= 1e6 ? "%.0f" : "%.2f",
 						thr_hashrates[thr_id] / 1e3);
-				applog(LOG_INFO, "thread %d: %llu hashes, %s khash/s", thr_id,
-						hashes_done, s);
+				applog(LOG_INFO, "CPU #%d: %s kH/s", thr_id, s);
 				break;
 			}
 		}
@@ -1919,7 +1918,7 @@ static void *miner_thread(void *userdata)
 					break;
 				default:
 					sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate / 1000);
-					applog(LOG_NOTICE, "Total: %s khash/s", s);
+					applog(LOG_NOTICE, "Total: %s kH/s", s);
 					break;
 				}
 				global_hashrate = (uint64_t) hashrate;
@@ -1954,7 +1953,7 @@ static void *longpoll_thread(void *userdata)
 
 	curl = curl_easy_init();
 	if (unlikely(!curl)) {
-		applog(LOG_ERR, "CURL initialization failed");
+		applog(LOG_ERR, "CURL init failed");
 		goto out;
 	}
 
@@ -1982,7 +1981,8 @@ start:
 		sprintf(lp_url, "%s%s%s", rpc_url, need_slash ? "/" : "", copy_start);
 	}
 
-	applog(LOG_INFO, "Long-polling activated for %s", lp_url);
+	if (!opt_quiet)
+		applog(LOG_INFO, "Longpoll enabled for %s", lp_url);
 
 	while (1) {
 		json_t *val;
@@ -2033,7 +2033,8 @@ start:
 				rc = work_decode(res, &g_work);
 			if (rc) {
 				if (strcmp(start_job_id, g_work.job_id)) {
-					applog(LOG_BLUE, "LONGPOLL pushed new work");
+					if (opt_debug)
+						applog(LOG_BLUE, "Longpoll pushed new work");
 					time(&g_work_time);
 					restart_threads();
 				}
@@ -2163,7 +2164,7 @@ static void *stratum_thread(void *userdata)
 
 			if (stratum.job.clean || jsonrpc_2) {
 				if (!opt_quiet)
-					applog(LOG_BLUE, "%s sent %s block %d", short_url, algo_names[opt_algo],
+					applog(LOG_BLUE, "%s %s block %d", short_url, algo_names[opt_algo],
 						stratum.bloc_height);
 				restart_threads();
 			} else if (opt_debug && !opt_quiet) {
