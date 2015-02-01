@@ -418,6 +418,9 @@
     <ClInclude Include="crypto\int-util.h">
       <Filter>crypto</Filter>
     </ClInclude>
+    <ClInclude Include="res\resource.h">
+      <Filter>res</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="sph">
@@ -453,6 +456,9 @@
     <Filter Include="algo">
       <UniqueIdentifier>{34f266e4-b48f-4721-ac34-474b65726498}</UniqueIdentifier>
     </Filter>
+    <Filter Include="res">
+      <UniqueIdentifier>{5969f6d8-98c0-49c9-8e4c-51c54b5f0e16}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="asm\scrypt-arm.S">
@@ -461,5 +467,15 @@
     <None Include="asm\sha2-arm.S">
       <Filter>algo</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\cpuminer.ico">
+      <Filter>res</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\cpuminer.rc">
+      <Filter>res</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

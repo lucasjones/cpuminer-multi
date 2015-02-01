@@ -273,6 +273,7 @@
     <ClInclude Include="lyra2\Lyra2.h" />
     <ClInclude Include="lyra2\Sponge.h" />
     <ClInclude Include="miner.h" />
+    <ClInclude Include="res\resource.h" />
     <ClInclude Include="scryptjane\scrypt-jane-chacha.h" />
     <ClInclude Include="scryptjane\scrypt-jane-hash.h" />
     <ClInclude Include="scryptjane\scrypt-jane-hash_keccak.h" />
@@ -335,6 +336,12 @@
     </ClCompile>
     <None Include="asm\scrypt-arm.S" />
     <None Include="asm\sha2-arm.S" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\cpuminer.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\cpuminer.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <!-- Copy the required dlls -->
