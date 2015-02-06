@@ -1,12 +1,13 @@
 ﻿; NSIS script (UTF-8) NSIS-3 Unicode
 ; Install
 
-Unicode true
+; Unicode true
 ; SetCompressor lzma
 RequestExecutionLevel Admin
 
 ; --------------------
 
+!include x64.nsh
 !include FileFunc.nsh
 !include WinMessages.nsh
 
@@ -20,7 +21,7 @@ AllowRootDirInstall true
 
 BrandingText "CPU Miner Install System"
 
-!define PROGRAM_NAME "cpuminer-multi"
+!define PROGRAM_NAME "CPU Miner"
 !define PROGRAM_KEY  "cpuminer"
 
 Name "cpuminer-multi v${MINER_VERSION}"
@@ -29,20 +30,19 @@ Icon "res\setup.ico"
 ; Icon "res\${PROGRAM_KEY}.ico"
 Caption "${PROGRAM_NAME}"
 
-!define NSIS_MAKENSIS64
-
-VIProductVersion ${VERSION}
+VIProductVersion "${VERSION}"
 VIAddVersionKey ProductName "${PROGRAM_NAME} - Setup"
 VIAddVersionKey Comments ""
 VIAddVersionKey CompanyName "Open Source"
 VIAddVersionKey LegalCopyright "2015 - Open Source"
 VIAddVersionKey FileDescription "${PROGRAM_NAME} - Setup"
-VIAddVersionKey FileVersion ${MINER_VERSION}
-VIAddVersionKey ProductVersion ${MINER_VERSION}
-VIAddVersionKey InternalName ${PROGRAM_NAME}
+VIAddVersionKey FileVersion "${MINER_VERSION}"
+VIAddVersionKey ProductVersion "${MINER_VERSION}"
+VIAddVersionKey InternalName "${PROGRAM_NAME}"
 VIAddVersionKey LegalTrademarks ""
 VIAddVersionKey OriginalFilename "${PROGRAM_KEY}.exe"
 
+!define NSIS_MAKENSIS64
 !ifdef NSIS_MAKENSIS64
   !define BITS 64
   InstallDir $PROGRAMFILES64\cpuminer-multi
@@ -54,7 +54,9 @@ VIAddVersionKey OriginalFilename "${PROGRAM_KEY}.exe"
   ;!define RK_UNINSTALL "SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\${PROGRAM_KEY}"
 !endif
 
-; InstType "Custom"
+# Test folders x86/x64
+# InstType "Custom"
+# InstallDir $WINDIR\system32
 
 ; LANG: ${LANG_ENGLISH}
 LangString LSTR_0 ${LANG_ENGLISH} "CPU Miner Install System"
@@ -108,31 +110,20 @@ Var _3_
 Var _4_
 Var _5_
 Var _6_
-Var _7_
-Var _8_
-Var _9_
-Var _10_
-Var _11_
-Var _12_
-Var _13_
-Var _14_
-Var _15_
-Var _16_
-Var _17_
-Var _18_
-Var _19_
 
+Var DATADIR
+Var REALINSTDIR
 
 ; --------------------
 ; PAGES: 3
 
 ; Page 0
-Page directory func_2 func_5 func_13 /ENABLECANCEL
+Page directory func_title_pre0 func_show0 func_leave0 /ENABLECANCEL
 ;  DirVar $CMDLINE
   DirText $(LSTR_49) $(LSTR_50) $(LSTR_51) $(LSTR_52)    ;  Setup will install ${PROGRAM_NAME} in the following folder....
 
 ; Page 1
-Page instfiles func_14 func_17 func_23
+Page instfiles func_title_pre1 func_show1 func_leave1
   CompletedText $(LSTR_57)    ;  Completed
   DetailsButtonText $(LSTR_56)    ;  Show &details
 
@@ -144,35 +135,35 @@ Page COMPLETED
 
 ; --------------------
 
-Function func_2    ; Page 0, Pre
+Function func_title_pre0    ; Page 0, Pre
   SendMessage $_0_ ${WM_SETTEXT} 0 STR:$(LSTR_36)    ;  Choose Install Location
   SendMessage $_2_ ${WM_SETTEXT} 0 STR:$(LSTR_37)    ;  Choose the folder in which to install ${PROGRAM_NAME}.
 FunctionEnd
 
 
-Function func_5    ; Page 0, Show
-  FindWindow $_12_ "#32770" "" $HWNDPARENT
-  GetDlgItem $_13_ $_12_ 1006
-  GetDlgItem $_14_ $_12_ 1020
-  GetDlgItem $_15_ $_12_ 1019
-  GetDlgItem $_16_ $_12_ 1001
-  GetDlgItem $_17_ $_12_ 1023
-  GetDlgItem $_18_ $_12_ 1024
+Function func_show0    ; Page 0, Show
+; FindWindow $_12_ "#32770" "" $HWNDPARENT
+;  GetDlgItem $_13_ $_12_ 1006
+;  GetDlgItem $_14_ $_12_ 1020
+;  GetDlgItem $_15_ $_12_ 1019
+;  GetDlgItem $_16_ $_12_ 1001
+;  GetDlgItem $_17_ $_12_ 1023
+;  GetDlgItem $_18_ $_12_ 1024
 FunctionEnd
 
 
-Function func_13    ; Page 0, Leave
+Function func_leave0    ; Page 0, Leave
 FunctionEnd
 
 
-Function func_14    ; Page 1, Pre
+Function func_title_pre1    ; Page 1, Pre
   SendMessage $_0_ ${WM_SETTEXT} 0 STR:$(LSTR_38)    ;  Installing
   SendMessage $_2_ ${WM_SETTEXT} 0 STR:$(LSTR_39)    ;  Please wait while ${PROGRAM_NAME} is being installed. cpuminer-multi
 FunctionEnd
 
 
-Function func_17    ; Page 1, Show
-  FindWindow $_19_ "#32770" "" $HWNDPARENT
+Function func_show1    ; Page 1, Show
+; FindWindow $_19_ "#32770" "" $HWNDPARENT
 ;  GetDlgItem $_20_ $_19_ 1006
 ;  GetDlgItem $_21_ $_19_ 1004
 ;  GetDlgItem $_22_ $_19_ 1027
@@ -180,7 +171,7 @@ Function func_17    ; Page 1, Show
 FunctionEnd
 
 
-Function func_23    ; Page 1, Leave
+Function func_leave1    ; Page 1, Leave
   IfAbort label_27
   SendMessage $_0_ ${WM_SETTEXT} 0 STR:$(LSTR_40)    ;  "Installation Complete"
   SendMessage $_2_ ${WM_SETTEXT} 0 STR:$(LSTR_41)    ;  "Setup was completed successfully."
@@ -235,11 +226,11 @@ Function .onGUIInit
   GetDlgItem $_5_ $HWNDPARENT 1256
   SetCtlColors $_5_ /BRANDING ""
   SendMessage $_5_ ${WM_SETTEXT} 0 "STR:$(LSTR_0) "    ;  "CPU Miner Install System"
-  GetDlgItem $_7_ $HWNDPARENT 1035
-  GetDlgItem $_8_ $HWNDPARENT 1045
-  GetDlgItem $_9_ $HWNDPARENT 1
-  GetDlgItem $_10_ $HWNDPARENT 2
-  GetDlgItem $_11_ $HWNDPARENT 3
+; GetDlgItem $_7_ $HWNDPARENT 1035
+; GetDlgItem $_8_ $HWNDPARENT 1045
+; GetDlgItem $_9_ $HWNDPARENT 1
+; GetDlgItem $_10_ $HWNDPARENT 2
+; GetDlgItem $_11_ $HWNDPARENT 3
 FunctionEnd
 
 
@@ -249,11 +240,18 @@ FunctionEnd
 
 Section
 
-  StrCmp $PROGRAMFILES32 $PROGRAMFILES +1
-  SetRegView 32
-  SetRegView 64
+  StrCpy $DATADIR "$APPDATA\${PROGRAM_KEY}"
+  StrCpy $REALINSTDIR "$INSTDIR"
+  ${If} ${RunningX64}
+    ${DisableX64FSRedirection}
+    ; StrCmp $INSTDIR "$WINDIR\system32" 0 +2
+    ; StrCpy $INSTDIR "$WINDIR\sysnative"
+    SetRegView 64
+  ${Else}
+    SetRegView 32
+  ${Endif}
 
-  SetOutPath $INSTDIR
+  SetOutPath "$INSTDIR"
 
   # call UserInfo plugin to get user info. The plugin puts the result in the stack
   UserInfo::getAccountType
@@ -266,64 +264,98 @@ Section
   Return
 
   SetOverwrite on
-  ; File cpuminer-conf.json
   File cpuminer-gw64.exe
   File cpuminer-x64.exe
-  ; File LICENCE
-  ; File README.md
+  File cpuminer-conf.json
+  File /oname=LICENSE.txt LICENSE
+  File /oname=README.txt README.md
 
   SetOverwrite off
   AllowSkipFiles on
   File x64\Release\msvcr120.dll
 
   # Create the uninstaller
-  WriteUninstaller "$INSTDIR\cpuminer-uninst.exe"
+  CreateDirectory "$DATADIR"
+  File "/oname=$DATADIR\cpuminer-conf.json" cpuminer-conf.json
+  WriteUninstaller "$DATADIR\cpuminer-uninst.exe"
 
-  # Shortcut for uninstaller
-  # CreateShortCut "$SMPROGRAMS\Uninstall CPU Miner.lnk" "$INSTDIR\cpuminer-uninst.exe"
+  # Shortcuts (program + uninstaller)
+  CreateDirectory "$SMPROGRAMS\${PROGRAM_NAME}"
+  CreateShortCut /NoWorkingDir "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME}.lnk" "$REALINSTDIR\cpuminer-gw64.exe"
+  CreateShortCut /NoWorkingDir "$SMPROGRAMS\${PROGRAM_NAME}\Config.lnk" "$SYSDIR\notepad.exe" "$DATADIR\cpuminer-conf.json"
+  CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\Uninstall.lnk" "$DATADIR\cpuminer-uninst.exe"
 
   WriteRegStr HKLM ${RK_UNINSTALL} \
-    "DisplayName" ${PROGRAM_NAME}
+    "DisplayName" "${PROGRAM_NAME}"
 
   WriteRegStr HKLM ${RK_UNINSTALL} \
-    "DisplayVersion" ${MINER_VERSION}
+    "DisplayVersion" "${MINER_VERSION}"
 
   WriteRegStr HKLM ${RK_UNINSTALL} \
     "Publisher" "Open Source"
 
   WriteRegStr HKLM ${RK_UNINSTALL} \
-    "DisplayIcon" "$INSTDIR\cpuminer-x64.exe"
+    "DisplayIcon" "$REALINSTDIR\cpuminer-x64.exe"
 
   WriteRegStr HKLM ${RK_UNINSTALL} \
-    "InstallLocation" "$\"$INSTDIR\$\""
+    "InstallLocation" "$REALINSTDIR"
 
   WriteRegStr HKLM ${RK_UNINSTALL} \
-    "UninstallString" "$\"$INSTDIR\cpuminer-uninst.exe$\""
+    "UninstallString" "$\"$DATADIR\cpuminer-uninst.exe$\""
 
   ${GetSize} "$INSTDIR" "/M=cpuminer* /S=0K /G=0" $0 $1 $2
   IntFmt $0 "0x%08X" $0
   WriteRegDWORD HKLM "${RK_UNINSTALL}" \
     "EstimatedSize" "$0"
 
+  # Add application to Windows Firewall exception list (to check)
+  ;liteFirewall::AddRule "$REALINSTDIR\cpuminer-gw64.exe" "CPU Miner (MinGW64)"
+  ;liteFirewall::AddRule "$REALINSTDIR\cpuminer-x64.exe" "CPU Miner (x64)"
+
 SectionEnd
 
 
-# uninstaller section start
 Section "uninstall"
+
+  StrCpy $DATADIR "$APPDATA\${PROGRAM_KEY}"
+  ${If} ${RunningX64}
+    ;StrCmp $INSTDIR "$WINDIR\system32" 0 +2
+    ;StrCpy $INSTDIR "$WINDIR\sysnative"
+    ${DisableX64FSRedirection}
+    SetRegView 64
+  ${Else}
+    SetRegView 32
+  ${Endif}
+
+  ReadRegStr $INSTDIR HKLM ${RK_UNINSTALL} "InstallLocation"
+  StrCpy $REALINSTDIR "$INSTDIR"
 
   Delete "$INSTDIR\cpuminer-conf.json"
   Delete "$INSTDIR\cpuminer-gw64.exe"
   Delete "$INSTDIR\cpuminer-x64.exe"
-  StrCmp $INSTDIR "$WINDIR/system32" +1
-  Delete "$INSTDIR\msvcr120.dll"
+  Delete "$INSTDIR\LICENSE.txt"
+  Delete "$INSTDIR\README.txt"
 
-  Delete "$INSTDIR\cpuminer-uninst.exe"
+  StrCmp $REALINSTDIR "$WINDIR/system32" +2
+  Delete "$INSTDIR\msvcr120.dll"
+  RMDir "$INSTDIR"
+
+  Delete "$DATADIR\cpuminer-uninst.exe"
+  RMDir "$DATADIR"
+
+  ; Delete "$DATADIR\cpuminer-conf.json"
+  ; RMDir "$DATADIR"
 
   # second, remove the link from the start menu
-  # Delete "$SMPROGRAMS\Uninstall CPU Miner.lnk"
+  Delete "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME}.lnk"
+  Delete "$SMPROGRAMS\${PROGRAM_NAME}\Config.lnk"
+  Delete "$SMPROGRAMS\${PROGRAM_NAME}\Uninstall.lnk"
+  RMDir "$SMPROGRAMS\${PROGRAM_NAME}"
 
-  RMDir $INSTDIR
   DeleteRegKey HKLM ${RK_UNINSTALL}
 
-# uninstaller section end
+  # Remove application from Windows Firewall exception list
+  ;liteFirewall::RemoveRule "$REALINSTDIR\cpuminer-gw64.exe" "CPU Miner (MinGW64)"
+  ;liteFirewall::RemoveRule "$REALINSTDIR\cpuminer-x64.exe" "CPU Miner (x64)"
+
 SectionEnd
