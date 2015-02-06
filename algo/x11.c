@@ -34,7 +34,7 @@ void x11hash(void *output, const void *input)
 	sph_echo512_context		ctx_echo1;
 
 	//these uint512 in the c++ source of the client are backed by an array of uint32
-	uint32_t hashA[16], hashB[16];
+	uint32_t _ALIGN(64) hashA[16], hashB[16];
 
 	sph_blake512_init(&ctx_blake);
 	sph_blake512 (&ctx_blake, input, 80);
@@ -84,108 +84,35 @@ void x11hash(void *output, const void *input)
 }
 
 int scanhash_x11(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-	uint32_t max_nonce, uint64_t *hashes_done)
+	uint32_t max_nonce,	uint64_t *hashes_done)
 {
-	uint32_t n = pdata[19] - 1;
 	const uint32_t first_nonce = pdata[19];
-
-	uint32_t _ALIGN(32) hash64[8];
-	uint32_t _ALIGN(32) endiandata[32];
-
-	//we need bigendian data...
-	int kk=0;
-	for (; kk < 32; kk++)
-	{
-		be32enc(&endiandata[kk], ((uint32_t*)pdata)[kk]);
-	};
+	uint32_t _ALIGN(64) endiandata[20];
+	uint32_t nonce = first_nonce;
+	volatile uint8_t *restart = &(work_restart[thr_id].restart);
 
 	if (opt_benchmark)
-		((uint32_t*)ptarget)[7] = 0xcff;
+		((uint32_t*)ptarget)[7] = 0x0cff;
 
-	// applog(LOG_DEBUG, "Thr: %02d, firstN: %08x, maxN: %08x", thr_id, first_nonce, max_nonce);
+	for (int k=0; k < 19; k++)
+		be32enc(&endiandata[k], ((uint32_t*)pdata)[k]);
 
-	/* I'm to lazy to put the loop in an inline function... so dirty copy'n'paste.... */
-	/* i know that i could set a variable, but i don't know how the compiler will optimize it, not that then the cpu needs to load the value *everytime* in a register */
-	if (ptarget[7]==0) {
-		do {
-			pdata[19] = ++n;
-			be32enc(&endiandata[19], n);
-			x11hash((char*) hash64, (const char*) endiandata);
-			if (hash64[7]==0 &&
-					fulltest(hash64, ptarget)) {
-				*hashes_done = n - first_nonce + 1;
-				return true;
-			}
-		} while (n < max_nonce && !work_restart[thr_id].restart);
-	}
-	else if (ptarget[7]<=0xF)
-	{
-		do {
-			pdata[19] = ++n;
-			be32enc(&endiandata[19], n);
-			x11hash((char*) hash64, (const char*) endiandata);
-			if (((hash64[7]&0xFFFFFFF0)==0) &&
-					fulltest(hash64, ptarget)) {
-				*hashes_done = n - first_nonce + 1;
-				return true;
-			}
-		} while (n < max_nonce && !work_restart[thr_id].restart);
-	}
-	else if (ptarget[7]<=0xFF)
-	{
-		do {
-			pdata[19] = ++n;
-			be32enc(&endiandata[19], n);
-			x11hash((char*) hash64, (const char*) endiandata);
-			if (((hash64[7]&0xFFFFFF00)==0) &&
-					fulltest(hash64, ptarget)) {
-				*hashes_done = n - first_nonce + 1;
-				return true;
-			}
-		} while (n < max_nonce && !work_restart[thr_id].restart);
-	}
-	else if (ptarget[7]<=0xFFF)
-	{
-		do {
-			pdata[19] = ++n;
-			be32enc(&endiandata[19], n);
-			x11hash((char*) hash64, (const char*) endiandata);
-			if (((hash64[7]&0xFFFFF000)==0) &&
-					fulltest(hash64, ptarget)) {
-				*hashes_done = n - first_nonce + 1;
-				return true;
-			}
-		} while (n < max_nonce && !work_restart[thr_id].restart);
+	do {
+		const uint32_t Htarg = ptarget[7];
+		uint32_t hash[8];
+		be32enc(&endiandata[19], nonce);
+		x11hash(hash, endiandata);
 
-	}
-	else if (ptarget[7]<=0xFFFF)
-	{
-		do {
-			pdata[19] = ++n;
-			be32enc(&endiandata[19], n);
-			x11hash((char*) hash64, (const char*) endiandata);
-			if (((hash64[7]&0xFFFF0000)==0) &&
-					fulltest(hash64, ptarget)) {
-				*hashes_done = n - first_nonce + 1;
-				return true;
-			}
-		} while (n < max_nonce && !work_restart[thr_id].restart);
+		if (hash[7] <= Htarg && fulltest(hash, ptarget)) {
+			pdata[19] = nonce;
+			*hashes_done = pdata[19] - first_nonce;
+			return 1;
+		}
+		nonce++;
 
-	}
-	else
-	{
-		do {
-			pdata[19] = ++n;
-			be32enc(&endiandata[19], n);
-			x11hash((char*) hash64, (const char*) endiandata);
-			if (fulltest(hash64, ptarget)) {
-				*hashes_done = n - first_nonce + 1;
-				return true;
-			}
-		} while (n < max_nonce && !work_restart[thr_id].restart);
-	}
+	} while (nonce < max_nonce && !(*restart));
 
-	*hashes_done = n - first_nonce + 1;
-	pdata[19] = n;
+	pdata[19] = nonce;
+	*hashes_done = pdata[19] - first_nonce + 1;
 	return 0;
 }

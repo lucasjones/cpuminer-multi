@@ -290,8 +290,8 @@ struct thr_info {
 };
 
 struct work_restart {
-	volatile unsigned long	restart;
-	char			padding[128 - sizeof(unsigned long)];
+	volatile uint8_t restart;
+	char padding[128 - sizeof(uint8_t)];
 };
 
 extern bool opt_debug;
