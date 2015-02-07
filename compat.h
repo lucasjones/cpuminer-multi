@@ -25,6 +25,18 @@ static __inline int setpriority(int which, int who, int prio)
 #define __thread __delclspec(thread)
 #define _ALIGN(x) __declspec(align(x))
 typedef int ssize_t;
+
+#include <stdlib.h>
+static __inline char * dirname(char *file) {
+	char buffer[_MAX_PATH] = { 0 };
+	char drive[_MAX_DRIVE];
+	char dir[_MAX_DIR];
+	char fname[_MAX_FNAME];
+	char ext[_MAX_EXT];
+	_splitpath_s(file, drive, _MAX_DRIVE, dir, _MAX_DIR, fname, _MAX_FNAME, ext, _MAX_EXT);
+	sprintf(buffer, "%s%s", drive, dir);
+	return strdup(buffer);
+}
 #endif
 
 #endif /* WIN32 */

@@ -27,13 +27,11 @@
 #include <jansson.h>
 #include <openssl/sha.h>
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #include <windows.h>
 #include <stdint.h>
-
 #else
 #include <errno.h>
-#include <sys/resource.h>
 #if HAVE_SYS_SYSCTL_H
 #include <sys/types.h>
 #if HAVE_SYS_PARAM_H
@@ -41,6 +39,10 @@
 #endif
 #include <sys/sysctl.h>
 #endif
+#endif
+
+#ifndef WIN32
+#include <sys/resource.h>
 #endif
 
 #include "miner.h"
@@ -2346,10 +2348,10 @@ static void parse_arg(int key, char *arg)
 			else
 				fprintf(stderr, "%s:%d: %s\n",
 					arg, err.line, err.text);
-			exit(1);
+		} else {
+			parse_config(config, arg);
+			json_decref(config);
 		}
-		parse_config(config, arg);
-		json_decref(config);
 		break;
 	}
 	case 'C':
@@ -2663,6 +2665,8 @@ static void show_credits()
 	printf("BTC donation address: 1FhDPLPpw18X4srecguG3MxJYe4a1JsZnd\n\n");
 }
 
+void get_defconfig_path(char *out, size_t bufsize, char *argv0);
+
 int main(int argc, char *argv[]) {
 	struct thr_info *thr;
 	long flags;
@@ -2678,6 +2682,18 @@ int main(int argc, char *argv[]) {
 
 	/* parse command line */
 	parse_cmdline(argc, argv);
+
+	if (!opt_benchmark && !rpc_url) {
+		// try default config file in binary folder
+		char defconfig[MAX_PATH] = { 0 };
+		get_defconfig_path(defconfig, MAX_PATH, argv[0]);
+		if (strlen(defconfig)) {
+			if (opt_debug)
+				applog(LOG_DEBUG, "Using config %s", defconfig);
+			parse_arg('c', defconfig);
+			parse_cmdline(argc, argv);
+		}
+	}
 
 	if (opt_algo == ALGO_QUARK) {
 		init_quarkhash_contexts();

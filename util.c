@@ -25,6 +25,7 @@
 #include <jansson.h>
 #include <curl/curl.h>
 #include <time.h>
+#include <sys/stat.h>
 #if defined(WIN32)
 #include <winsock2.h>
 #include <mstcpip.h>
@@ -34,6 +35,12 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #endif
+
+#ifndef _MSC_VER
+/* dirname() linux/mingw, else in compat.h */
+#include <libgen.h>
+#endif
+
 #include "miner.h"
 #include "elist.h"
 
@@ -146,6 +153,28 @@ void applog(int prio, const char *fmt, ...)
 		pthread_mutex_unlock(&applog_lock);
 	}
 	va_end(ap);
+}
+
+/* Get default config.json path (will be system specific) */
+void get_defconfig_path(char *out, size_t bufsize, char *argv0)
+{
+	char *dir = dirname(argv0);
+	const char *sep = strstr(dir, "\\") ? "\\" : "/";
+#ifdef WIN32
+	snprintf(out, bufsize, "%s\\cpuminer\\cpuminer-conf.json", getenv("APPDATA"));
+#else
+	snprintf(out, bufsize, "%s\\.cpuminer\\cpuminer-conf.json", getenv("HOME"));
+#endif
+	struct stat info;
+	if (stat(out, &info) != 0) {
+		snprintf(out, bufsize, "%s%scpuminer-conf.json", dir, sep);
+	}
+	if (stat(out, &info) != 0) {
+		out[0] = '\0';
+		return;
+	}
+	out[bufsize - 1] = '\0';
+	free(dir);
 }
 
 /* Modify the representation of integer numbers which would cause an overflow
