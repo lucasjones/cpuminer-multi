@@ -158,7 +158,8 @@ void applog(int prio, const char *fmt, ...)
 /* Get default config.json path (will be system specific) */
 void get_defconfig_path(char *out, size_t bufsize, char *argv0)
 {
-	char *dir = dirname(argv0);
+	char *cmd = strdup(argv0);
+	char *dir = dirname(cmd);
 	const char *sep = strstr(dir, "\\") ? "\\" : "/";
 #ifdef WIN32
 	snprintf(out, bufsize, "%s\\cpuminer\\cpuminer-conf.json", getenv("APPDATA"));
@@ -166,7 +167,7 @@ void get_defconfig_path(char *out, size_t bufsize, char *argv0)
 	snprintf(out, bufsize, "%s\\.cpuminer\\cpuminer-conf.json", getenv("HOME"));
 #endif
 	struct stat info;
-	if (stat(out, &info) != 0) {
+	if (dir && stat(out, &info) != 0) {
 		snprintf(out, bufsize, "%s%scpuminer-conf.json", dir, sep);
 	}
 	if (stat(out, &info) != 0) {
@@ -174,7 +175,7 @@ void get_defconfig_path(char *out, size_t bufsize, char *argv0)
 		return;
 	}
 	out[bufsize - 1] = '\0';
-	free(dir);
+	free(cmd);
 }
 
 /* Modify the representation of integer numbers which would cause an overflow

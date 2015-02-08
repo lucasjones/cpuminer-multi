@@ -35,7 +35,7 @@ static __inline char * dirname(char *file) {
 	char ext[_MAX_EXT];
 	_splitpath_s(file, drive, _MAX_DRIVE, dir, _MAX_DIR, fname, _MAX_FNAME, ext, _MAX_EXT);
 	sprintf(buffer, "%s%s", drive, dir);
-	return strdup(buffer);
+	return &buffer[0];
 }
 #endif
 
@@ -53,6 +53,10 @@ static __inline char * dirname(char *file) {
 #else
 #define unlikely(expr) (expr)
 #define likely(expr) (expr)
+#endif
+
+#ifndef WIN32
+#define MAX_PATH PATH_MAX
 #endif
 
 #endif /* __COMPAT_H__ */
