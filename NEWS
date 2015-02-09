@@ -2,6 +2,9 @@ version 1.1-git (Tanguy Pruvot)
 - Add GroestlCoin, Diamond and Myriad variants
 - Change some logged strings
 - Use all cores by default, not N-1
+- Handle a default config to run without params
+- add cpu-priority and cpu-affinity options
+- add NSIS installer script for windows setup
 
 version 1.0.9 (Tanguy Pruvot)
 - pool extranonce subscribe

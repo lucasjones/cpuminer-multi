@@ -141,8 +141,8 @@ Lucas Jones :
 
 Credits
 =======
-CPUMiner-multi was forked from pooler's CPUMiner, and has been developed by Lucas Jones.
-* [tpruvot](https://github.com/tpruvot) added some features and recent SHA3 based algorythmns
+CPUMiner-multi was forked from pooler's CPUMiner, and has been started by Lucas Jones.
+* [tpruvot](https://github.com/tpruvot) added all the recent features and newer algorythmns
 * [Wolf9466](https://github.com/wolf9466) helped with Intel AES-NI support for CryptoNight
 
 License
