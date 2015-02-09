@@ -201,7 +201,7 @@ static const bool opt_time = true;
 static enum algos opt_algo = ALGO_SCRYPT;
 static int opt_scrypt_n = 1024;
 static unsigned int opt_nfactor = 6;
-int opt_n_threads;
+int opt_n_threads = 0;
 int opt_affinity = -1;
 int opt_priority = 0;
 int num_cpus;
@@ -2441,7 +2441,7 @@ static void parse_arg(int key, char *arg)
 		break;
 	case 't':
 		v = atoi(arg);
-		if (v < 1 || v > 9999) /* sanity check */
+		if (v < 0 || v > 9999) /* sanity check */
 			show_usage_and_exit(1);
 		opt_n_threads = v;
 		break;
