@@ -66,7 +66,6 @@ static inline void drop_policy(void)
 {
 	struct sched_param param;
 	param.sched_priority = 0;
-
 #ifdef SCHED_IDLE
 	if (unlikely(sched_setscheduler(0, SCHED_IDLE, &param) == -1))
 #endif
@@ -75,20 +74,24 @@ static inline void drop_policy(void)
 #endif
 }
 
-static inline void affine_to_cpu(int id, int cpu)
-{
+static void affine_to_cpu_mask(int id, uint8_t mask) {
 	cpu_set_t set;
-
 	CPU_ZERO(&set);
-	CPU_SET(cpu, &set);
-	sched_setaffinity(0, sizeof(set), &set);
+	for (uint8_t i = 0; i < num_cpus; i++) {
+		// cpu mask
+		if (mask & (1<<i)) { CPU_SET(i, &set); }
+	}
+	if (id == -1) {
+		// process affinity
+		sched_setaffinity(0, sizeof(&set), &set);
+	} else {
+		// thread only
+		pthread_setaffinity_np(thr_info[id].pth, sizeof(&set), &set);
+	}
 }
 #elif defined(__FreeBSD__) /* FreeBSD specific policy and affinity management */
-
 #include <sys/cpuset.h>
-static inline void drop_policy(void)
-{
-}
+static inline void drop_policy(void) { }
 
 static inline void affine_to_cpu(int id, int cpu)
 {
@@ -97,13 +100,13 @@ static inline void affine_to_cpu(int id, int cpu)
 	CPU_SET(cpu, &set);
 	cpuset_setaffinity(CPU_LEVEL_WHICH, CPU_WHICH_TID, -1, sizeof(cpuset_t), &set);
 }
-#else
-static inline void drop_policy(void)
-{
-}
-
-static inline void affine_to_cpu(int id, int cpu)
-{
+#else /* Windows */
+static inline void drop_policy(void) { }
+static void affine_to_cpu_mask(int id, uint8_t mask) {
+	if (id == -1)
+		SetProcessAffinityMask(GetCurrentProcess(), mask);
+	else
+		SetThreadAffinityMask(GetCurrentThread(), mask);
 }
 #endif
 
@@ -199,7 +202,9 @@ static enum algos opt_algo = ALGO_SCRYPT;
 static int opt_scrypt_n = 1024;
 static unsigned int opt_nfactor = 6;
 int opt_n_threads;
-int num_processors;
+int opt_affinity = -1;
+int opt_priority = 0;
+int num_cpus;
 static char *rpc_url;
 static char *rpc_userpass;
 static char *rpc_user, *rpc_pass;
@@ -317,6 +322,9 @@ Options:\n\
 "\
       --benchmark       run in offline benchmark mode\n\
       --cputest         debug hashes from cpu algorithms\n\
+      --cpu-affinity    set process affinity to cpu core(s), mask 0x3 for cores 0 and 1\n\
+      --cpu-priority    set process priority (default: 0 idle, 2 normal to 5 highest)\n\
+  -b, --api-bind        IP/Port for the miner API (default: 127.0.0.1:4048)\n\
   -c, --config=FILE     load a JSON-format configuration file\n\
   -V, --version         display version information and exit\n\
   -h, --help            display this help text and exit\n\
@@ -344,6 +352,8 @@ static struct option const options[] = {
 	{ "coinbase-addr", 1, NULL, 1013 },
 	{ "coinbase-sig", 1, NULL, 1015 },
 	{ "config", 1, NULL, 'c' },
+	{ "cpu-affinity", 1, NULL, 1020 },
+	{ "cpu-priority", 1, NULL, 1021 },
 	{ "no-color", 0, NULL, 1002 },
 	{ "debug", 0, NULL, 'D' },
 	{ "help", 0, NULL, 'h' },
@@ -1645,18 +1655,53 @@ static void *miner_thread(void *userdata)
 	/* Set worker threads to nice 19 and then preferentially to SCHED_IDLE
 	 * and if that fails, then SCHED_BATCH. No need for this to be an
 	 * error if it fails */
-	if (!opt_benchmark) {
+	if (!opt_benchmark && opt_priority == 0) {
 		setpriority(PRIO_PROCESS, 0, 19);
 		drop_policy();
+	} else {
+		int prio = 0;
+#ifndef WIN32
+		prio = 18;
+		// note: different behavior on linux (-19 to 19)
+		switch (opt_priority) {
+			case 1:
+				prio = 5;
+				break;
+			case 2:
+				prio = 0;
+				break;
+			case 3:
+				prio = -5;
+				break;
+			case 4:
+				prio = -10;
+				break;
+			case 5:
+				prio = -15;
+		}
+		if (opt_debug)
+			applog(LOG_DEBUG, "Thread %d priority %d (nice %d)",
+				thr_id,	opt_priority, prio);
+#endif
+		setpriority(PRIO_PROCESS, 0, prio);
+		if (opt_priority == 0) {
+			drop_policy();
+		}
 	}
 
-	/* Cpu affinity only makes sense if the number of threads is a multiple
-	 * of the number of CPUs */
-	if (num_processors > 1 && opt_n_threads % num_processors == 0) {
-		if (opt_debug)
-			applog(LOG_DEBUG, "Binding thread %d to cpu %d", thr_id,
-					thr_id % num_processors);
-		affine_to_cpu(thr_id, thr_id % num_processors);
+	/* Cpu thread affinity */
+	if (num_cpus > 1) {
+		if (opt_affinity == -1 && opt_n_threads > 1) {
+			if (opt_debug)
+				applog(LOG_DEBUG, "Binding thread %d to cpu %d (mask %x)", thr_id,
+						thr_id % num_cpus, (1 << (thr_id % num_cpus)));
+			affine_to_cpu_mask(thr_id, 1 << (thr_id % num_cpus));
+		} else if (opt_affinity != -1) {
+			if (opt_debug)
+				applog(LOG_DEBUG, "Binding thread %d to cpu mask %x", thr_id,
+						opt_affinity);
+			affine_to_cpu_mask(thr_id, opt_affinity);
+		}
 	}
 
 	if (opt_algo == ALGO_SCRYPT) {
@@ -2543,6 +2588,20 @@ static void parse_arg(int key, char *arg)
 		use_syslog = true;
 		use_colors = false;
 		break;
+	case 1020:
+		v = atoi(arg);
+		if (v < -1)
+			v = -1;
+		if (v > (1<<num_cpus)-1)
+			v = -1;
+		opt_affinity = v;
+		break;
+	case 1021:
+		v = atoi(arg);
+		if (v < 0 || v > 5)	/* sanity check */
+			show_usage_and_exit(1);
+		opt_priority = v;
+		break;
 	case 'V':
 		show_version_and_exit();
 	case 'h':
@@ -2661,7 +2720,6 @@ static int thread_create(struct thr_info *thr, void* func)
 static void show_credits()
 {
 	printf("** " PACKAGE_NAME " " PACKAGE_VERSION " by Tanguy Pruvot (tpruvot@github) **\n");
-	printf(CL_GRY " based on Lucas Jones fork of pooler cpuminer 2.4" CL_N "\n\n");
 	printf("BTC donation address: 1FhDPLPpw18X4srecguG3MxJYe4a1JsZnd\n\n");
 }
 
@@ -2680,6 +2738,22 @@ int main(int argc, char *argv[]) {
 	rpc_pass = strdup("");
 	opt_api_allow = strdup("127.0.0.1"); /* 0.0.0.0 for all ips */
 
+#if defined(WIN32)
+	SYSTEM_INFO sysinfo;
+	GetSystemInfo(&sysinfo);
+	num_cpus = sysinfo.dwNumberOfProcessors;
+#elif defined(_SC_NPROCESSORS_CONF)
+	num_cpus = sysconf(_SC_NPROCESSORS_CONF);
+#elif defined(CTL_HW) && defined(HW_NCPU)
+	int req[] = { CTL_HW, HW_NCPU };
+	size_t len = sizeof(num_cpus);
+	sysctl(req, 2, &num_cpus, &len, NULL, 0);
+#else
+	num_cpus = 1;
+#endif
+	if (num_cpus < 1)
+		num_cpus = 1;
+
 	/* parse command line */
 	parse_cmdline(argc, argv);
 
@@ -2694,6 +2768,11 @@ int main(int argc, char *argv[]) {
 			parse_cmdline(argc, argv);
 		}
 	}
+
+	if (!opt_n_threads)
+		opt_n_threads = num_cpus;
+	if (!opt_n_threads)
+		opt_n_threads = 1;
 
 	if (opt_algo == ALGO_QUARK) {
 		init_quarkhash_contexts();
@@ -2749,27 +2828,29 @@ int main(int argc, char *argv[]) {
 	signal(SIGINT, signal_handler);
 #else
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleHandler, TRUE);
+	if (opt_priority > 0) {
+		DWORD prio = NORMAL_PRIORITY_CLASS;
+		switch (opt_priority) {
+		case 1:
+			prio = BELOW_NORMAL_PRIORITY_CLASS;
+			break;
+		case 3:
+			prio = ABOVE_NORMAL_PRIORITY_CLASS;
+			break;
+		case 4:
+			prio = HIGH_PRIORITY_CLASS;
+			break;
+		case 5:
+			prio = REALTIME_PRIORITY_CLASS;
+		}
+		SetPriorityClass(GetCurrentProcess(), prio);
+	}
 #endif
-
-#if defined(WIN32)
-	SYSTEM_INFO sysinfo;
-	GetSystemInfo(&sysinfo);
-	num_processors = sysinfo.dwNumberOfProcessors;
-#elif defined(_SC_NPROCESSORS_CONF)
-	num_processors = sysconf(_SC_NPROCESSORS_CONF);
-#elif defined(CTL_HW) && defined(HW_NCPU)
-	int req[] = { CTL_HW, HW_NCPU };
-	size_t len = sizeof(num_processors);
-	sysctl(req, 2, &num_processors, &len, NULL, 0);
-#else
-	num_processors = 1;
-#endif
-	if (num_processors < 1)
-		num_processors = 1;
-	if (!opt_n_threads)
-		opt_n_threads = num_processors;
-	if (!opt_n_threads)
-		opt_n_threads = 1;
+	if (opt_affinity != -1) {
+		if (!opt_quiet)
+			applog(LOG_DEBUG, "Binding process to cpu mask %x", opt_affinity);
+		affine_to_cpu_mask(-1, opt_affinity);
+	}
 
 #ifdef HAVE_SYSLOG_H
 	if (use_syslog)
