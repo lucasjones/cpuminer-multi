@@ -161,12 +161,12 @@ void get_defconfig_path(char *out, size_t bufsize, char *argv0)
 	char *cmd = strdup(argv0);
 	char *dir = dirname(cmd);
 	const char *sep = strstr(dir, "\\") ? "\\" : "/";
+	struct stat info = { 0 };
 #ifdef WIN32
 	snprintf(out, bufsize, "%s\\cpuminer\\cpuminer-conf.json", getenv("APPDATA"));
 #else
 	snprintf(out, bufsize, "%s\\.cpuminer\\cpuminer-conf.json", getenv("HOME"));
 #endif
-	struct stat info;
 	if (dir && stat(out, &info) != 0) {
 		snprintf(out, bufsize, "%s%scpuminer-conf.json", dir, sep);
 	}

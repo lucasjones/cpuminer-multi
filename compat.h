@@ -48,15 +48,19 @@ static __inline int setpriority(int which, int who, int prio)
 typedef int ssize_t;
 
 #include <stdlib.h>
+// This static var is made to be compatible with linux/mingw (no free on string result)
+// This is not thread safe but we only use that once on process start
+static char dirname_buffer[_MAX_PATH] = { 0 };
 static __inline char * dirname(char *file) {
-	char buffer[_MAX_PATH] = { 0 };
-	char drive[_MAX_DRIVE];
-	char dir[_MAX_DIR];
-	char fname[_MAX_FNAME];
-	char ext[_MAX_EXT];
+	char drive[_MAX_DRIVE] = { 0 };
+	char dir[_MAX_DIR] = { 0 };
+	char fname[_MAX_FNAME], ext[_MAX_EXT];
 	_splitpath_s(file, drive, _MAX_DRIVE, dir, _MAX_DIR, fname, _MAX_FNAME, ext, _MAX_EXT);
-	sprintf(buffer, "%s%s", drive, dir);
-	return &buffer[0];
+	if (dir && strlen(dir) && dir[strlen(dir)-1] == '\\') {
+		dir[strlen(dir) - 1] = '\0';
+	}
+	sprintf(dirname_buffer, "%s%s", drive, dir);
+	return &dirname_buffer[0];
 }
 #endif
 
