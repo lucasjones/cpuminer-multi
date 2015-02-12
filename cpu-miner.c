@@ -169,6 +169,7 @@ static int work_thr_id;
 int longpoll_thr_id = -1;
 int stratum_thr_id = -1;
 int api_thr_id = -1;
+bool stratum_need_reset = false;
 struct work_restart *work_restart = NULL;
 static struct stratum_ctx stratum;
 bool jsonrpc_2 = false;
@@ -192,6 +193,7 @@ double   global_diff = 0.0;
 int opt_intensity = 0;
 uint32_t opt_work_size = 0; /* default */
 char *opt_api_allow = NULL;
+int opt_api_remote = 0;
 int opt_api_listen = 4048; /* 0 to disable */
 
 #ifdef HAVE_GETOPT_LONG
@@ -271,6 +273,7 @@ Options:\n\
       --cpu-affinity    set process affinity to cpu core(s), mask 0x3 for cores 0 and 1\n\
       --cpu-priority    set process priority (default: 0 idle, 2 normal to 5 highest)\n\
   -b, --api-bind        IP/Port for the miner API (default: 127.0.0.1:4048)\n\
+      --api-remote      Allow remote control\n\
   -c, --config=FILE     load a JSON-format configuration file\n\
   -V, --version         display version information and exit\n\
   -h, --help            display this help text and exit\n\
@@ -286,6 +289,7 @@ static char const short_options[] =
 static struct option const options[] = {
 	{ "algo", 1, NULL, 'a' },
 	{ "api-bind", 1, NULL, 'b' },
+	{ "api-remote", 0, NULL, 1030 },
 	{ "background", 0, NULL, 'B' },
 	{ "benchmark", 0, NULL, 1005 },
 	{ "cputest", 0, NULL, 1006 },
@@ -2181,6 +2185,12 @@ static void *stratum_thread(void *userdata)
 	while (1) {
 		int failures = 0;
 
+		if (stratum_need_reset) {
+			stratum_need_reset = false;
+			stratum_disconnect(&stratum);
+			applog(LOG_DEBUG, "stratum connection reset");
+		}
+
 		while (!stratum.curl) {
 			pthread_mutex_lock(&g_work_lock);
 			g_work_time = 0;
@@ -2315,9 +2325,7 @@ static void strhide(char *s)
 	while (*s) *s++ = '\0';
 }
 
-static void parse_config(json_t *config, char *ref);
-
-static void parse_arg(int key, char *arg)
+void parse_arg(int key, char *arg)
 {
 	char *p;
 	int v, i;
@@ -2370,6 +2378,9 @@ static void parse_arg(int key, char *arg)
 			/* port or 0 to disable */
 			opt_api_listen = atoi(arg);
 		}
+		break;
+	case 1030: /* --api-remote */
+		opt_api_remote = 1;
 		break;
 	case 'n':
 		if (opt_algo == ALGO_NEOSCRYPT) {
@@ -2613,7 +2624,7 @@ static void parse_arg(int key, char *arg)
 	}
 }
 
-static void parse_config(json_t *config, char *ref)
+void parse_config(json_t *config, char *ref)
 {
 	int i;
 	json_t *val;

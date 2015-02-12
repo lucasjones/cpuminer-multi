@@ -96,6 +96,7 @@ extern int opt_intensity;
 extern int opt_n_threads;
 extern char *opt_api_allow;
 extern int opt_api_listen; /* port */
+extern int opt_api_remote;
 extern double *thr_hashrates;
 extern uint64_t global_hashrate;
 extern uint32_t accepted_count;
@@ -162,13 +163,51 @@ static char *getsummary(char *params)
 }
 
 /**
-* Returns cpu/thread specific stats
-*/
+ * Returns cpu/thread specific stats
+ */
 static char *getthreads(char *params)
 {
 	*buffer = '\0';
 	for (int i = 0; i < opt_n_threads; i++)
 		cpustatus(i);
+	return buffer;
+}
+
+/**
+ * Is remote control allowed ?
+ */
+static bool check_remote_access(void)
+{
+	return (opt_api_remote > 0);
+}
+
+/**
+ * Change pool url (see --url parameter)
+ * seturl|stratum+tcp://XeVrkPrWB7pDbdFLfKhF1Z3xpqhsx6wkH3:X@stratum+tcp://mine.xpool.ca:1131|
+ * seturl|stratum+tcp://Danila.1:X@pool.ipominer.com:3335|
+ */
+extern bool stratum_need_reset;
+static char *remote_seturl(char *params)
+{
+	*buffer = '\0';
+	if (!check_remote_access())
+		return buffer;
+	parse_arg('o', params);
+	stratum_need_reset = true;
+	sprintf(buffer, "%s", "ok|");
+	return buffer;
+}
+
+/**
+ * Ask the miner to quit
+ */
+static char *remote_quit(char *params)
+{
+	*buffer = '\0';
+	if (!check_remote_access())
+		return buffer;
+	bye = 1;
+	sprintf(buffer, "%s", "bye|");
 	return buffer;
 }
 
@@ -179,6 +218,9 @@ struct CMDS {
 } cmds[] = {
 	{ "summary", getsummary },
 	{ "threads", getthreads },
+	/* remote functions */
+	{ "seturl", remote_seturl },
+	{ "quit",    remote_quit },
 	/* keep it the last */
 	{ "help",    gethelp },
 };
@@ -665,8 +707,12 @@ void *api_thread(void *userdata)
 
 	startup = time(NULL);
 	api();
-
 	tq_freeze(mythr->q);
+
+	if (bye) {
+		// quit command
+		proper_exit(1);
+	}
 
 	return NULL;
 }
