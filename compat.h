@@ -43,7 +43,7 @@ static __inline int setpriority(int which, int who, int prio)
 #define strncasecmp(x,y,z) _strnicmp(x,y,z)
 #define strcasecmp(x,y) _stricmp(x,y)
 #define __func__ __FUNCTION__
-#define __thread __delclspec(thread)
+#define __thread __declspec(thread)
 #define _ALIGN(x) __declspec(align(x))
 typedef int ssize_t;
 

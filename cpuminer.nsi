@@ -101,7 +101,7 @@ LangString LSTR_61 ${LANG_ENGLISH} "&Close"
 
 
 ; --------------------
-; VARIABLES: 20
+; VARIABLES:
 
 Var _0_
 Var _1_
@@ -284,6 +284,7 @@ Section
   CreateShortCut /NoWorkingDir "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME}.lnk" "$REALINSTDIR\cpuminer-gw64.exe"
   CreateShortCut /NoWorkingDir "$SMPROGRAMS\${PROGRAM_NAME}\Config.lnk" "$SYSDIR\notepad.exe" "$DATADIR\cpuminer-conf.json"
   CreateShortCut "$SMPROGRAMS\${PROGRAM_NAME}\Uninstall.lnk" "$DATADIR\cpuminer-uninst.exe"
+  CreateShortCut /NoWorkingDir "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME}-bg.lnk" "$REALINSTDIR\cpuminer-gw64.exe" "-q -B" "" "" SW_SHOWMINIMIZED
 
   WriteRegStr HKLM ${RK_UNINSTALL} \
     "DisplayName" "${PROGRAM_NAME}"
@@ -348,6 +349,7 @@ Section "uninstall"
 
   # second, remove the link from the start menu
   Delete "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME}.lnk"
+  Delete "$SMPROGRAMS\${PROGRAM_NAME}\${PROGRAM_NAME}-bg.lnk"
   Delete "$SMPROGRAMS\${PROGRAM_NAME}\Config.lnk"
   Delete "$SMPROGRAMS\${PROGRAM_NAME}\Uninstall.lnk"
   RMDir "$SMPROGRAMS\${PROGRAM_NAME}"

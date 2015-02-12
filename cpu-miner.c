@@ -264,11 +264,8 @@ Options:\n\
 "\
   -S, --syslog          use system log for output messages\n"
 #endif
-#ifndef WIN32
 "\
-  -B, --background      run the miner in the background\n"
-#endif
-"\
+  -B, --background      run the miner in the background\n\
       --benchmark       run in offline benchmark mode\n\
       --cputest         debug hashes from cpu algorithms\n\
       --cpu-affinity    set process affinity to cpu core(s), mask 0x3 for cores 0 and 1\n\
@@ -281,20 +278,15 @@ Options:\n\
 
 
 static char const short_options[] =
-#ifndef WIN32
-	"B"
-#endif
 #ifdef HAVE_SYSLOG_H
 	"S"
 #endif
-	"a:b:c:CDhp:Px:qr:R:s:t:T:o:u:O:Vn:f:";
+	"a:b:Bc:CDhp:Px:qr:R:s:t:T:o:u:O:Vn:f:";
 
 static struct option const options[] = {
 	{ "algo", 1, NULL, 'a' },
 	{ "api-bind", 1, NULL, 'b' },
-#ifndef WIN32
 	{ "background", 0, NULL, 'B' },
-#endif
 	{ "benchmark", 0, NULL, 1005 },
 	{ "cputest", 0, NULL, 1006 },
 	{ "cert", 1, NULL, 1001 },
@@ -400,7 +392,15 @@ void get_currentalgo(char* buf, int sz)
 
 void proper_exit(int reason)
 {
-	/* placeholder if required */
+#ifdef WIN32
+	if (opt_background) {
+		HWND hcon = GetConsoleWindow();
+		if (hcon) {
+			// unhide parent command line windows
+			ShowWindow(hcon, SW_SHOWMINNOACTIVE);
+		}
+	}
+#endif
 	exit(reason);
 }
 
@@ -2384,6 +2384,7 @@ static void parse_arg(int key, char *arg)
 		break;
 	case 'B':
 		opt_background = true;
+		use_colors = false;
 		break;
 	case 'c': {
 		json_error_t err;
@@ -2829,6 +2830,17 @@ int main(int argc, char *argv[]) {
 	signal(SIGINT, signal_handler);
 #else
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleHandler, TRUE);
+	if (opt_background) {
+		HWND hcon = GetConsoleWindow();
+		if (hcon) {
+			// this method also hide parent command line window
+			ShowWindow(hcon, SW_HIDE);
+		} else {
+			HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+			CloseHandle(h);
+			FreeConsole();
+		}
+	}
 	if (opt_priority > 0) {
 		DWORD prio = NORMAL_PRIORITY_CLASS;
 		switch (opt_priority) {
