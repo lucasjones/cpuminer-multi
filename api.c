@@ -681,6 +681,11 @@ static void api()
 
 				for (i = 0; i < CMDMAX; i++) {
 					if (strcmp(buf, cmds[i].name) == 0) {
+						if (params && strlen(params)) {
+							// remove possible trailing |
+							if (params[strlen(params) - 1] == '|')
+								params[strlen(params) - 1] = '\0';
+						}
 						result = (cmds[i].func)(params);
 						if (wskey) {
 							websocket_handshake(c, result, wskey);

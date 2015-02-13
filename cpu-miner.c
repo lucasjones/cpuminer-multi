@@ -2188,7 +2188,13 @@ static void *stratum_thread(void *userdata)
 		if (stratum_need_reset) {
 			stratum_need_reset = false;
 			stratum_disconnect(&stratum);
-			applog(LOG_DEBUG, "stratum connection reset");
+			if (strcmp(stratum.url, rpc_url)) {
+				free(stratum.url);
+				stratum.url = strdup(rpc_url);
+				applog(LOG_BLUE, "Connection changed to %s", short_url);
+			} else if (!opt_quiet) {
+				applog(LOG_DEBUG, "Stratum connection reset");
+			}
 		}
 
 		while (!stratum.curl) {
