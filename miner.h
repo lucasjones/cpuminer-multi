@@ -231,6 +231,10 @@ extern int scanhash_neoscrypt(int thr_id, uint32_t *pdata, const uint32_t *ptarg
 extern int scanhash_nist5(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
+extern int scanhash_pluck(int thr_id, uint32_t *pdata,
+                            unsigned char *scratchbuf, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done, int N);
+
 extern int scanhash_qubit(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
@@ -468,6 +472,7 @@ void lyra2_hash(void *state, const void *input);
 void myriadhash(void *output, const void *input);
 void neoscrypt(unsigned char *output, const unsigned char *password, uint32_t profile);
 void nist5hash(void *output, const void *input);
+void pluck_hash(uint32_t *hash, const uint32_t *data, uchar *hashbuffer, const int N);
 void pentablakehash(void *output, const void *input);
 void qubithash(void *output, const void *input);
 void s3hash(void *output, const void *input);

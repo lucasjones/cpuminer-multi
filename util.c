@@ -1720,10 +1720,13 @@ void applog_hash(void *hash)
 #define printpfx(n,h) \
 	printf("%s%12s%s: %s\n", CL_BLU, n, CL_N, format_hash(s, (uint8_t*) h))
 
+static char scratchbuf[128*1024] = { 0 };
+
 void print_hash_tests(void)
 {
-	char* buf[128], hash[128], s[80];
-	memset(buf, 0, sizeof buf);
+	char hash[128], s[80];
+	char* buf = &scratchbuf[0];
+	memset(buf, 0, sizeof scratchbuf);
 
 	printf("\n" CL_WHT "CPU HASH ON EMPTY BUFFER RESULTS:" CL_N " (dev purpose)\n\n");
 
@@ -1774,6 +1777,11 @@ void print_hash_tests(void)
 	memset(hash, 0, sizeof hash);
 	pentablakehash(&hash[0], &buf[0]);
 	printpfx("Pentablake", hash);
+
+	memset(hash, 0, sizeof hash);
+	pluck_hash((uint32_t*)&hash[0], (uint32_t*)&buf[0], &buf[0], 128);
+	memset(buf, 0, sizeof scratchbuf);
+	printpfx("Pluck", hash);
 
 	memset(hash, 0, sizeof hash);
 	quarkhash(&hash[0], &buf[0]);

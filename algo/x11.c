@@ -95,10 +95,10 @@ int scanhash_x11(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 		((uint32_t*)ptarget)[7] = 0x0cff;
 
 	for (int k=0; k < 19; k++)
-		be32enc(&endiandata[k], ((uint32_t*)pdata)[k]);
+		be32enc(&endiandata[k], pdata[k]);
 
+	const uint32_t Htarg = ptarget[7];
 	do {
-		const uint32_t Htarg = ptarget[7];
 		uint32_t hash[8];
 		be32enc(&endiandata[19], nonce);
 		x11hash(hash, endiandata);

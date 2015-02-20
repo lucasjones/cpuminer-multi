@@ -89,6 +89,7 @@ enum algos {
 	ALGO_LYRA2,       /* Lyra2RE (Vertcoin) */
 	ALGO_MYR_GR,      /* Myriad Groestl */
 	ALGO_NIST5,       /* Nist5 */
+	ALGO_PLUCK,       /* Pluck (Supcoin) */
 	ALGO_QUBIT,       /* Qubit */
 	ALGO_S3,          /* S3 */
 	ALGO_X11,         /* X11 */
@@ -117,6 +118,7 @@ static const char *algo_names[] = {
 	"lyra2",
 	"myr-gr",
 	"nist5",
+	"pluck",
 	"qubit",
 	"s3",
 	"x11",
@@ -149,6 +151,7 @@ static int opt_scantime = 5;
 static const bool opt_time = true;
 static enum algos opt_algo = ALGO_SCRYPT;
 static int opt_scrypt_n = 1024;
+static int opt_pluck_n = 128;
 static unsigned int opt_nfactor = 6;
 int opt_n_threads = 0;
 int opt_affinity = -1;
@@ -158,9 +161,9 @@ static char *rpc_url;
 static char *rpc_userpass;
 static char *rpc_user, *rpc_pass;
 static char *short_url = NULL;
-static size_t pk_script_size;
-static unsigned char pk_script[25];
-static char coinbase_sig[101] = "";
+static unsigned char pk_script[25] = { 0 };
+static size_t pk_script_size = 0;
+static char coinbase_sig[101] = { 0 };
 char *opt_cert;
 char *opt_proxy;
 long opt_proxy_type;
@@ -226,6 +229,7 @@ Options:\n\
                           myr-gr       Myriad-Groestl\n\
                           neoscrypt    NeoScrypt(128, 2, 1)\n\
                           nist5        Nist5\n\
+                          pluck        Pluck:128 (Supcoin)\n\
                           pentablake   Pentablake\n\
                           quark        Quark\n\
                           qubit        Qubit\n\
@@ -310,6 +314,7 @@ static struct option const options[] = {
 	{ "no-redirect", 0, NULL, 1009 },
 	{ "no-stratum", 0, NULL, 1007 },
 	{ "pass", 1, NULL, 'p' },
+	{ "protocol", 0, NULL, 'P' },
 	{ "protocol-dump", 0, NULL, 'P' },
 	{ "proxy", 1, NULL, 'x' },
 	{ "quiet", 0, NULL, 'q' },
@@ -682,6 +687,8 @@ err_out:
 	return false;
 }
 
+#define BLOCK_VERSION_CURRENT 3
+
 static bool gbt_work_decode(const json_t *val, struct work *work)
 {
 	int i, n;
@@ -692,7 +699,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 	uchar *cbtx = NULL;
 	int tx_count, tx_size;
 	uchar txc_vi[9];
-	uchar **merkle_tree = NULL;
+	uchar(*merkle_tree)[32] = NULL;
 	bool coinbase_append = false;
 	bool submit_coinbase = false;
 	bool version_force = false;
@@ -732,9 +739,9 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 		goto out;
 	}
 	version = (uint32_t) json_integer_value(tmp);
-	if (version > 2) {
+	if ((version & 0xffU) > BLOCK_VERSION_CURRENT) {
 		if (version_reduce) {
-			version = 2;
+			version = (version & ~0xffU) | BLOCK_VERSION_CURRENT;
 		} else if (have_gbt && allow_getwork && !version_force) {
 			applog(LOG_DEBUG, "Switching to getwork, gbt version %d", version);
 			have_gbt = false;
@@ -794,7 +801,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 		int64_t cbvalue;
 		if (!pk_script_size) {
 			if (allow_getwork) {
-				applog(LOG_NOTICE, "No payout address provided, switching to getwork");
+				applog(LOG_INFO, "No payout address provided, switching to getwork");
 				have_gbt = false;
 			} else
 				applog(LOG_ERR, "No payout address provided");
@@ -882,8 +889,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 	bin2hex(work->txs + 2*n, cbtx, cbtx_size);
 
 	/* generate merkle root */
-	merkle_tree = (unsigned char**) malloc(32 * ((1 + tx_count + 1) & ~1));
-
+	merkle_tree = (uchar(*)[32]) calloc(((1 + tx_count + 1) & ~1), 32);
 	sha256d(merkle_tree[0], cbtx, cbtx_size);
 	for (i = 0; i < tx_count; i++) {
 		tmp = json_array_get(txa, i);
@@ -938,6 +944,8 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 		work->workid = strdup(json_string_value(tmp));
 	}
 
+	rc = true;
+out:
 	/* Long polling */
 	tmp = json_object_get(val, "longpollid");
 	if (want_longpoll && json_is_string(tmp)) {
@@ -952,11 +960,8 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 		}
 	}
 
-	rc = true;
-
-out:
-	free(cbtx);
 	free(merkle_tree);
+	free(cbtx);
 	return rc;
 }
 
@@ -989,6 +994,12 @@ static int share_result(int result, struct work *work, const char *reason)
 			100. * accepted_count / (accepted_count + rejected_count), s,
 			(((double) 0xffffffff) / (work ? work->target[7] : rpc2_target)),
 			sres);
+		break;
+	case ALGO_PLUCK:
+		sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate);
+		applog(LOG_NOTICE, "accepted: %lu/%lu (%.2f%%), %s H/s %s",
+			accepted_count, accepted_count + rejected_count,
+			100. * accepted_count / (accepted_count + rejected_count), s, sres);
 		break;
 	default:
 		sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate / 1000.0);
@@ -1275,8 +1286,9 @@ start:
 			json_decref(val);
 			goto start;
 		}
-	} else
+	} else {
 		rc = work_decode(json_object_get(val, "result"), work);
+	}
 
 	if (opt_protocol && rc) {
 		timeval_subtract(&diff, &tv_end, &tv_start);
@@ -1626,6 +1638,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 		switch (opt_algo) {
 			case ALGO_SCRYPT:
 			case ALGO_NEOSCRYPT:
+			case ALGO_PLUCK:
 				diff_to_target(work->target, sctx->job.diff / (65536.0 * opt_diff_factor));
 				break;
 			case ALGO_FRESH:
@@ -1716,6 +1729,16 @@ static void *miner_thread(void *userdata)
 			exit(1);
 		}
 	}
+
+	else if (opt_algo == ALGO_PLUCK) {
+		scratchbuf = malloc(opt_pluck_n * 1024);
+		if (!scratchbuf) {
+			applog(LOG_ERR, "pluck buffer allocation failed");
+			pthread_mutex_lock(&applog_lock);
+			exit(1);
+		}
+	}
+
 	uint32_t *nonceptr = (uint32_t*) (((char*)work.data) + (jsonrpc_2 ? 39 : 76));
 
 	while (1) {
@@ -1795,6 +1818,9 @@ static void *miner_thread(void *userdata)
 			case ALGO_CRYPTONIGHT:
 				max64 = 0x40LL;
 				break;
+			case ALGO_PLUCK:
+				max64 = 0x1ff;
+				break;
 			case ALGO_LYRA2:
 				max64 = 0xffff;
 				break;
@@ -1826,10 +1852,10 @@ static void *miner_thread(void *userdata)
 				break;
 			}
 		}
-		if (*nonceptr + max64 > end_nonce)
+		if ((*nonceptr) + max64 > end_nonce)
 			max_nonce = end_nonce;
 		else
-			max_nonce = *nonceptr + (uint32_t) max64;
+			max_nonce = (*nonceptr) + (uint32_t) max64;
 
 		hashes_done = 0;
 		gettimeofday((struct timeval *) &tv_start, NULL);
@@ -1898,6 +1924,10 @@ static void *miner_thread(void *userdata)
 			rc = scanhash_nist5(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
 			break;
+		case ALGO_PLUCK:
+			rc = scanhash_pluck(thr_id, work.data, scratchbuf, work.target,
+					max_nonce, &hashes_done, opt_pluck_n);
+			break;
 		case ALGO_QUBIT:
 			rc = scanhash_qubit(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
@@ -1948,6 +1978,7 @@ static void *miner_thread(void *userdata)
 		if (!opt_quiet) {
 			switch(opt_algo) {
 			case ALGO_CRYPTONIGHT:
+			case ALGO_PLUCK:
 				applog(LOG_INFO, "CPU #%d: %.2f H/s", thr_id, thr_hashrates[thr_id]);
 				break;
 			default:
@@ -2083,7 +2114,7 @@ start:
 			else
 				rc = work_decode(res, &g_work);
 			if (rc) {
-				if (strcmp(start_job_id, g_work.job_id)) {
+				if (g_work.job_id && strcmp(start_job_id, g_work.job_id)) {
 					if (opt_debug)
 						applog(LOG_BLUE, "Longpoll pushed new work");
 					time(&g_work_time);

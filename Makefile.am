@@ -61,6 +61,7 @@ cpuminer_SOURCES = \
   algo/quark.c \
   algo/neoscrypt.c \
   algo/nist5.c \
+  algo/pluck.c \
   algo/qubit.c \
   algo/scrypt.c \
   algo/sha2.c \
