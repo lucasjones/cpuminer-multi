@@ -29,22 +29,80 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <inttypes.h>
-#include <emmintrin.h>
 
 #define BLOCK_HEADER_SIZE 80
 
-//windows hack bleh
+// windows
 #ifndef htobe32
 #define htobe32(x)  ((uint32_t)htonl((uint32_t)(x)))
 #endif
 
-#define USE_SSE2 0 /* broken */
-
 // note, this is 64 bits
 #define ROTL(a, b) (((a) << (b)) | ((a) >> (32 - (b))))
 
-#if !USE_SSE2
+#ifdef _MSC_VER
+//#include "scryptjane/scrypt-jane-portable-x86.h"
+#endif
+
+#if defined(_MSC_VER) && defined(_M_X64)
+#define _VECTOR __vectorcall
+#include <intrin.h>
+//#include <emmintrin.h> //SSE2
+//#include <pmmintrin.h> //SSE3
+//#include <tmmintrin.h> //SSSE3
+//#include <smmintrin.h> //SSE4.1
+//#include <nmmintrin.h> //SSE4.2
+//#include <ammintrin.h> //SSE4A
+//#include <wmmintrin.h> //AES
+//#include <immintrin.h> //AVX
+#define OPT_COMPATIBLE
+#elif defined(__GNUC__) && defined(__x86_64__)
+#include <x86intrin.h>
+#define _VECTOR
+#endif
+
+#ifdef OPT_COMPATIBLE
+static void _VECTOR xor_salsa8(__m128i B[4], const __m128i Bx[4])
+{
+	__m128i X0, X1, X2, X3;
+
+	X0 = B[0] = _mm_xor_si128(B[0], Bx[0]);
+	X1 = B[1] = _mm_xor_si128(B[1], Bx[1]);
+	X2 = B[2] = _mm_xor_si128(B[2], Bx[2]);
+	X3 = B[3] = _mm_xor_si128(B[3], Bx[3]);
+
+	for (int i = 0; i < 4; i++) {
+		/* Operate on columns. */
+		X1.m128i_u32[0] ^= ROTL(X0.m128i_u32[0] + X3.m128i_u32[0], 7);  X2.m128i_u32[1] ^= ROTL(X1.m128i_u32[1] + X0.m128i_u32[1], 7);
+		X3.m128i_u32[2] ^= ROTL(X2.m128i_u32[2] + X1.m128i_u32[2], 7);  X0.m128i_u32[3] ^= ROTL(X3.m128i_u32[3] + X2.m128i_u32[3], 7);
+		X2.m128i_u32[0] ^= ROTL(X1.m128i_u32[0] + X0.m128i_u32[0], 9);  X3.m128i_u32[1] ^= ROTL(X2.m128i_u32[1] + X1.m128i_u32[1], 9);
+		X0.m128i_u32[2] ^= ROTL(X3.m128i_u32[2] + X2.m128i_u32[2], 9);  X1.m128i_u32[3] ^= ROTL(X0.m128i_u32[3] + X3.m128i_u32[3], 9);
+
+		X3.m128i_u32[0] ^= ROTL(X2.m128i_u32[0] + X1.m128i_u32[0], 13);  X0.m128i_u32[1] ^= ROTL(X3.m128i_u32[1] + X2.m128i_u32[1], 13);
+		X1.m128i_u32[2] ^= ROTL(X0.m128i_u32[2] + X3.m128i_u32[2], 13);  X2.m128i_u32[3] ^= ROTL(X1.m128i_u32[3] + X0.m128i_u32[3], 13);
+		X0.m128i_u32[0] ^= ROTL(X3.m128i_u32[0] + X2.m128i_u32[0], 18);  X1.m128i_u32[1] ^= ROTL(X0.m128i_u32[1] + X3.m128i_u32[1], 18);
+		X2.m128i_u32[2] ^= ROTL(X1.m128i_u32[2] + X0.m128i_u32[2], 18);  X3.m128i_u32[3] ^= ROTL(X2.m128i_u32[3] + X1.m128i_u32[3], 18);
+
+		/* Operate on rows. */
+		X0.m128i_u32[1] ^= ROTL(X0.m128i_u32[0] + X0.m128i_u32[3], 7);  X1.m128i_u32[2] ^= ROTL(X1.m128i_u32[1] + X1.m128i_u32[0], 7);
+		X2.m128i_u32[3] ^= ROTL(X2.m128i_u32[2] + X2.m128i_u32[1], 7);  X3.m128i_u32[0] ^= ROTL(X3.m128i_u32[3] + X3.m128i_u32[2], 7);
+		X0.m128i_u32[2] ^= ROTL(X0.m128i_u32[1] + X0.m128i_u32[0], 9);  X1.m128i_u32[3] ^= ROTL(X1.m128i_u32[2] + X1.m128i_u32[1], 9);
+		X2.m128i_u32[0] ^= ROTL(X2.m128i_u32[3] + X2.m128i_u32[2], 9);  X3.m128i_u32[1] ^= ROTL(X3.m128i_u32[0] + X3.m128i_u32[3], 9);
+
+		X0.m128i_u32[3] ^= ROTL(X0.m128i_u32[2] + X0.m128i_u32[1], 13);  X1.m128i_u32[0] ^= ROTL(X1.m128i_u32[3] + X1.m128i_u32[2], 13);
+		X2.m128i_u32[1] ^= ROTL(X2.m128i_u32[0] + X2.m128i_u32[3], 13);  X3.m128i_u32[2] ^= ROTL(X3.m128i_u32[1] + X3.m128i_u32[0], 13);
+		X0.m128i_u32[0] ^= ROTL(X0.m128i_u32[3] + X0.m128i_u32[2], 18);  X1.m128i_u32[1] ^= ROTL(X1.m128i_u32[0] + X1.m128i_u32[3], 18);
+		X2.m128i_u32[2] ^= ROTL(X2.m128i_u32[1] + X2.m128i_u32[0], 18);  X3.m128i_u32[3] ^= ROTL(X3.m128i_u32[2] + X3.m128i_u32[1], 18);
+	}
+
+	B[0] = _mm_add_epi32(B[0], X0);
+	B[1] = _mm_add_epi32(B[1], X1);
+	B[2] = _mm_add_epi32(B[2], X2);
+	B[3] = _mm_add_epi32(B[3], X3);
+}
+
+#else
+
 static inline void xor_salsa8(uint32_t B[16], const uint32_t Bx[16])
 {
 	uint32_t x00,x01,x02,x03,x04,x05,x06,x07,x08,x09,x10,x11,x12,x13,x14,x15;
@@ -111,75 +169,7 @@ static inline void xor_salsa8(uint32_t B[16], const uint32_t Bx[16])
 	B[15] += x15;
 }
 
-#else
-
-static inline void xor_salsa8(__m128i B[4], const __m128i Bx[4])
-{
-	__m128i X0, X1, X2, X3;
-	__m128i T;
-	int i;
-
-	X0 = B[0] = _mm_xor_si128(B[0], Bx[0]);
-	X1 = B[1] = _mm_xor_si128(B[1], Bx[1]);
-	X2 = B[2] = _mm_xor_si128(B[2], Bx[2]);
-	X3 = B[3] = _mm_xor_si128(B[3], Bx[3]);
-
-	for (i = 0; i < 8; i += 2) {
-		/* Operate on "columns". */
-		T = _mm_add_epi32(X0, X3);
-		X1 = _mm_xor_si128(X1, _mm_slli_epi32(T, 7));
-		X1 = _mm_xor_si128(X1, _mm_srli_epi32(T, 25));
-		T = _mm_add_epi32(X1, X0);
-		X2 = _mm_xor_si128(X2, _mm_slli_epi32(T, 9));
-		X2 = _mm_xor_si128(X2, _mm_srli_epi32(T, 23));
-		T = _mm_add_epi32(X2, X1);
-		X3 = _mm_xor_si128(X3, _mm_slli_epi32(T, 13));
-		X3 = _mm_xor_si128(X3, _mm_srli_epi32(T, 19));
-		T = _mm_add_epi32(X3, X2);
-		X0 = _mm_xor_si128(X0, _mm_slli_epi32(T, 18));
-		X0 = _mm_xor_si128(X0, _mm_srli_epi32(T, 14));
-
-		/* Rearrange data. */
-		X1 = _mm_shuffle_epi32(X1, 0x93);
-		X2 = _mm_shuffle_epi32(X2, 0x4E);
-		X3 = _mm_shuffle_epi32(X3, 0x39);
-
-		/* Operate on "rows". */
-		T = _mm_add_epi32(X0, X1);
-		X3 = _mm_xor_si128(X3, _mm_slli_epi32(T, 7));
-		X3 = _mm_xor_si128(X3, _mm_srli_epi32(T, 25));
-		T = _mm_add_epi32(X3, X0);
-		X2 = _mm_xor_si128(X2, _mm_slli_epi32(T, 9));
-		X2 = _mm_xor_si128(X2, _mm_srli_epi32(T, 23));
-		T = _mm_add_epi32(X2, X3);
-		X1 = _mm_xor_si128(X1, _mm_slli_epi32(T, 13));
-		X1 = _mm_xor_si128(X1, _mm_srli_epi32(T, 19));
-		T = _mm_add_epi32(X1, X2);
-		X0 = _mm_xor_si128(X0, _mm_slli_epi32(T, 18));
-		X0 = _mm_xor_si128(X0, _mm_srli_epi32(T, 14));
-
-		/* Rearrange data. */
-		X1 = _mm_shuffle_epi32(X1, 0x39);
-		X2 = _mm_shuffle_epi32(X2, 0x4E);
-		X3 = _mm_shuffle_epi32(X3, 0x93);
-	}
-
-	B[0] = _mm_add_epi32(B[0], X0);
-	B[1] = _mm_add_epi32(B[1], X1);
-	B[2] = _mm_add_epi32(B[2], X2);
-	B[3] = _mm_add_epi32(B[3], X3);
-}
-
 #endif
-
-static inline void assert(int cond)
-{
-	if(!cond)
-	{
-		printf("error\n");
-		exit(1);
-	}
-}
 
 //computes a single sha256 hash
 static void sha256_hash(unsigned char *hash, const unsigned char *data, int len)
@@ -249,7 +239,7 @@ void pluck_hash(uint32_t *hash, const uint32_t *data, uchar *hashbuffer, const i
 		if(i > 128) memcpy(randbuffer, hashbuffer + i - 128, 64);
 		else memset(randbuffer, 0, 64);
 
-		xor_salsa8(randbuffer, randseed);
+		xor_salsa8((void*) randbuffer, (void*) randseed);
 		memcpy(joint, hashbuffer + i - 32, 32);
 
 		//use the last hash value as the seed
@@ -270,7 +260,7 @@ void pluck_hash(uint32_t *hash, const uint32_t *data, uchar *hashbuffer, const i
 		if(i > 128) memcpy(randbuffer, hashbuffer + i - 128, 64);
 		else memset(randbuffer, 0, 64);
 
-		xor_salsa8(randbuffer, randseed);
+		xor_salsa8((void*) randbuffer, (void*) randseed);
 
 		//use the last hash value as the seed
 		for (int j = 0; j < 32; j += 2)
