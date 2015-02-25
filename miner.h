@@ -380,6 +380,7 @@ extern bool fulltest(const uint32_t *hash, const uint32_t *target);
 extern void diff_to_target(uint32_t *target, double diff);
 extern void get_currentalgo(char* buf, int sz);
 bool has_aes_ni(void);
+void bestcpu_feature(char *outbuf, int maxsz);
 
 struct work {
 	uint32_t data[32];

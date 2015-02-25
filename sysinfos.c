@@ -119,13 +119,54 @@ static inline void cpuid(int functionnumber, int output[4]) {
 }
 #endif /* !__arm__ */
 
+// http://en.wikipedia.org/wiki/CPUID
+#define OSXSAVE_Flag  (1 << 27)
+#define AVX1_Flag    ((1 << 28)|OSXSAVE_Flag)
+#define XOP_Flag      (1 << 11)
+#define FMA3_Flag    ((1 << 12)|AVX1_Flag|OSXSAVE_Flag)
+#define AES_Flag      (1 << 25)
+#define SSE42_Flag    (1 << 20)
+
+#define SSE_Flag      (1 << 25) // EDX
+#define SSE2_Flag     (1 << 26) // EDX
+
+#define AVX2_Flag     (1 << 5) // ADV EBX
+
 bool has_aes_ni()
 {
 #ifdef __arm__
 	return false;
 #else
-	int cpu_info[4];
+	int cpu_info[4] = { 0 };
 	cpuid(1, cpu_info);
-	return cpu_info[2] & (1 << 25);
+	return cpu_info[2] & AES_Flag;
+#endif
+}
+
+void bestcpu_feature(char *outbuf, int maxsz)
+{
+#ifdef __arm__
+	sprintf(outbuf, "ARM");
+#else
+	int cpu_info[4] = { 0 };
+	int cpu_info_adv[4] = { 0 };
+	cpuid(1, cpu_info);
+	cpuid(7, cpu_info_adv);
+	if ((cpu_info[2] & AVX1_Flag) && (cpu_info_adv[1] & AVX2_Flag))
+		sprintf(outbuf, "AVX2");
+	else if (cpu_info[2] & AVX1_Flag)
+		sprintf(outbuf, "AVX1");
+	else if (cpu_info[2] & FMA3_Flag)
+		sprintf(outbuf, "FMA3");
+	else if (cpu_info[2] & XOP_Flag)
+		sprintf(outbuf, "XOP");
+	else if (cpu_info[2] & SSE42_Flag)
+		sprintf(outbuf, "SSE42");
+	else if (cpu_info[3] & SSE2_Flag)
+		sprintf(outbuf, "SSE2");
+	else if (cpu_info[3] & SSE_Flag)
+		sprintf(outbuf, "SSE");
+	else
+		*outbuf = '\0';
 #endif
 }
