@@ -1820,6 +1820,10 @@ void print_hash_tests(void)
 	printpfx("X15", hash);
 
 	memset(hash, 0, sizeof hash);
+	zr5hash(&hash[0], &buf[0]);
+	printpfx("ZR5", hash);
+
+	memset(hash, 0, sizeof hash);
 	cryptonight_hash(&hash[0], &buf[0], 76);
 	printpfx("Cryptonight", hash);
 

@@ -70,7 +70,8 @@ cpuminer_SOURCES = \
   algo/x11.c \
   algo/x13.c \
   algo/x14.c \
-  algo/x15.c
+  algo/x15.c \
+  algo/zr5.c
 
 disable_flags =
 

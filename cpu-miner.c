@@ -83,12 +83,14 @@ enum algos {
 	ALGO_SHAVITE3,    /* Shavite3 */
 	ALGO_BLAKE,       /* Blake 256 */
 	ALGO_BLAKECOIN,   /* Simplified 8 rounds Blake 256 */
-	ALGO_FRESH,       /* Fresh */
+	ALGO_CRYPTONIGHT, /* CryptoNight */
 	ALGO_DMD_GR,      /* Diamond */
+	ALGO_FRESH,       /* Fresh */
 	ALGO_GROESTL,     /* Groestl */
 	ALGO_LYRA2,       /* Lyra2RE (Vertcoin) */
 	ALGO_MYR_GR,      /* Myriad Groestl */
 	ALGO_NIST5,       /* Nist5 */
+	ALGO_PENTABLAKE,  /* Pentablake */
 	ALGO_PLUCK,       /* Pluck (Supcoin) */
 	ALGO_QUBIT,       /* Qubit */
 	ALGO_S3,          /* S3 */
@@ -96,8 +98,7 @@ enum algos {
 	ALGO_X13,         /* X13 */
 	ALGO_X14,         /* X14 */
 	ALGO_X15,         /* X15 Whirlpool */
-	ALGO_PENTABLAKE,  /* Pentablake */
-	ALGO_CRYPTONIGHT, /* CryptoNight */
+	ALGO_ZR5,
 	ALGO_COUNT
 };
 
@@ -112,12 +113,14 @@ static const char *algo_names[] = {
 	"shavite3",
 	"blake",
 	"blakecoin",
-	"fresh",
+	"cryptonight",
 	"dmd-gr",
+	"fresh",
 	"groestl",
 	"lyra2",
 	"myr-gr",
 	"nist5",
+	"pentablake",
 	"pluck",
 	"qubit",
 	"s3",
@@ -125,8 +128,7 @@ static const char *algo_names[] = {
 	"x13",
 	"x14",
 	"x15",
-	"pentablake",
-	"cryptonight",
+	"zr5",
 	"\0"
 };
 
@@ -187,6 +189,7 @@ static pthread_mutex_t rpc2_job_lock;
 static pthread_mutex_t rpc2_login_lock;
 pthread_mutex_t applog_lock;
 static pthread_mutex_t stats_lock;
+uint32_t zr5_pok = 0;
 
 uint32_t accepted_count = 0L;
 uint32_t rejected_count = 0L;
@@ -240,6 +243,7 @@ Options:\n\
                           x13          X13\n\
                           x14          X14\n\
                           x15          X15\n\
+                          zr5          ZR5\n\
   -o, --url=URL         URL of mining server\n\
   -O, --userpass=U:P    username:password pair for mining server\n\
   -u, --user=USERNAME   username for mining server\n\
@@ -607,10 +611,10 @@ static bool work_decode(const json_t *val, struct work *work)
 	int data_size = sizeof(work->data), target_size = sizeof(work->target);
 	int adata_sz = ARRAY_SIZE(work->data), atarget_sz = ARRAY_SIZE(work->target);
 
-	if (opt_algo == ALGO_NEOSCRYPT) {
+	if (opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
 		data_size = 80; target_size = 32;
-		adata_sz = data_size >> 2;
-		atarget_sz = target_size >> 2;
+		adata_sz = data_size /  sizeof(uint32_t);
+		atarget_sz = target_size /  sizeof(uint32_t);
 	}
 
 	if (jsonrpc_2) {
@@ -628,6 +632,15 @@ static bool work_decode(const json_t *val, struct work *work)
 
 	for (i = 0; i < adata_sz; i++)
 		work->data[i] = le32dec(work->data + i);
+
+	if (opt_algo == ALGO_ZR5) {
+		#define POK_BOOL_MASK 0x00008000
+		#define POK_DATA_MASK 0xFFFF0000
+		if (work->data[0] & POK_BOOL_MASK) {
+			applog(LOG_BLUE, "POK received: %08xx", work->data[0]);
+			zr5_pok = work->data[0] & POK_DATA_MASK;
+		}
+	}
 
 	for (i = 0; i < atarget_sz; i++)
 		work->target[i] = le32dec(work->target + i);
@@ -1023,7 +1036,6 @@ static int share_result(int result, struct work *work, const char *reason)
 static bool submit_upstream_work(CURL *curl, struct work *work)
 {
 	json_t *val, *res, *reason;
-	char data_str[2 * sizeof(work->data) + 1];
 	char s[JSON_BUF_LEN];
 	int i;
 	bool rc = false;
@@ -1080,6 +1092,8 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 		}
 
 	} else if (work->txs) {
+
+		char data_str[2 * sizeof(work->data) + 1];
 		char *req;
 
 		for (i = 0; i < ARRAY_SIZE(work->data); i++)
@@ -1162,11 +1176,11 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			share_result(!strcmp(status ? json_string_value(status) : "", "OK"), work,
 					reason ? json_string_value(reason) : NULL);
 
-		} else if (opt_algo == ALGO_NEOSCRYPT) {
-			/* different data size and reversed endian */
-			int data_size = 80, adata_sz = data_size / sizeof(uint32_t);
+		} else if (opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
 
-			uchar gw_str[2 * 80 + 1];
+			/* different data size */
+			int data_size = 80, adata_sz = data_size / sizeof(uint32_t);
+			uchar gw_str[2 * 80 + 1] = { 0 };
 
 			/* Convert to little endian */
 			for(i = 0; i < adata_sz; i++)
@@ -1178,7 +1192,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			/* build JSON-RPC request */
 			snprintf(s, JSON_BUF_LEN,
 				"{\"method\": \"getwork\", \"params\": [\"%s\"], \"id\":4}\r\n",
-				data_str);
+				gw_str);
 
 			/* Issue a JSON-RPC request */
 			val = json_rpc_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
@@ -1194,16 +1208,19 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 
 		} else {
 
+			int data_size = 64, adata_sz = ARRAY_SIZE(work->data);
+			uchar gw_str[2 * 64 + 1] = { 0 };
+
 			/* build hex string */
-			for (i = 0; i < ARRAY_SIZE(work->data); i++)
+			for (i = 0; i < adata_sz; i++)
 				le32enc(work->data + i, work->data[i]);
 
-			bin2hex(data_str, (unsigned char *)work->data, sizeof(work->data));
+			bin2hex((char*) gw_str, (const uchar*) work->data, data_size);
 
 			/* build JSON-RPC request */
 			snprintf(s, JSON_BUF_LEN,
 				"{\"method\": \"getwork\", \"params\": [\"%s\"], \"id\":4}\r\n",
-				data_str);
+				gw_str);
 
 			/* issue JSON-RPC request */
 			val = json_rpc_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
@@ -1639,6 +1656,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_SCRYPT:
 			case ALGO_NEOSCRYPT:
 			case ALGO_PLUCK:
+			case ALGO_ZR5:
 				diff_to_target(work->target, sctx->job.diff / (65536.0 * opt_diff_factor));
 				break;
 			case ALGO_FRESH:
@@ -1745,7 +1763,15 @@ static void *miner_thread(void *userdata)
 		uint64_t hashes_done;
 		struct timeval tv_start, tv_end, diff;
 		int64_t max64;
+		int wkcmp_offset = 0;
+		int wkcmp_sz = 19*4;
 		int rc;
+
+		if (opt_algo == ALGO_ZR5) {
+			// Duplicates
+			wkcmp_sz -= sizeof(uint32_t);
+			wkcmp_offset = 1;
+		}
 
 		if (have_stratum) {
 			while (!jsonrpc_2 && time(NULL) >= g_work_time + 120)
@@ -1760,7 +1786,7 @@ static void *miner_thread(void *userdata)
 			if ((*nonceptr) >= end_nonce
 				&& !(jsonrpc_2 ? memcmp(work.data, g_work.data, 39) ||
 						memcmp(((uint8_t*) work.data) + 43, ((uint8_t*) g_work.data) + 43, 33)
-				  : memcmp(work.data, g_work.data, 76)))
+				  : memcmp(&work.data[wkcmp_offset], &g_work.data[wkcmp_offset], wkcmp_sz)))
 				stratum_gen_work(&stratum, &g_work);
 		} else {
 
@@ -1786,7 +1812,7 @@ static void *miner_thread(void *userdata)
 		if (jsonrpc_2
 			? memcmp(work.data, g_work.data, 39) ||
 				memcmp(((uint8_t*) work.data) + 43, ((uint8_t*) g_work.data) + 43, 33)
-			: memcmp(work.data, g_work.data, 76))
+			: memcmp(&work.data[wkcmp_offset], &g_work.data[wkcmp_offset], wkcmp_sz))
 		{
 			work_free(&work);
 			work_copy(&work, &g_work);
@@ -1950,6 +1976,10 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_X15:
 			rc = scanhash_x15(thr_id, work.data, work.target, max_nonce,
+					&hashes_done);
+			break;
+		case ALGO_ZR5:
+			rc = scanhash_zr5(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
 			break;
 		case ALGO_PENTABLAKE:
