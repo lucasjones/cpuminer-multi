@@ -2138,7 +2138,7 @@ start:
 				submit_old = soval ? json_is_true(soval) : false;
 			}
 			pthread_mutex_lock(&g_work_lock);
-			start_job_id = strdup(g_work.job_id);
+			start_job_id = g_work.job_id ? strdup(g_work.job_id) : NULL;
 			if (have_gbt)
 				rc = gbt_work_decode(res, &g_work);
 			else
