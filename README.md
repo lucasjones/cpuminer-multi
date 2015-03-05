@@ -1,4 +1,4 @@
-﻿CPUMiner-Multi
+CPUMiner-Multi
 ==============
 
 [![Build Status](https://travis-ci.org/tpruvot/cpuminer-multi.svg)](https://travis-ci.org/tpruvot/cpuminer-multi)
@@ -33,12 +33,15 @@ Algorithms
  * ✓ __neoscrypt__ (Feathercoin)
  * ✓ __nist5__ (MistCoin [MIC], TalkCoin [TAC], ...)
  * ✓ __pentablake__ (Joincoin)
+ * ✓ __pluck__ (Supcoin [SUP])
  * ✓ __qubit__ (MyriadCoin [MYR])
+ * ✓ __skein2__ (Woodcoin)
  * ✓ __s3__ (OneCoin)
  * ✓ __x11__ (Darkcoin [DRK], Hirocoin, Limecoin, ...)
  * ✓ __x13__ (Sherlockcoin, [ACE], [B2B], [GRC], [XHC], ...)
  * ✓ __x14__ (X14, Webcoin [WEB])
  * ✓ __x15__ (RadianceCoin [RCE])
+ * ✓ __zr5__ (Ziftrcoin [ZRC])
 
 #### Implemented, but untested
  * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)

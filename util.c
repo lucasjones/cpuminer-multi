@@ -1730,6 +1730,11 @@ void print_hash_tests(void)
 
 	printf("\n" CL_WHT "CPU HASH ON EMPTY BUFFER RESULTS:" CL_N " (dev purpose)\n\n");
 
+	//buf[0] = 1; buf[64] = 2; // for endian tests
+	memset(hash, 0, sizeof hash);
+	skein2hash(&hash[0], &buf[0]);
+	printpfx("skein2", hash);
+
 	memset(hash, 0, sizeof hash);
 	sha256d((uint8_t*) &hash[0], (uint8_t*)&buf[0], 64);
 	printpfx("SHA 256D", hash);
@@ -1798,6 +1803,10 @@ void print_hash_tests(void)
 	memset(hash, 0, sizeof hash);
 	skeinhash(&hash[0], &buf[0]);
 	printpfx("Skein", hash);
+
+	memset(hash, 0, sizeof hash);
+	skein2hash(&hash[0], &buf[0]);
+	printpfx("Skein2", hash);
 
 	memset(hash, 0, sizeof hash);
 	s3hash(&hash[0], &buf[0]);

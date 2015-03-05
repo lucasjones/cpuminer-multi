@@ -79,8 +79,6 @@ enum algos {
 	ALGO_HEAVY,       /* Heavy */
 	ALGO_NEOSCRYPT,   /* NeoScrypt(128, 2, 1) with Salsa20/20 and ChaCha20/20 */
 	ALGO_QUARK,       /* Quark */
-	ALGO_SKEIN,       /* Skein */
-	ALGO_SHAVITE3,    /* Shavite3 */
 	ALGO_BLAKE,       /* Blake 256 */
 	ALGO_BLAKECOIN,   /* Simplified 8 rounds Blake 256 */
 	ALGO_CRYPTONIGHT, /* CryptoNight */
@@ -93,6 +91,9 @@ enum algos {
 	ALGO_PENTABLAKE,  /* Pentablake */
 	ALGO_PLUCK,       /* Pluck (Supcoin) */
 	ALGO_QUBIT,       /* Qubit */
+	ALGO_SHAVITE3,    /* Shavite3 */
+	ALGO_SKEIN,       /* Skein */
+	ALGO_SKEIN2,      /* Double skein (Woodcoin) */
 	ALGO_S3,          /* S3 */
 	ALGO_X11,         /* X11 */
 	ALGO_X13,         /* X13 */
@@ -109,8 +110,6 @@ static const char *algo_names[] = {
 	"heavy",
 	"neoscrypt",
 	"quark",
-	"skein",
-	"shavite3",
 	"blake",
 	"blakecoin",
 	"cryptonight",
@@ -123,6 +122,9 @@ static const char *algo_names[] = {
 	"pentablake",
 	"pluck",
 	"qubit",
+	"shavite3",
+	"skein",
+	"skein2",
 	"s3",
 	"x11",
 	"x13",
@@ -237,7 +239,8 @@ Options:\n\
                           quark        Quark\n\
                           qubit        Qubit\n\
                           shavite3     Shavite3\n\
-                          skein        Skein\n\
+                          skein        Skein+Sha (Skeincoin)\n\
+                          skeincoin    Double Skein (Woodcoin)\n\
                           s3           S3\n\
                           x11          X11\n\
                           x13          X13\n\
@@ -1871,6 +1874,8 @@ static void *miner_thread(void *userdata)
 				break;
 			case ALGO_BLAKE:
 			case ALGO_BLAKECOIN:
+			case ALGO_SKEIN:
+			case ALGO_SKEIN2:
 				max64 = 0x7ffffLL;
 				break;
 			default:
@@ -1913,14 +1918,6 @@ static void *miner_thread(void *userdata)
 			rc = scanhash_quark(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
 			break;
-		case ALGO_SKEIN:
-			rc = scanhash_skein(thr_id, work.data, work.target, max_nonce,
-					&hashes_done);
-			break;
-		case ALGO_SHAVITE3:
-			rc = scanhash_ink(thr_id, work.data, work.target, max_nonce,
-					&hashes_done);
-			break;
 		case ALGO_BLAKE:
 			rc = scanhash_blake(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
@@ -1956,6 +1953,18 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_QUBIT:
 			rc = scanhash_qubit(thr_id, work.data, work.target, max_nonce,
+					&hashes_done);
+			break;
+		case ALGO_SHAVITE3:
+			rc = scanhash_ink(thr_id, work.data, work.target, max_nonce,
+					&hashes_done);
+			break;
+		case ALGO_SKEIN:
+			rc = scanhash_skein(thr_id, work.data, work.target, max_nonce,
+					&hashes_done);
+			break;
+		case ALGO_SKEIN2:
+			rc = scanhash_skein2(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
 			break;
 		case ALGO_S3:

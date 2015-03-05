@@ -66,6 +66,7 @@ cpuminer_SOURCES = \
   algo/scrypt.c \
   algo/sha2.c \
   algo/skein.c \
+  algo/skein2.c \
   algo/s3.c \
   algo/x11.c \
   algo/x13.c \
