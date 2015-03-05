@@ -514,7 +514,7 @@ static bool check_connect(struct sockaddr_in *cli, char **connectaddr, char *gro
 static void api()
 {
 	const char *addr = opt_api_allow;
-	short int port = opt_api_listen; // 4068
+	unsigned short port = (unsigned short) opt_api_listen; // 4048
 	char buf[MYBUFSIZ];
 	int c, n, bound;
 	char *connectaddr;
