@@ -1718,124 +1718,102 @@ void applog_hash(void *hash)
 }
 
 #define printpfx(n,h) \
-	printf("%s%12s%s: %s\n", CL_BLU, n, CL_N, format_hash(s, (uint8_t*) h))
-
-static char scratchbuf[128*1024] = { 0 };
+	printf("%s%11s%s: %s\n", CL_WHT, n, CL_N, format_hash(s, (uint8_t*) h))
 
 void print_hash_tests(void)
 {
+	uchar *scratchbuf = NULL;
 	char hash[128], s[80];
-	char* buf = &scratchbuf[0];
-	memset(buf, 0, sizeof scratchbuf);
+	char buf[128] = { 0 };
+
+	//memset(buf, 0, sizeof buf);
+
+	scratchbuf = (uchar*) calloc(128, 1024);
 
 	printf("\n" CL_WHT "CPU HASH ON EMPTY BUFFER RESULTS:" CL_N " (dev purpose)\n\n");
 
 	//buf[0] = 1; buf[64] = 2; // for endian tests
-	memset(hash, 0, sizeof hash);
+
 	skein2hash(&hash[0], &buf[0]);
 	printpfx("skein2", hash);
 
-	memset(hash, 0, sizeof hash);
 	sha256d((uint8_t*) &hash[0], (uint8_t*)&buf[0], 64);
 	printpfx("SHA 256D", hash);
 
-	memset(hash, 0, sizeof hash);
 	blakehash(&hash[0], &buf[0]);
 	printpfx("Blake", hash);
 
-	memset(hash, 0, sizeof hash);
 	blakecoinhash(&hash[0], &buf[0]);
 	printpfx("Blakecoin", hash);
 
-	memset(hash, 0, sizeof hash);
 	freshhash(&hash[0], &buf[0], 80);
 	printpfx("Fresh", hash);
 
-	memset(hash, 0, sizeof hash);
 	groestlhash(&hash[0], &buf[0]);
 	printpfx("Groestl", hash);
 
-	memset(hash, 0, sizeof hash);
 	heavyhash((uint8_t*) &hash[0], (uint8_t*) &buf[0], 32);
 	printpfx("Heavy", hash);
 
-	memset(hash, 0, sizeof hash);
 	keccakhash(&hash[0], &buf[0]);
 	printpfx("Keccak", hash);
 
-	memset(hash, 0, sizeof hash);
 	lyra2_hash(&hash[0], &buf[0]);
 	printpfx("Lyra2", hash);
 
-	memset(hash, 0, sizeof hash);
 	myriadhash(&hash[0], &buf[0]);
 	printpfx("Myriad", hash);
 
-	memset(hash, 0, sizeof hash);
 	neoscrypt((uchar*) &hash[0], (uchar*)&buf[0], 80000620);
 	printpfx("Neoscrypt", hash);
 
-	memset(hash, 0, sizeof hash);
 	nist5hash(&hash[0], &buf[0]);
 	printpfx("Nist5", hash);
 
-	memset(hash, 0, sizeof hash);
 	pentablakehash(&hash[0], &buf[0]);
 	printpfx("Pentablake", hash);
 
-	memset(hash, 0, sizeof hash);
-	pluck_hash((uint32_t*)&hash[0], (uint32_t*)&buf[0], &buf[0], 128);
-	memset(buf, 0, sizeof scratchbuf);
+	pluck_hash((uint32_t*)&hash[0], (uint32_t*)&buf[0], scratchbuf, 128);
 	printpfx("Pluck", hash);
 
-	memset(hash, 0, sizeof hash);
 	quarkhash(&hash[0], &buf[0]);
 	printpfx("Quark", hash);
 
-	memset(hash, 0, sizeof hash);
 	qubithash(&hash[0], &buf[0]);
 	printpfx("Qubit", hash);
 
-	memset(hash, 0, sizeof hash);
 	inkhash(&hash[0], &buf[0]);
 	printpfx("Shavite", hash);
 
-	memset(hash, 0, sizeof hash);
 	skeinhash(&hash[0], &buf[0]);
 	printpfx("Skein", hash);
 
-	memset(hash, 0, sizeof hash);
 	skein2hash(&hash[0], &buf[0]);
 	printpfx("Skein2", hash);
 
-	memset(hash, 0, sizeof hash);
 	s3hash(&hash[0], &buf[0]);
 	printpfx("S3", hash);
 
-	memset(hash, 0, sizeof hash);
 	x11hash(&hash[0], &buf[0]);
 	printpfx("X11", hash);
 
-	memset(hash, 0, sizeof hash);
 	x13hash(&hash[0], &buf[0]);
 	printpfx("X13", hash);
 
-	memset(hash, 0, sizeof hash);
 	x14hash(&hash[0], &buf[0]);
 	printpfx("X14", hash);
 
-	memset(hash, 0, sizeof hash);
 	x15hash(&hash[0], &buf[0]);
 	printpfx("X15", hash);
 
-	memset(hash, 0, sizeof hash);
 	zr5hash(&hash[0], &buf[0]);
 	printpfx("ZR5", hash);
 
-	memset(hash, 0, sizeof hash);
 	cryptonight_hash(&hash[0], &buf[0], 76);
 	printpfx("Cryptonight", hash);
 
 	printf("\n");
+
+	free(scratchbuf);
 }
 
