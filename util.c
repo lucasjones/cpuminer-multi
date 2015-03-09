@@ -1734,9 +1734,6 @@ void print_hash_tests(void)
 
 	//buf[0] = 1; buf[64] = 2; // for endian tests
 
-	skein2hash(&hash[0], &buf[0]);
-	printpfx("skein2", hash);
-
 	sha256d((uint8_t*) &hash[0], (uint8_t*)&buf[0], 64);
 	printpfx("SHA 256D", hash);
 
