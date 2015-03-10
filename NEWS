@@ -4,6 +4,7 @@ version 1.1-git (Tanguy Pruvot)
 - Add Pluck algo and fix gbt query crash
 - Add ZR5 algo (ZRC) and fix longpoll bug on linux
 - Add Skein2 algo (Double Skein for Woodcoin)
+- Add Animecoin algo (Quark variant)
 - Change some logged strings
 - Use all cores by default, not N-1
 - Handle a default config to run without params

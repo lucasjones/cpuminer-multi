@@ -185,6 +185,9 @@ void sha256_transform_8way(uint32_t *state, const uint32_t *block, int swap);
 #endif
 #endif
 
+extern int scanhash_anime(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
+
 extern int scanhash_blake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
@@ -369,7 +372,8 @@ extern double   global_diff;
 
 #define CL_WHT  "\x1B[01;37m" /* white */
 
-extern void applog(int prio, const char *fmt, ...);
+void applog(int prio, const char *fmt, ...);
+void restart_threads(void);
 extern json_t *json_rpc_call(CURL *curl, const char *url, const char *userpass,
 	const char *rpc_req, int *curl_err, int flags);
 extern void bin2hex(char *s, const unsigned char *p, size_t len);
@@ -379,9 +383,9 @@ extern int varint_encode(unsigned char *p, uint64_t n);
 extern size_t address_to_script(unsigned char *out, size_t outsz, const char *addr);
 extern int timeval_subtract(struct timeval *result, struct timeval *x,
 	struct timeval *y);
-extern bool fulltest(const uint32_t *hash, const uint32_t *target);
-extern void diff_to_target(uint32_t *target, double diff);
-extern void get_currentalgo(char* buf, int sz);
+bool fulltest(const uint32_t *hash, const uint32_t *target);
+void diff_to_target(uint32_t *target, double diff);
+void get_currentalgo(char* buf, int sz);
 bool has_aes_ni(void);
 void bestcpu_feature(char *outbuf, int maxsz);
 
@@ -465,6 +469,7 @@ void proper_exit(int reason);
 void applog_hash(void *hash);
 void print_hash_tests(void);
 void sha256d(unsigned char *hash, const unsigned char *data, int len);
+void animehash(void *state, const void *input);
 void blakehash(void *state, const void *input);
 void blakecoinhash(void *state, const void *input);
 void cryptonight_hash(void* output, const void* input, int len);

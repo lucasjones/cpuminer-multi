@@ -242,6 +242,9 @@
     <ClCompile Include="algo\skein2.c">
       <Filter>algo</Filter>
     </ClCompile>
+    <ClCompile Include="algo\animecoin.c">
+      <Filter>algo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sha3\sph_blake.h">

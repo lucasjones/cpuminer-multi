@@ -79,6 +79,7 @@ enum algos {
 	ALGO_HEAVY,       /* Heavy */
 	ALGO_NEOSCRYPT,   /* NeoScrypt(128, 2, 1) with Salsa20/20 and ChaCha20/20 */
 	ALGO_QUARK,       /* Quark */
+	ALGO_ANIME,       /* Animecoin (Quark variant) */
 	ALGO_BLAKE,       /* Blake 256 */
 	ALGO_BLAKECOIN,   /* Simplified 8 rounds Blake 256 */
 	ALGO_CRYPTONIGHT, /* CryptoNight */
@@ -110,6 +111,7 @@ static const char *algo_names[] = {
 	"heavy",
 	"neoscrypt",
 	"quark",
+	"anime",
 	"blake",
 	"blakecoin",
 	"cryptonight",
@@ -144,6 +146,7 @@ bool have_gbt = true;
 bool allow_getwork = true;
 bool want_stratum = true;
 bool have_stratum = false;
+bool allow_mininginfo = true;
 bool use_syslog = false;
 bool use_colors = true;
 static bool opt_background = false;
@@ -198,6 +201,8 @@ uint32_t rejected_count = 0L;
 double *thr_hashrates;
 uint64_t global_hashrate = 0;
 double   global_diff = 0.0;
+uint64_t net_hashrate = 0;
+uint64_t net_blocks = 0;
 int opt_intensity = 0;
 uint32_t opt_work_size = 0; /* default */
 char *opt_api_allow = NULL;
@@ -222,6 +227,7 @@ Options:\n\
                           scrypt       scrypt(1024, 1, 1) (default)\n\
                           scrypt:N     scrypt(N, 1, 1)\n\
                           sha256d      SHA-256d\n\
+                          anime        Animecoin\n\
                           blake        Blake-256 (SFR)\n\
                           blakecoin    Blakecoin\n\
                           cryptonight  CryptoNight\n\
@@ -703,6 +709,60 @@ err_out:
 	return false;
 }
 
+// good alternative for wallet mining, difficulty and net hashrate
+static const char *info_req =
+"{\"method\": \"getmininginfo\", \"params\": [], \"id\":8}\r\n";
+
+static bool get_mininginfo(CURL *curl, struct work *work)
+{
+	if (have_stratum || !allow_mininginfo)
+		return false;
+
+	int curl_err = 0;
+	json_t *val = json_rpc_call(curl, rpc_url, rpc_userpass, info_req, &curl_err, 0);
+
+	if (!val && curl_err == -1) {
+		allow_mininginfo = false;
+		if (opt_debug) {
+			applog(LOG_DEBUG, "getmininginfo not supported");
+		}
+		return false;
+	}
+	else {
+		json_t *res = json_object_get(val, "result");
+		// "blocks": 491493 (= current work height - 1)
+		// "difficulty": 0.99607860999999998
+		// "networkhashps": 56475980
+		if (res) {
+			json_t *key = json_object_get(res, "difficulty");
+			if (key && json_is_real(key)) {
+				global_diff = json_real_value(key);
+			}
+			key = json_object_get(res, "networkhashps");
+			if (key && json_is_integer(key)) {
+				net_hashrate = json_integer_value(key);
+			}
+			key = json_object_get(res, "blocks");
+			if (key && json_is_integer(key)) {
+				net_blocks = json_integer_value(key);
+			}
+			if (!work->height) {
+				// complete missing data from getwork
+				work->height = (uint32_t) net_blocks + 1;
+				if (work->height > g_work.height) {
+					restart_threads();
+					if (!opt_quiet) {
+						applog(LOG_BLUE, "%s block %u diff %.2f",
+							algo_names[opt_algo], work->height, global_diff);
+					}
+				}
+			}
+		}
+	}
+	json_decref(val);
+	return true;
+}
+
 #define BLOCK_VERSION_CURRENT 3
 
 static bool gbt_work_decode(const json_t *val, struct work *work)
@@ -1050,6 +1110,16 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 		return true;
 	}
 
+	if (!have_stratum && allow_mininginfo) {
+		struct work wheight = { 0 };
+		get_mininginfo(curl, &wheight);
+		if (work->height && work->height <= net_blocks) {
+			if (opt_debug)
+				applog(LOG_WARNING, "block %u was already solved", work->height);
+			return true;
+		}
+	}
+
 	if (have_stratum) {
 		uint32_t ntime, nonce;
 		char ntimestr[9], noncestr[9];
@@ -1149,6 +1219,10 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 
 	} else {
 
+		char* gw_str = NULL;
+		int data_size = 128;
+		int adata_sz;
+
 		if (jsonrpc_2) {
 			char noncestr[9];
 			uchar hash[32];
@@ -1163,7 +1237,9 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			}
 			hashhex = abin2hex(&hash[0], 32);
 			snprintf(s, JSON_BUF_LEN,
-					"{\"method\": \"submit\", \"params\": {\"id\": \"%s\", \"job_id\": \"%s\", \"nonce\": \"%s\", \"result\": \"%s\"}, \"id\":4}\r\n",
+					"{\"method\": \"submit\", \"params\": "
+						"{\"id\": \"%s\", \"job_id\": \"%s\", \"nonce\": \"%s\", \"result\": \"%s\"},"
+					"\"id\":4}\r\n",
 					rpc2_id, work->job_id, noncestr, hashhex);
 			free(hashhex);
 
@@ -1179,62 +1255,40 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			share_result(!strcmp(status ? json_string_value(status) : "", "OK"), work,
 					reason ? json_string_value(reason) : NULL);
 
+			json_decref(val);
+			return true;
+
 		} else if (opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
-
 			/* different data size */
-			int data_size = 80, adata_sz = data_size / sizeof(uint32_t);
-			uchar gw_str[2 * 80 + 1] = { 0 };
-
-			/* Convert to little endian */
-			for(i = 0; i < adata_sz; i++)
-				le32enc(work->data + i, work->data[i]);
-
-			/* Convert binary to hexadecimal string */
-			bin2hex((char*) gw_str, (const uchar*) work->data, data_size);
-
-			/* build JSON-RPC request */
-			snprintf(s, JSON_BUF_LEN,
-				"{\"method\": \"getwork\", \"params\": [\"%s\"], \"id\":4}\r\n",
-				gw_str);
-
-			/* Issue a JSON-RPC request */
-			val = json_rpc_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
-			if (unlikely(!val)) {
-				applog(LOG_ERR, "submit_upstream_work json_rpc_call failed");
-				goto out;
-			}
-
-			/* Process a JSON-RPC response */
-			res = json_object_get(val, "result");
-			reason = json_object_get(val, "reject-reason");
-			share_result(json_is_true(res), work, reason ? json_string_value(reason) : NULL);
-
-		} else {
-
-			int data_size = 64, adata_sz = ARRAY_SIZE(work->data);
-			uchar gw_str[2 * 64 + 1] = { 0 };
-
-			/* build hex string */
-			for (i = 0; i < adata_sz; i++)
-				le32enc(work->data + i, work->data[i]);
-
-			bin2hex((char*) gw_str, (const uchar*) work->data, data_size);
-
-			/* build JSON-RPC request */
-			snprintf(s, JSON_BUF_LEN,
-				"{\"method\": \"getwork\", \"params\": [\"%s\"], \"id\":4}\r\n",
-				gw_str);
-
-			/* issue JSON-RPC request */
-			val = json_rpc_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
-			if (unlikely(!val)) {
-				applog(LOG_ERR, "submit_upstream_work json_rpc_call failed");
-				goto out;
-			}
-			res = json_object_get(val, "result");
-			reason = json_object_get(val, "reject-reason");
-			share_result(json_is_true(res), work, reason ? json_string_value(reason) : NULL);
+			data_size = 80;
 		}
+		adata_sz = data_size / sizeof(uint32_t);
+
+		/* build hex string */
+		for (i = 0; i < adata_sz; i++)
+			le32enc(&work->data[i], work->data[i]);
+
+		gw_str = abin2hex((uchar*)work->data, data_size);
+
+		if (unlikely(!gw_str)) {
+			applog(LOG_ERR, "submit_upstream_work OOM");
+			return false;
+		}
+
+		/* build JSON-RPC request */
+		snprintf(s, JSON_BUF_LEN,
+			"{\"method\": \"getwork\", \"params\": [\"%s\"], \"id\":4}\r\n", gw_str);
+		free(gw_str);
+
+		/* issue JSON-RPC request */
+		val = json_rpc_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
+		if (unlikely(!val)) {
+			applog(LOG_ERR, "submit_upstream_work json_rpc_call failed");
+			goto out;
+		}
+		res = json_object_get(val, "result");
+		reason = json_object_get(val, "reject-reason");
+		share_result(json_is_true(res), work, reason ? json_string_value(reason) : NULL);
 
 		json_decref(val);
 	}
@@ -1317,6 +1371,9 @@ start:
 	}
 
 	json_decref(val);
+
+	// store work height in solo
+	get_mininginfo(curl, work);
 
 	return rc;
 }
@@ -1918,6 +1975,10 @@ static void *miner_thread(void *userdata)
 			rc = scanhash_quark(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
 			break;
+		case ALGO_ANIME:
+			rc = scanhash_anime(thr_id, work.data, work.target, max_nonce,
+					&hashes_done);
+			break;
 		case ALGO_BLAKE:
 			rc = scanhash_blake(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
@@ -2057,7 +2118,7 @@ out:
 	return NULL;
 }
 
-static void restart_threads(void)
+void restart_threads(void)
 {
 	int i;
 

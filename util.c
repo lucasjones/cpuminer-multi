@@ -416,7 +416,7 @@ json_t *json_rpc_call(CURL *curl, const char *url,
 	json_error_t err;
 	struct curl_slist *headers = NULL;
 	char len_hdr[64];
-	char curl_err_str[CURL_ERROR_SIZE];
+	char curl_err_str[CURL_ERROR_SIZE] = { 0 };
 	long timeout = (flags & JSON_RPC_LONGPOLL) ? opt_timeout : 30;
 	struct header_info hi = {0};
 
@@ -428,7 +428,7 @@ json_t *json_rpc_call(CURL *curl, const char *url,
 	if (opt_cert)
 		curl_easy_setopt(curl, CURLOPT_CAINFO, opt_cert);
 	curl_easy_setopt(curl, CURLOPT_ENCODING, "");
-	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 0);
 	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 	curl_easy_setopt(curl, CURLOPT_TCP_NODELAY, 1);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, all_data_cb);
@@ -533,14 +533,31 @@ json_t *json_rpc_call(CURL *curl, const char *url,
 	if (!res_val || (err_val && !json_is_null(err_val)
 		&& !(flags & JSON_RPC_IGNOREERR))) {
 
-		char *s;
+		char *s = NULL;
 
-		if (err_val)
-			s = json_dumps(err_val, JSON_INDENT(3));
+		if (err_val) {
+			s = json_dumps(err_val, 0);
+			json_t *msg = json_object_get(err_val, "message");
+			json_t *err_code = json_object_get(err_val, "code");
+			if (curl_err && json_integer_value(err_code))
+				*curl_err = (int)json_integer_value(err_code);
+
+			if (msg && json_is_string(msg)) {
+				free(s);
+				s = strdup(json_string_value(msg));
+				if (have_longpoll && s && !strcmp(s, "method not getwork")) {
+					json_decref(err_val);
+					free(s);
+					goto err_out;
+				}
+			}
+			json_decref(err_val);
+		}
 		else
 			s = strdup("(unknown reason)");
 
-		applog(LOG_ERR, "JSON-RPC call failed: %s", s);
+		if (!curl_err || opt_debug)
+			applog(LOG_ERR, "JSON-RPC call failed: %s", s);
 
 		free(s);
 
@@ -1736,6 +1753,9 @@ void print_hash_tests(void)
 
 	sha256d((uint8_t*) &hash[0], (uint8_t*)&buf[0], 64);
 	printpfx("SHA 256D", hash);
+
+	animehash(&hash[0], &buf[0]);
+	printpfx("anime", hash);
 
 	blakehash(&hash[0], &buf[0]);
 	printpfx("Blake", hash);

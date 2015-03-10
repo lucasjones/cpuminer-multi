@@ -166,6 +166,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="algo\animecoin.c" />
     <ClCompile Include="algo\skein2.c" />
     <ClCompile Include="algo\zr5.c" />
     <ClCompile Include="compat\getopt\getopt_long.c" />
