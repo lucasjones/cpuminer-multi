@@ -25,7 +25,7 @@ BrandingText "CPU Miner Install System"
 !define PROGRAM_KEY  "cpuminer"
 
 Name "cpuminer-multi v${MINER_VERSION}"
-OutFile "${PROGRAM_KEY}.exe"
+OutFile "${PROGRAM_KEY}-setup.exe"
 Icon "res\setup.ico"
 ; Icon "res\${PROGRAM_KEY}.ico"
 Caption "${PROGRAM_NAME}"

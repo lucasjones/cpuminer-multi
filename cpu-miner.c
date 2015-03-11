@@ -246,7 +246,7 @@ Options:\n\
                           qubit        Qubit\n\
                           shavite3     Shavite3\n\
                           skein        Skein+Sha (Skeincoin)\n\
-                          skeincoin    Double Skein (Woodcoin)\n\
+                          skein2       Double Skein (Woodcoin)\n\
                           s3           S3\n\
                           x11          X11\n\
                           x13          X13\n\
@@ -1104,14 +1104,14 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 	bool rc = false;
 
 	/* pass if the previous hash is not the current previous hash */
-	if (!submit_old && memcmp(work->data + 1, g_work.data + 1, 32)) {
+	if (!submit_old && memcmp(&work->data[1], &g_work.data[1], 32)) {
 		if (opt_debug)
 			applog(LOG_DEBUG, "DEBUG: stale work detected, discarding");
 		return true;
 	}
 
 	if (!have_stratum && allow_mininginfo) {
-		struct work wheight = { 0 };
+		struct work wheight;
 		get_mininginfo(curl, &wheight);
 		if (work->height && work->height <= net_blocks) {
 			if (opt_debug)

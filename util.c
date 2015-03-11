@@ -1735,7 +1735,7 @@ void applog_hash(void *hash)
 }
 
 #define printpfx(n,h) \
-	printf("%s%11s%s: %s\n", CL_WHT, n, CL_N, format_hash(s, (uint8_t*) h))
+	printf("%s%11s%s: %s\n", CL_CYN, n, CL_N, format_hash(s, (uint8_t*) h))
 
 void print_hash_tests(void)
 {
@@ -1743,91 +1743,89 @@ void print_hash_tests(void)
 	char hash[128], s[80];
 	char buf[128] = { 0 };
 
-	//memset(buf, 0, sizeof buf);
-
 	scratchbuf = (uchar*) calloc(128, 1024);
 
-	printf("\n" CL_WHT "CPU HASH ON EMPTY BUFFER RESULTS:" CL_N " (dev purpose)\n\n");
+	printf(CL_WHT "CPU HASH ON EMPTY BUFFER RESULTS:" CL_N "\n\n");
 
 	//buf[0] = 1; buf[64] = 2; // for endian tests
-
-	sha256d((uint8_t*) &hash[0], (uint8_t*)&buf[0], 64);
-	printpfx("SHA 256D", hash);
 
 	animehash(&hash[0], &buf[0]);
 	printpfx("anime", hash);
 
 	blakehash(&hash[0], &buf[0]);
-	printpfx("Blake", hash);
+	printpfx("blake", hash);
 
 	blakecoinhash(&hash[0], &buf[0]);
-	printpfx("Blakecoin", hash);
-
-	freshhash(&hash[0], &buf[0], 80);
-	printpfx("Fresh", hash);
-
-	groestlhash(&hash[0], &buf[0]);
-	printpfx("Groestl", hash);
-
-	heavyhash((uint8_t*) &hash[0], (uint8_t*) &buf[0], 32);
-	printpfx("Heavy", hash);
-
-	keccakhash(&hash[0], &buf[0]);
-	printpfx("Keccak", hash);
-
-	lyra2_hash(&hash[0], &buf[0]);
-	printpfx("Lyra2", hash);
-
-	myriadhash(&hash[0], &buf[0]);
-	printpfx("Myriad", hash);
-
-	neoscrypt((uchar*) &hash[0], (uchar*)&buf[0], 80000620);
-	printpfx("Neoscrypt", hash);
-
-	nist5hash(&hash[0], &buf[0]);
-	printpfx("Nist5", hash);
-
-	pentablakehash(&hash[0], &buf[0]);
-	printpfx("Pentablake", hash);
-
-	pluck_hash((uint32_t*)&hash[0], (uint32_t*)&buf[0], scratchbuf, 128);
-	printpfx("Pluck", hash);
-
-	quarkhash(&hash[0], &buf[0]);
-	printpfx("Quark", hash);
-
-	qubithash(&hash[0], &buf[0]);
-	printpfx("Qubit", hash);
-
-	inkhash(&hash[0], &buf[0]);
-	printpfx("Shavite", hash);
-
-	skeinhash(&hash[0], &buf[0]);
-	printpfx("Skein", hash);
-
-	skein2hash(&hash[0], &buf[0]);
-	printpfx("Skein2", hash);
-
-	s3hash(&hash[0], &buf[0]);
-	printpfx("S3", hash);
-
-	x11hash(&hash[0], &buf[0]);
-	printpfx("X11", hash);
-
-	x13hash(&hash[0], &buf[0]);
-	printpfx("X13", hash);
-
-	x14hash(&hash[0], &buf[0]);
-	printpfx("X14", hash);
-
-	x15hash(&hash[0], &buf[0]);
-	printpfx("X15", hash);
-
-	zr5hash(&hash[0], &buf[0]);
-	printpfx("ZR5", hash);
+	printpfx("blakecoin", hash);
 
 	cryptonight_hash(&hash[0], &buf[0], 76);
-	printpfx("Cryptonight", hash);
+	printpfx("cryptonight", hash);
+
+	freshhash(&hash[0], &buf[0], 80);
+	printpfx("fresh", hash);
+
+	groestlhash(&hash[0], &buf[0]);
+	printpfx("groestl", hash);
+
+	heavyhash((uint8_t*) &hash[0], (uint8_t*) &buf[0], 32);
+	printpfx("heavy", hash);
+
+	keccakhash(&hash[0], &buf[0]);
+	printpfx("keccak", hash);
+
+	lyra2_hash(&hash[0], &buf[0]);
+	printpfx("lyra2", hash);
+
+	myriadhash(&hash[0], &buf[0]);
+	printpfx("myr-gr", hash);
+
+	neoscrypt((uchar*) &hash[0], (uchar*)&buf[0], 80000620);
+	printpfx("neoscrypt", hash);
+
+	nist5hash(&hash[0], &buf[0]);
+	printpfx("nist5", hash);
+
+	pentablakehash(&hash[0], &buf[0]);
+	printpfx("pentablake", hash);
+
+	pluck_hash((uint32_t*)&hash[0], (uint32_t*)&buf[0], scratchbuf, 128);
+	printpfx("pluck", hash);
+
+	quarkhash(&hash[0], &buf[0]);
+	printpfx("quark", hash);
+
+	qubithash(&hash[0], &buf[0]);
+	printpfx("qubit", hash);
+
+	inkhash(&hash[0], &buf[0]);
+	printpfx("shavite3", hash);
+
+	sha256d((uint8_t*) &hash[0], (uint8_t*)&buf[0], 64);
+	printpfx("sha256d", hash);
+
+	skeinhash(&hash[0], &buf[0]);
+	printpfx("skein", hash);
+
+	skein2hash(&hash[0], &buf[0]);
+	printpfx("skein2", hash);
+
+	s3hash(&hash[0], &buf[0]);
+	printpfx("s3", hash);
+
+	x11hash(&hash[0], &buf[0]);
+	printpfx("x11", hash);
+
+	x13hash(&hash[0], &buf[0]);
+	printpfx("x13", hash);
+
+	x14hash(&hash[0], &buf[0]);
+	printpfx("x14", hash);
+
+	x15hash(&hash[0], &buf[0]);
+	printpfx("x15", hash);
+
+	zr5hash(&hash[0], &buf[0]);
+	printpfx("zr5", hash);
 
 	printf("\n");
 
