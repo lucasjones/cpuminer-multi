@@ -1036,25 +1036,23 @@ static bool fulltest_le(const uint *hash, const uint *target)
 int scanhash_neoscrypt(int thr_id, uint32_t *pdata, const uint32_t *ptarget, uint32_t max_nonce,
                        uint64_t *hashes_done, uint32_t profile)
 {
-    uint32_t _ALIGN(32) hash[8];
-    uint32_t start_nonce = pdata[19], inc_nonce = 1;
-    const uint32_t targint = ptarget[7];
+    uint32_t _ALIGN(64) hash[8];
+    const uint32_t Htarg = ptarget[7];
+    const uint32_t first_nonce = pdata[19];
 
     while (pdata[19] < max_nonce && !work_restart[thr_id].restart)
     {
         neoscrypt((uint8_t *) hash, (uint8_t *) pdata, profile);
 
         /* Quick hash check */
-        if (hash[7] <= targint) {
-            if (fulltest_le(hash, ptarget)) {
-                *hashes_done = pdata[19] - start_nonce;
-                return 1;
-            }
+        if (hash[7] <= Htarg && fulltest_le(hash, ptarget)) {
+            *hashes_done = pdata[19] - first_nonce + 1;
+            return 1;
         }
 
-        pdata[19] += inc_nonce;
+        pdata[19]++;
     }
 
-    *hashes_done = pdata[19] - inc_nonce - start_nonce;
+    *hashes_done = pdata[19] - first_nonce;
     return 0;
 }
