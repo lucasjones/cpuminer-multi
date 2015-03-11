@@ -752,8 +752,16 @@ static bool get_mininginfo(CURL *curl, struct work *work)
 				if (work->height > g_work.height) {
 					restart_threads();
 					if (!opt_quiet) {
-						applog(LOG_BLUE, "%s block %u diff %.2f",
-							algo_names[opt_algo], work->height, global_diff);
+						char netinfo[64] = { 0 };
+						char srate[32] = { 0 };
+						sprintf(netinfo, "diff %.2f", global_diff);
+						if (net_hashrate) {
+							format_hashrate((double) net_hashrate, srate);
+							strcat(netinfo, ", net ");
+							strcat(netinfo, srate);
+						}
+						applog(LOG_BLUE, "%s block %d, %s",
+							algo_names[opt_algo], work->height, netinfo);
 					}
 				}
 			}

@@ -467,7 +467,9 @@ void parse_config(json_t *config, char *ref);
 void proper_exit(int reason);
 
 void applog_hash(void *hash);
+void format_hashrate(double hashrate, char *output);
 void print_hash_tests(void);
+
 void sha256d(unsigned char *hash, const unsigned char *data, int len);
 void animehash(void *state, const void *input);
 void blakehash(void *state, const void *input);
