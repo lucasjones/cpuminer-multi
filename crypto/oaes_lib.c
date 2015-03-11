@@ -656,7 +656,7 @@ OAES_RET oaes_key_export( OAES_CTX * ctx,
 	// header
 	memcpy( data, oaes_header, OAES_BLOCK_SIZE );
 	data[5] = 0x01;
-	data[7] = _ctx->key->data_len;
+	data[7] = (uint8_t) _ctx->key->data_len;
 	memcpy( data + OAES_BLOCK_SIZE, _ctx->key->data, _ctx->key->data_len );
 	
 	return OAES_RET_SUCCESS;
@@ -1217,7 +1217,7 @@ OAES_RET oaes_encrypt( OAES_CTX * ctx,
 		
 		// insert pad
 		for( _j = 0; _j < OAES_BLOCK_SIZE - _block_size; _j++ )
-			_block[ _block_size + _j ] = _j + 1;
+			_block[_block_size + _j] = (uint8_t)_j + 1;
 	
 		// CBC
 		if( _ctx->options & OAES_OPTION_CBC )
