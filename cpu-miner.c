@@ -1152,7 +1152,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			le32enc(&ntime, work->data[17]);
 			le32enc(&nonce, work->data[19]);
 
-			if (opt_algo == ALGO_NEOSCRYPT) {
+			if (opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
 				/* reversed */
 				be32enc(&ntime, work->data[17]);
 				be32enc(&nonce, work->data[19]);
@@ -1702,7 +1702,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 		work->data[17] = le32dec(sctx->job.ntime);
 		work->data[18] = le32dec(sctx->job.nbits);
 
-		if (opt_algo == ALGO_NEOSCRYPT) {
+		if (opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
 			/* reversed endian */
 			for (i = 0; i <= 18; i++)
 				work->data[i] = swab32(work->data[i]);
@@ -1724,7 +1724,6 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_SCRYPT:
 			case ALGO_NEOSCRYPT:
 			case ALGO_PLUCK:
-			case ALGO_ZR5:
 				diff_to_target(work->target, sctx->job.diff / (65536.0 * opt_diff_factor));
 				break;
 			case ALGO_FRESH:

@@ -1856,7 +1856,9 @@ void print_hash_tests(void)
 	x15hash(&hash[0], &buf[0]);
 	printpfx("x15", hash);
 
-	zr5hash(&hash[0], &buf[0]);
+	//zr5hash(&hash[0], &buf[0]);
+	zr5hash_pok(&hash[0], (uint32_t*) &buf[0]);
+	memset(buf, 0, sizeof(buf));
 	printpfx("zr5", hash);
 
 	printf("\n");

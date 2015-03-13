@@ -496,5 +496,7 @@ void x13hash(void *output, const void *input);
 void x14hash(void *output, const void *input);
 void x15hash(void *output, const void *input);
 void zr5hash(void *output, const void *input);
+void zr5hash_pok(void *output, uint32_t *pdata);
+
 
 #endif /* __MINER_H__ */

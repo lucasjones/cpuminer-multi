@@ -13,13 +13,13 @@
 
 #define ZR_BLAKE   0
 #define ZR_GROESTL 1
-#define ZR_JH      2
+#define ZR_JH512   2
 #define ZR_SKEIN   3
 
 #define POK_BOOL_MASK 0x00008000
 #define POK_DATA_MASK 0xFFFF0000
 
-static const int permut[][4] = {
+static const int permut[24][4] = {
 	{0, 1, 2, 3},
 	{0, 1, 3, 2},
 	{0, 2, 1, 3},
@@ -54,70 +54,83 @@ void zr5hash(void *output, const void *input)
 	sph_jh512_context ctx_jh;
 	sph_skein512_context ctx_skein;
 
-	uint32_t _ALIGN(64) hash[5][16];
+	uchar _ALIGN(64) hash[64];
+	uint32_t *phash = (uint32_t *) hash;
+	uint32_t norder;
 
 	sph_keccak512_init(&ctx_keccak);
 	sph_keccak512(&ctx_keccak, (const void*) input, 80);
-	sph_keccak512_close(&ctx_keccak, (void*) &hash[0][0]);
+	sph_keccak512_close(&ctx_keccak, (void*) phash);
 
-	unsigned int norder = hash[0][0] % ARRAY_SIZE(permut); /* % 24 */
+	norder = phash[0] % ARRAY_SIZE(permut); /* % 24 */
 
 	for(int i = 0; i < 4; i++)
 	{
-		void* phash = (void*) &(hash[i][0]);
-		void* pdest = (void*) &(hash[i+1][0]);
-
 		switch (permut[norder][i]) {
 		case ZR_BLAKE:
 			sph_blake512_init(&ctx_blake);
 			sph_blake512(&ctx_blake, (const void*) phash, 64);
-			sph_blake512_close(&ctx_blake, pdest);
+			sph_blake512_close(&ctx_blake, phash);
 			break;
 		case ZR_GROESTL:
 			sph_groestl512_init(&ctx_groestl);
 			sph_groestl512(&ctx_groestl, (const void*) phash, 64);
-			sph_groestl512_close(&ctx_groestl, pdest);
+			sph_groestl512_close(&ctx_groestl, phash);
 			break;
-		case ZR_JH:
+		case ZR_JH512:
 			sph_jh512_init(&ctx_jh);
 			sph_jh512(&ctx_jh, (const void*) phash, 64);
-			sph_jh512_close(&ctx_jh, pdest);
+			sph_jh512_close(&ctx_jh, phash);
 			break;
 		case ZR_SKEIN:
 			sph_skein512_init(&ctx_skein);
 			sph_skein512(&ctx_skein, (const void*) phash, 64);
-			sph_skein512_close(&ctx_skein, pdest);
+			sph_skein512_close(&ctx_skein, phash);
 			break;
 		default:
 			break;
 		}
 	}
-	memcpy(output, &hash[4], 32);
+	memcpy(output, phash, 32);
+}
+
+void zr5hash_pok(void *output, uint32_t *pdata)
+{
+	const uint32_t version = pdata[0] & (~POK_DATA_MASK);
+	uint32_t _ALIGN(64) hash[8];
+	uint32_t pok;
+
+	pdata[0] = version;
+	zr5hash(hash, pdata);
+
+	// fill PoK
+	pok = version | (hash[0] & POK_DATA_MASK);
+	if (pdata[0] != pok) {
+		pdata[0] = pok;
+		zr5hash(hash, pdata);
+	}
+	memcpy(output, hash, 32);
 }
 
 int scanhash_zr5(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	uint32_t max_nonce,	uint64_t *hashes_done)
 {
 	uint32_t _ALIGN(64) hash[16];
-	uint32_t _ALIGN(64) tmpdata[20];
-	const uint32_t version = pdata[0] & (~POK_DATA_MASK);
 	const uint32_t first_nonce = pdata[19];
 	uint32_t nonce = first_nonce;
+
+	//uint32_t _ALIGN(64) tmpdata[20];
+	//memcpy(tmpdata, pdata, 76);
+	#define tmpdata pdata
 
 	if (opt_benchmark)
 		((uint32_t*)ptarget)[7] = 0x0000ff;
 
-	memcpy(tmpdata, pdata, 80);
+	const uint32_t Htarg = ptarget[7];
 
 	do {
-		#define Htarg ptarget[7]
-
-		tmpdata[0]  = version;
 		tmpdata[19] = nonce;
-		zr5hash(hash, tmpdata);
-		// fill PoK
-		tmpdata[0] = version | (hash[0] & POK_DATA_MASK);
-		zr5hash(hash, tmpdata);
+		zr5hash_pok(hash, tmpdata);
 
 		if (hash[7] <= Htarg && fulltest(hash, ptarget))
 		{
