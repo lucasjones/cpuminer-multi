@@ -153,6 +153,7 @@ static bool opt_background = false;
 bool opt_quiet = false;
 static int opt_retries = -1;
 static int opt_fail_pause = 10;
+static int opt_time_limit = 0;
 int opt_timeout = 0;
 static int opt_scantime = 5;
 static const bool opt_time = true;
@@ -263,6 +264,7 @@ Options:\n\
   -r, --retries=N       number of times to retry if a network call fails\n\
                           (default: retry indefinitely)\n\
   -R, --retry-pause=N   time to pause between retries, in seconds (default: 30)\n\
+      --time-limit=N    maximum time [s] to mine before exiting the program.\n\
   -T, --timeout=N       timeout for long polling, in seconds (default: none)\n\
   -s, --scantime=N      upper bound on time spent scanning current work when\n\
                           long polling is unavailable, in seconds (default: 5)\n\
@@ -337,6 +339,7 @@ static struct option const options[] = {
 #ifdef HAVE_SYSLOG_H
 	{ "syslog", 0, NULL, 'S' },
 #endif
+	{ "time-limit", 1, NULL, 1008 },
 	{ "threads", 1, NULL, 't' },
 	{ "timeout", 1, NULL, 'T' },
 	{ "url", 1, NULL, 'o' },
@@ -1748,6 +1751,7 @@ static void *miner_thread(void *userdata)
 	struct work work;
 	uint32_t max_nonce;
 	uint32_t end_nonce = 0xffffffffU / opt_n_threads * (thr_id + 1) - 0x20;
+	time_t firstwork_time = 0;
 	unsigned char *scratchbuf = NULL;
 	char s[16];
 	int i;
@@ -1896,6 +1900,18 @@ static void *miner_thread(void *userdata)
 		else
 			max64 = g_work_time + (have_longpoll ? LP_SCANTIME : opt_scantime)
 					- time(NULL);
+
+		/* time limit */
+		if (opt_time_limit && firstwork_time) {
+			int passed = (int)(time(NULL) - firstwork_time);
+			int remain = (int)(opt_time_limit - passed);
+			if (remain < 0) {
+				applog(LOG_NOTICE, "Mining timeout of %ds reached, exiting...", opt_time_limit);
+				proper_exit(0);
+			}
+			if (remain < max64) max64 = remain;
+		}
+
 		max64 *= (int64_t) thr_hashrates[thr_id];
 
 		if (max64 <= 0) {
@@ -1954,6 +1970,9 @@ static void *miner_thread(void *userdata)
 
 		hashes_done = 0;
 		gettimeofday((struct timeval *) &tv_start, NULL);
+
+		if (firstwork_time == 0)
+			firstwork_time = time(NULL);
 
 		/* scan nonces for a proof-of-work hash */
 		switch (opt_algo) {
@@ -2710,6 +2729,9 @@ void parse_arg(int key, char *arg)
 		exit(0);
 	case 1007:
 		want_stratum = false;
+		break;
+	case 1008:
+		opt_time_limit = atoi(arg);
 		break;
 	case 1009:
 		opt_redirect = false;
