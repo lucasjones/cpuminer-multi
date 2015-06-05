@@ -206,7 +206,7 @@ double net_diff = 0.;
 double net_hashrate = 0.;
 uint64_t net_blocks = 0;
 // conditional mining
-bool conditional_state = true;
+bool conditional_state[MAX_CPUS] = { 0 };
 double opt_max_temp = 0.0;
 double opt_max_diff = 0.0;
 double opt_max_rate = 0.0;
@@ -1763,26 +1763,25 @@ static bool wanna_mine(int thr_id)
 	if (opt_max_temp > 0.0) {
 		float temp = cpu_temp(0);
 		if (temp > opt_max_temp) {
-			if (!conditional_state && !opt_quiet && !thr_id)
-				applog(LOG_INFO, "temperature too high (%.0f°c), waiting...", temp);
+			if (!conditional_state[thr_id] && !opt_quiet && !thr_id)
+				applog(LOG_INFO, "temperature too high (%.0fC), waiting...", temp);
 			state = false;
 		}
 	}
 	if (opt_max_diff > 0.0 && net_diff > opt_max_diff) {
-		if (!conditional_state && !opt_quiet && !thr_id)
+		if (!conditional_state[thr_id] && !opt_quiet && !thr_id)
 			applog(LOG_INFO, "network diff too high, waiting...");
 		state = false;
 	}
 	if (opt_max_rate > 0.0 && net_hashrate > opt_max_rate) {
-		if (!conditional_state && !opt_quiet && !thr_id) {
+		if (!conditional_state[thr_id] && !opt_quiet && !thr_id) {
 			char rate[32];
 			format_hashrate(opt_max_rate, rate);
 			applog(LOG_INFO, "network hashrate too high, waiting %s...", rate);
 		}
 		state = false;
 	}
-	if (thr_id == 0)
-		conditional_state = (uint8_t) !state;
+	conditional_state[thr_id] = (uint8_t) !state;
 	return state;
 }
 

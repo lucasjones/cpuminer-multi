@@ -4,6 +4,7 @@
 #include <cpuminer-config.h>
 
 #define USER_AGENT PACKAGE_NAME "/" PACKAGE_VERSION
+#define MAX_CPUS 16
 
 #ifdef _MSC_VER
 
