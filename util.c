@@ -147,8 +147,8 @@ void applog(int prio, const char *fmt, ...)
 			use_colors ? CL_N : ""
 		);
 		pthread_mutex_lock(&applog_lock);
-		vfprintf(stderr, f, ap);	/* atomic write to stderr */
-		fflush(stderr);
+		vfprintf(stdout, f, ap);	/* atomic write to stdout */
+		fflush(stdout);
 		free(f);
 		pthread_mutex_unlock(&applog_lock);
 	}
@@ -1821,6 +1821,7 @@ void print_hash_tests(void)
 	printpfx("pentablake", hash);
 
 	pluck_hash((uint32_t*)&hash[0], (uint32_t*)&buf[0], scratchbuf, 128);
+	memset(&buf[0], 0, sizeof(buf));
 	printpfx("pluck", hash);
 
 	quarkhash(&hash[0], &buf[0]);

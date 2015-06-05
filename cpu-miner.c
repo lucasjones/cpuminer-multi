@@ -1905,8 +1905,16 @@ static void *miner_thread(void *userdata)
 		if (opt_time_limit && firstwork_time) {
 			int passed = (int)(time(NULL) - firstwork_time);
 			int remain = (int)(opt_time_limit - passed);
-			if (remain < 0) {
-				applog(LOG_NOTICE, "Mining timeout of %ds reached, exiting...", opt_time_limit);
+			if (remain < 0 && thr_id == 0) {
+				if (opt_benchmark) {
+					char rate[32];
+					format_hashrate((double)global_hashrate, rate);
+					applog(LOG_NOTICE, "Benchmark: %s", rate);
+					fprintf(stderr, "%llu\n", (long long unsigned int) global_hashrate);
+				} else {
+					applog(LOG_NOTICE,
+						"Mining timeout of %ds reached, exiting...", opt_time_limit);
+				}
 				proper_exit(0);
 			}
 			if (remain < max64) max64 = remain;
