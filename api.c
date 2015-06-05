@@ -92,7 +92,6 @@ static char *buffer = NULL;
 static time_t startup = 0;
 static int bye = 0;
 
-extern int opt_intensity;
 extern int opt_n_threads;
 extern char *opt_api_allow;
 extern int opt_api_listen; /* port */
@@ -156,7 +155,7 @@ static char *getsummary(char *params)
 		"UPTIME=%.0f;TS=%u|",
 		PACKAGE_NAME, PACKAGE_VERSION, APIVERSION,
 		algo, opt_n_threads, (double)global_hashrate / 1000.0,
-		accepted_count, rejected_count, accps, global_diff,
+		accepted_count, rejected_count, accps, net_diff > 0. ? net_diff : stratum_diff,
 		cpu.cpu_temp, cpu.cpu_fan, cpu.cpu_clock,
 		uptime, (uint32_t) ts);
 	return buffer;

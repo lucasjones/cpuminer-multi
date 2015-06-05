@@ -335,7 +335,9 @@ extern bool aes_ni_supported;
 
 extern uint32_t opt_work_size;
 extern uint64_t global_hashrate;
-extern double   global_diff;
+extern double stratum_diff;
+extern double net_diff;
+extern double net_hashrate;
 
 #define JSON_RPC_LONGPOLL	(1 << 0)
 #define JSON_RPC_QUIET_404	(1 << 1)
@@ -388,6 +390,7 @@ void diff_to_target(uint32_t *target, double diff);
 void get_currentalgo(char* buf, int sz);
 bool has_aes_ni(void);
 void bestcpu_feature(char *outbuf, int maxsz);
+float cpu_temp(int core);
 
 struct work {
 	uint32_t data[32];

@@ -201,10 +201,16 @@ uint32_t accepted_count = 0L;
 uint32_t rejected_count = 0L;
 double *thr_hashrates;
 uint64_t global_hashrate = 0;
-double   global_diff = 0.0;
-uint64_t net_hashrate = 0;
+double stratum_diff = 0.;
+double net_diff = 0.;
+double net_hashrate = 0.;
 uint64_t net_blocks = 0;
-int opt_intensity = 0;
+// conditional mining
+bool conditional_state = true;
+double opt_max_temp = 0.0;
+double opt_max_diff = 0.0;
+double opt_max_rate = 0.0;
+
 uint32_t opt_work_size = 0; /* default */
 char *opt_api_allow = NULL;
 int opt_api_remote = 0;
@@ -293,6 +299,9 @@ Options:\n\
       --cpu-priority    set process priority (default: 0 idle, 2 normal to 5 highest)\n\
   -b, --api-bind        IP/Port for the miner API (default: 127.0.0.1:4048)\n\
       --api-remote      Allow remote control\n\
+      --max-temp=N      Only mine if cpu temp is less than specified value (linux)\n\
+      --max-rate=N[KMG] Only mine if net hashrate is less than specified value\n\
+      --max-diff=N      Only mine if net difficulty is less than specified value\n\
   -c, --config=FILE     load a JSON-format configuration file\n\
   -V, --version         display version information and exit\n\
   -h, --help            display this help text and exit\n\
@@ -328,6 +337,9 @@ static struct option const options[] = {
 	{ "no-longpoll", 0, NULL, 1003 },
 	{ "no-redirect", 0, NULL, 1009 },
 	{ "no-stratum", 0, NULL, 1007 },
+	{ "max-temp", 1, NULL, 1060 },
+	{ "max-diff", 1, NULL, 1061 },
+	{ "max-rate", 1, NULL, 1062 },
 	{ "pass", 1, NULL, 'p' },
 	{ "protocol", 0, NULL, 'P' },
 	{ "protocol-dump", 0, NULL, 'P' },
@@ -739,11 +751,11 @@ static bool get_mininginfo(CURL *curl, struct work *work)
 		if (res) {
 			json_t *key = json_object_get(res, "difficulty");
 			if (key && json_is_real(key)) {
-				global_diff = json_real_value(key);
+				net_diff = json_real_value(key);
 			}
 			key = json_object_get(res, "networkhashps");
 			if (key && json_is_integer(key)) {
-				net_hashrate = json_integer_value(key);
+				net_hashrate = (double) json_integer_value(key);
 			}
 			key = json_object_get(res, "blocks");
 			if (key && json_is_integer(key)) {
@@ -757,9 +769,9 @@ static bool get_mininginfo(CURL *curl, struct work *work)
 					if (!opt_quiet) {
 						char netinfo[64] = { 0 };
 						char srate[32] = { 0 };
-						sprintf(netinfo, "diff %.2f", global_diff);
+						sprintf(netinfo, "diff %.2f", net_diff);
 						if (net_hashrate) {
-							format_hashrate((double) net_hashrate, srate);
+							format_hashrate(net_hashrate, srate);
 							strcat(netinfo, ", net ");
 							strcat(netinfo, srate);
 						}
@@ -1744,6 +1756,36 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 	}
 }
 
+static bool wanna_mine(int thr_id)
+{
+	bool state = true;
+
+	if (opt_max_temp > 0.0) {
+		float temp = cpu_temp(0);
+		if (temp > opt_max_temp) {
+			if (!conditional_state && !opt_quiet && !thr_id)
+				applog(LOG_INFO, "temperature too high (%.0f°c), waiting...", temp);
+			state = false;
+		}
+	}
+	if (opt_max_diff > 0.0 && net_diff > opt_max_diff) {
+		if (!conditional_state && !opt_quiet && !thr_id)
+			applog(LOG_INFO, "network diff too high, waiting...");
+		state = false;
+	}
+	if (opt_max_rate > 0.0 && net_hashrate > opt_max_rate) {
+		if (!conditional_state && !opt_quiet && !thr_id) {
+			char rate[32];
+			format_hashrate(opt_max_rate, rate);
+			applog(LOG_INFO, "network hashrate too high, waiting %s...", rate);
+		}
+		state = false;
+	}
+	if (thr_id == 0)
+		conditional_state = (uint8_t) !state;
+	return state;
+}
+
 static void *miner_thread(void *userdata)
 {
 	struct thr_info *mythr = (struct thr_info *) userdata;
@@ -1894,6 +1936,12 @@ static void *miner_thread(void *userdata)
 		pthread_mutex_unlock(&g_work_lock);
 		work_restart[thr_id].restart = 0;
 
+		/* conditional mining */
+		if (!wanna_mine(thr_id)) {
+			sleep(5);
+			continue;
+		}
+
 		/* adjust max_nonce to meet target scan time */
 		if (have_stratum)
 			max64 = LP_SCANTIME;
@@ -1905,7 +1953,11 @@ static void *miner_thread(void *userdata)
 		if (opt_time_limit && firstwork_time) {
 			int passed = (int)(time(NULL) - firstwork_time);
 			int remain = (int)(opt_time_limit - passed);
-			if (remain < 0 && thr_id == 0) {
+			if (remain < 0) {
+				if (thr_id != 0) {
+					sleep(1);
+					continue;
+				}
 				if (opt_benchmark) {
 					char rate[32];
 					format_hashrate((double)global_hashrate, rate);
@@ -2787,6 +2839,24 @@ void parse_arg(int key, char *arg)
 		if (v < 0 || v > 5)	/* sanity check */
 			show_usage_and_exit(1);
 		opt_priority = v;
+		break;
+	case 1060: // max-temp
+		d = atof(arg);
+		opt_max_temp = d;
+		break;
+	case 1061: // max-diff
+		d = atof(arg);
+		opt_max_diff = d;
+		break;
+	case 1062: // max-rate
+		d = atof(arg);
+		p = strstr(arg, "K");
+		if (p) d *= 1e3;
+		p = strstr(arg, "M");
+		if (p) d *= 1e6;
+		p = strstr(arg, "G");
+		if (p) d *= 1e9;
+		opt_max_rate = d;
 		break;
 	case 'V':
 		show_version_and_exit();
