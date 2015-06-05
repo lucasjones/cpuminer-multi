@@ -154,7 +154,7 @@ bool opt_quiet = false;
 static int opt_retries = -1;
 static int opt_fail_pause = 10;
 static int opt_time_limit = 0;
-int opt_timeout = 0;
+int opt_timeout = 300;
 static int opt_scantime = 5;
 static const bool opt_time = true;
 static enum algos opt_algo = ALGO_SCRYPT;
@@ -271,7 +271,7 @@ Options:\n\
                           (default: retry indefinitely)\n\
   -R, --retry-pause=N   time to pause between retries, in seconds (default: 30)\n\
       --time-limit=N    maximum time [s] to mine before exiting the program.\n\
-  -T, --timeout=N       timeout for long polling, in seconds (default: none)\n\
+  -T, --timeout=N       timeout for long poll and stratum (default: 300 seconds)\n\
   -s, --scantime=N      upper bound on time spent scanning current work when\n\
                           long polling is unavailable, in seconds (default: 5)\n\
   -f, --diff            Divide difficulty by this factor (std is 1) \n\
@@ -2471,7 +2471,7 @@ static void *stratum_thread(void *userdata)
 			}
 		}
 
-		if (!stratum_socket_full(&stratum, 120)) {
+		if (!stratum_socket_full(&stratum, opt_timeout)) {
 			applog(LOG_ERR, "Stratum connection timeout");
 			s = NULL;
 		} else
