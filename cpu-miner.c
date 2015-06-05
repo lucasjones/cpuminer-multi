@@ -1763,25 +1763,26 @@ static bool wanna_mine(int thr_id)
 	if (opt_max_temp > 0.0) {
 		float temp = cpu_temp(0);
 		if (temp > opt_max_temp) {
-			if (!conditional_state[thr_id] && !opt_quiet && !thr_id)
+			if (!thr_id && !conditional_state[thr_id] && !opt_quiet)
 				applog(LOG_INFO, "temperature too high (%.0fC), waiting...", temp);
 			state = false;
 		}
 	}
 	if (opt_max_diff > 0.0 && net_diff > opt_max_diff) {
-		if (!conditional_state[thr_id] && !opt_quiet && !thr_id)
+		if (!thr_id && !conditional_state[thr_id] && !opt_quiet)
 			applog(LOG_INFO, "network diff too high, waiting...");
 		state = false;
 	}
 	if (opt_max_rate > 0.0 && net_hashrate > opt_max_rate) {
-		if (!conditional_state[thr_id] && !opt_quiet && !thr_id) {
+		if (!thr_id && !conditional_state[thr_id] && !opt_quiet) {
 			char rate[32];
 			format_hashrate(opt_max_rate, rate);
 			applog(LOG_INFO, "network hashrate too high, waiting %s...", rate);
 		}
 		state = false;
 	}
-	conditional_state[thr_id] = (uint8_t) !state;
+	if (thr_id < MAX_CPUS)
+		conditional_state[thr_id] = (uint8_t) !state;
 	return state;
 }
 
@@ -1934,6 +1935,12 @@ static void *miner_thread(void *userdata)
 			++(*nonceptr);
 		pthread_mutex_unlock(&g_work_lock);
 		work_restart[thr_id].restart = 0;
+
+		/* prevent scans before a job is received */
+		if (have_stratum && work.data[0] == 0 && !opt_benchmark) {
+			sleep(1);
+			continue;
+		}
 
 		/* conditional mining */
 		if (!wanna_mine(thr_id)) {
@@ -2193,8 +2200,20 @@ static void *miner_thread(void *userdata)
 		}
 
 		/* if nonce found, submit work */
-		if (rc && !opt_benchmark && !submit_work(mythr, &work))
-			break;
+		if (rc && !opt_benchmark) {
+			if (!submit_work(mythr, &work))
+				break;
+			// prevent stale work in solo
+			// we can't submit twice a block!
+			if (!have_stratum && !have_longpoll) {
+				pthread_mutex_lock(&g_work_lock);
+				// will force getwork
+				g_work_time = 0;
+				pthread_mutex_unlock(&g_work_lock);
+				continue;
+			}
+		}
+
 	}
 
 out:
