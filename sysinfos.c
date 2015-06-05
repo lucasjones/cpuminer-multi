@@ -14,8 +14,10 @@
 #ifndef WIN32
 
 #define HWMON_PATH \
- "/sys/class/hwmon/hwmon1/device/temp1_input"
+ "/sys/devices/platform/coretemp.0/hwmon/hwmon1/temp1_input"
 #define HWMON_ALT \
+ "/sys/class/hwmon/hwmon1/temp1_input"
+#define HWMON_ALT2 \
  "/sys/class/hwmon/hwmon0/temp1_input"
 
 static float linux_cputemp(int core)
@@ -26,6 +28,9 @@ static float linux_cputemp(int core)
 
 	if (!fd)
 		fd = fopen(HWMON_ALT, "r");
+
+	if (!fd)
+		fd = fopen(HWMON_ALT2, "r");
 
 	if (!fd)
 		return tc;
