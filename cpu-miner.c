@@ -274,7 +274,8 @@ Options:\n\
   -T, --timeout=N       timeout for long poll and stratum (default: 300 seconds)\n\
   -s, --scantime=N      upper bound on time spent scanning current work when\n\
                           long polling is unavailable, in seconds (default: 5)\n\
-  -f, --diff            Divide difficulty by this factor (std is 1) \n\
+  -f, --diff-factor     Divide req. difficulty by this factor (std is 1.0)\n\
+  -m, --diff-multiplier Multiply difficulty by this factor (std is 1.0)\n\
   -n, --nfactor         neoscrypt N-Factor\n\
       --coinbase-addr=ADDR  payout address for solo mining\n\
       --coinbase-sig=TEXT  data to insert in the coinbase when possible\n\
@@ -312,7 +313,7 @@ static char const short_options[] =
 #ifdef HAVE_SYSLOG_H
 	"S"
 #endif
-	"a:b:Bc:CDhp:Px:qr:R:s:t:T:o:u:O:Vn:f:";
+	"a:b:Bc:CDf:hm:n:p:Px:qr:R:s:t:T:o:u:O:V";
 
 static struct option const options[] = {
 	{ "algo", 1, NULL, 'a' },
@@ -329,8 +330,10 @@ static struct option const options[] = {
 	{ "cpu-priority", 1, NULL, 1021 },
 	{ "no-color", 0, NULL, 1002 },
 	{ "debug", 0, NULL, 'D' },
+	{ "diff-factor", 1, NULL, 'f' },
+	{ "diff", 1, NULL, 'f' }, // deprecated (alias)
+	{ "diff-multiplier", 1, NULL, 'm' },
 	{ "help", 0, NULL, 'h' },
-	{ "diff", 1, NULL, 'f' },
 	{ "nfactor", 1, NULL, 'n' },
 	{ "no-gbt", 0, NULL, 1011 },
 	{ "no-getwork", 0, NULL, 1010 },
@@ -2836,9 +2839,15 @@ void parse_arg(int key, char *arg)
 		break;
 	case 'f':
 		d = atof(arg);
-		if (d == 0)	/* sanity check */
+		if (d == 0.)	/* --diff-factor */
 			show_usage_and_exit(1);
 		opt_diff_factor = d;
+		break;
+	case 'm':
+		d = atof(arg);
+		if (d == 0.)	/* --diff-multiplier */
+			show_usage_and_exit(1);
+		opt_diff_factor = 1.0/d;
 		break;
 	case 'S':
 		use_syslog = true;
