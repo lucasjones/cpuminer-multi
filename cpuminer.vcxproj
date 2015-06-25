@@ -203,8 +203,7 @@
     <ClCompile Include="util.c">
       <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
     </ClCompile>
-    <ClCompile Include="algo\ink.c" />
-    <ClCompile Include="algo\lyra2re.c" />
+    <ClCompile Include="algo\animecoin.c" />
     <ClCompile Include="algo\s3.c" />
     <ClCompile Include="algo\blake.c" />
     <ClCompile Include="algo\blakecoin.c" />
@@ -213,6 +212,9 @@
     <ClCompile Include="algo\groestl.c" />
     <ClCompile Include="algo\heavy.c" />
     <ClCompile Include="algo\keccak.c" />
+    <ClCompile Include="algo\ink.c" />
+    <ClCompile Include="algo\luffa.c" />
+    <ClCompile Include="algo\lyra2re.c" />
     <ClCompile Include="algo\myr-groestl.c" />
     <ClCompile Include="algo\neoscrypt.c" />
     <ClCompile Include="algo\nist5.c" />

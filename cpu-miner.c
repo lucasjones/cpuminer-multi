@@ -86,6 +86,7 @@ enum algos {
 	ALGO_DMD_GR,      /* Diamond */
 	ALGO_FRESH,       /* Fresh */
 	ALGO_GROESTL,     /* Groestl */
+	ALGO_LUFFA,       /* Luffa (Joincoin, Doom) */
 	ALGO_LYRA2,       /* Lyra2RE (Vertcoin) */
 	ALGO_MYR_GR,      /* Myriad Groestl */
 	ALGO_NIST5,       /* Nist5 */
@@ -118,6 +119,7 @@ static const char *algo_names[] = {
 	"dmd-gr",
 	"fresh",
 	"groestl",
+	"luffa",
 	"lyra2",
 	"myr-gr",
 	"nist5",
@@ -243,6 +245,7 @@ Options:\n\
                           groestl      GroestlCoin\n\
                           heavy        Heavy\n\
                           keccak       Keccak\n\
+                          luffa        Luffa\n\
                           lyra2        Lyra2RE\n\
                           myr-gr       Myriad-Groestl\n\
                           neoscrypt    NeoScrypt(128, 2, 1)\n\
@@ -2090,6 +2093,10 @@ static void *miner_thread(void *userdata)
 		case ALGO_GROESTL:
 			rc = scanhash_groestl(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
+			break;
+		case ALGO_LUFFA:
+			rc = scanhash_luffa(thr_id, work.data, work.target, max_nonce,
+				&hashes_done);
 			break;
 		case ALGO_LYRA2:
 			rc = scanhash_lyra2(thr_id, work.data, work.target, max_nonce,

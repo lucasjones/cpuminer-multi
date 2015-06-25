@@ -55,6 +55,7 @@ cpuminer_SOURCES = \
   algo/groestl.c \
   algo/heavy.c \
   algo/ink.c \
+  algo/luffa.c \
   algo/lyra2re.c \
   algo/myr-groestl.c \
   algo/keccak.c \

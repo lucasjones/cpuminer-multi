@@ -1,8 +1,9 @@
-version 1.1-git (Tanguy Pruvot)
+version 1.1 (Tanguy Pruvot)
 - Add basic API remote control (quit/seturl)
 - Add GroestlCoin, Diamond and Myriad variants
 - Add Pluck algo and fix gbt query crash
 - Add ZR5 algo (ZRC) and fix longpoll bug on linux
+- Add Luffa algo
 - Add Skein2 algo (Double Skein for Woodcoin)
 - Add Animecoin algo (Quark variant)
 - Change some logged strings
@@ -11,6 +12,7 @@ version 1.1-git (Tanguy Pruvot)
 - add cpu-priority and cpu-affinity options
 - add NSIS installer script for windows setup
 - Implement background option on windows
+- add -m stratum option (diff-multiplier)
 
 version 1.0.9 (Tanguy Pruvot)
 - pool extranonce subscribe

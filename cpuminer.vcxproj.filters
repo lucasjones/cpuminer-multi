@@ -185,6 +185,9 @@
     <ClCompile Include="algo\keccak.c">
       <Filter>algo</Filter>
     </ClCompile>
+    <ClCompile Include="algo\luffa.c">
+      <Filter>algo</Filter>
+    </ClCompile>
     <ClCompile Include="algo\lyra2re.c">
       <Filter>algo</Filter>
     </ClCompile>
@@ -491,3 +494,4 @@
     </ResourceCompile>
   </ItemGroup>
 </Project>
+

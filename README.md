@@ -35,6 +35,7 @@ Algorithms
  * ✓ __pentablake__ (Joincoin)
  * ✓ __pluck__ (Supcoin [SUP])
  * ✓ __qubit__ (MyriadCoin [MYR])
+ * ✓ __skein__ (Skeincoin, Myriadcoin, Xedoscoin, ...)
  * ✓ __skein2__ (Woodcoin)
  * ✓ __s3__ (OneCoin)
  * ✓ __x11__ (Darkcoin [DRK], Hirocoin, Limecoin, ...)
@@ -44,11 +45,11 @@ Algorithms
  * ✓ __zr5__ (Ziftrcoin [ZRC])
 
 #### Implemented, but untested
- * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
  * ? hefty1 (Heavycoin)
+ * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
+ * ? luffa (Joincoin, Doomcoin)
  * ? quark (Quarkcoin)
- * ? qubit* (Qubitcoin, Myriadcoin)
- * ? skein (Skeincoin, Myriadcoin)
+ * ? qubit (Qubitcoin, Myriadcoin)
  * ? shavite3 (INKcoin)
 
 #### Planned support for

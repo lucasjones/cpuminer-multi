@@ -162,6 +162,7 @@ fi
 CFLAGS="$CFLAGS $LIBCURL_CFLAGS"
 LDFLAGS="$LDFLAGS $LIBCURL_LDFLAGS"
 
+#AC_CHECK_LIB([z],[gzopen],[],[])
 #AC_CHECK_LIB([crypto],[OPENSSL_init], crypto=yes, [AC_MSG_ERROR([OpenSSL crypto library required])])
 #AC_CHECK_LIB([ssl],[SSL_new], ssl=yes, ssl=no)
 
