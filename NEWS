@@ -6,6 +6,7 @@ version 1.1 (Tanguy Pruvot)
 - Add Luffa algo
 - Add Skein2 algo (Double Skein for Woodcoin)
 - Add Animecoin algo (Quark variant)
+- Add Dropcoin pok algo
 - Change some logged strings
 - Use all cores by default, not N-1
 - Handle a default config to run without params

@@ -37,7 +37,7 @@ cpuminer_SOURCES = \
   sha3/sph_sha2big.c \
   sha3/sph_shabal.c \
   sha3/sph_whirlpool.c \
-  crypto/blake2s \
+  crypto/blake2s.c \
   crypto/oaes_lib.c \
   crypto/c_keccak.c \
   crypto/c_groestl.c \
@@ -50,7 +50,9 @@ cpuminer_SOURCES = \
   algo/animecoin.c \
   algo/blake.c \
   algo/blakecoin.c \
+  algo/blake2.c \
   algo/cryptonight.c \
+  algo/drop.c \
   algo/fresh.c \
   algo/groestl.c \
   algo/heavy.c \

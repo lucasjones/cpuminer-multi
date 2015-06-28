@@ -1,25 +1,23 @@
 #include "miner.h"
 
-#include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
-#include <stdio.h>
+#include <stdint.h>
 
-#include "sha3/sph_luffa.h"
+#include "crypto/blake2s.h"
 
-void luffahash(void *output, const void *input)
+inline void blake2s_hash(void *output, const void *input)
 {
-	unsigned char _ALIGN(128) hash[64];
-	sph_luffa512_context ctx_luffa;
+	unsigned char hash[128] = { 0 };
+	blake2s_state blake2_ctx;
 
-	sph_luffa512_init(&ctx_luffa);
-	sph_luffa512 (&ctx_luffa, input, 80);
-	sph_luffa512_close(&ctx_luffa, (void*) hash);
+	blake2s_init(&blake2_ctx, BLAKE2S_OUTBYTES);
+	blake2s_update(&blake2_ctx, input, 80);
+	blake2s_final(&blake2_ctx, hash, BLAKE2S_OUTBYTES);
 
 	memcpy(output, hash, 32);
 }
 
-int scanhash_luffa(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+int scanhash_blake2s(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	uint32_t max_nonce, uint64_t *hashes_done)
 {
 	uint32_t _ALIGN(64) hash64[8];
@@ -36,7 +34,7 @@ int scanhash_luffa(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 
 	do {
 		be32enc(&endiandata[19], n);
-		luffahash(hash64, endiandata);
+		blake2s_hash(hash64, endiandata);
 		if (hash64[7] < Htarg && fulltest(hash64, ptarget)) {
 			*hashes_done = n - first_nonce + 1;
 			pdata[19] = n;

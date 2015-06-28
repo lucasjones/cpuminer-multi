@@ -166,9 +166,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="algo\animecoin.c" />
-    <ClCompile Include="algo\skein2.c" />
-    <ClCompile Include="algo\zr5.c" />
     <ClCompile Include="compat\getopt\getopt_long.c" />
     <ClCompile Include="compat\gettimeofday.c" />
     <ClCompile Include="compat\jansson\dump.c" />
@@ -204,10 +201,11 @@
       <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
     </ClCompile>
     <ClCompile Include="algo\animecoin.c" />
-    <ClCompile Include="algo\s3.c" />
     <ClCompile Include="algo\blake.c" />
     <ClCompile Include="algo\blakecoin.c" />
+    <ClCompile Include="algo\blake2.c" />
     <ClCompile Include="algo\cryptonight.c" />
+    <ClCompile Include="algo\drop.c" />
     <ClCompile Include="algo\fresh.c" />
     <ClCompile Include="algo\groestl.c" />
     <ClCompile Include="algo\heavy.c" />
@@ -222,15 +220,18 @@
     <ClCompile Include="algo\pluck.c" />
     <ClCompile Include="algo\quark.c" />
     <ClCompile Include="algo\qubit.c" />
+    <ClCompile Include="algo\s3.c" />
     <ClCompile Include="algo\sha2.c" />
     <ClCompile Include="algo\scrypt.c">
       <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
     </ClCompile>
     <ClCompile Include="algo\skein.c" />
+    <ClCompile Include="algo\skein2.c" />
     <ClCompile Include="algo\x11.c" />
     <ClCompile Include="algo\x13.c" />
     <ClCompile Include="algo\x14.c" />
     <ClCompile Include="algo\x15.c" />
+    <ClCompile Include="algo\zr5.c" />
     <ClCompile Include="sha3\aes_helper.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>

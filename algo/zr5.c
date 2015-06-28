@@ -112,27 +112,23 @@ void zr5hash_pok(void *output, uint32_t *pdata)
 	memcpy(output, hash, 32);
 }
 
-int scanhash_zr5(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-	uint32_t max_nonce,	uint64_t *hashes_done)
+int scanhash_zr5(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done)
 {
 	uint32_t _ALIGN(64) hash[16];
+	uint32_t *pdata = work->data;
+	uint32_t *ptarget = work->target;
 	const uint32_t first_nonce = pdata[19];
 	uint32_t nonce = first_nonce;
-
-	//uint32_t _ALIGN(64) tmpdata[20];
-	//memcpy(tmpdata, pdata, 76);
 	#define tmpdata pdata
 
 	if (opt_benchmark)
-		((uint32_t*)ptarget)[7] = 0x0000ff;
-
-	const uint32_t Htarg = ptarget[7];
+		ptarget[7] = 0x00ff;
 
 	do {
 		tmpdata[19] = nonce;
 		zr5hash_pok(hash, tmpdata);
 
-		if (hash[7] <= Htarg && fulltest(hash, ptarget))
+		if (hash[7] <= ptarget[7] && fulltest(hash, ptarget))
 		{
 			pdata[0] = tmpdata[0];
 			pdata[19] = nonce;

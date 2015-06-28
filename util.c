@@ -1790,8 +1790,14 @@ void print_hash_tests(void)
 	blakecoinhash(&hash[0], &buf[0]);
 	printpfx("blakecoin", hash);
 
+	blake2s_hash(&hash[0], &buf[0]);
+	printpfx("blake2s", hash);
+
 	cryptonight_hash(&hash[0], &buf[0], 76);
 	printpfx("cryptonight", hash);
+
+	droplp_hash(&hash[0], &buf[0]);
+	printpfx("drop", hash);
 
 	freshhash(&hash[0], &buf[0], 80);
 	printpfx("fresh", hash);
@@ -1805,7 +1811,7 @@ void print_hash_tests(void)
 	keccakhash(&hash[0], &buf[0]);
 	printpfx("keccak", hash);
 
-	luffa_hash(&hash[0], &buf[0]);
+	luffahash(&hash[0], &buf[0]);
 	printpfx("luffa", hash);
 
 	lyra2_hash(&hash[0], &buf[0]);

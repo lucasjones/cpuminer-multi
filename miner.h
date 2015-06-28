@@ -186,6 +186,8 @@ void sha256_transform_8way(uint32_t *state, const uint32_t *block, int swap);
 #endif
 #endif
 
+struct work;
+
 int scanhash_anime(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
@@ -194,6 +196,11 @@ int scanhash_blake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 
 int scanhash_blakecoin(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
+
+int scanhash_blake2s(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
+
+int scanhash_drop(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 
 int scanhash_sha256d(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
@@ -238,6 +245,9 @@ int scanhash_neoscrypt(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 int scanhash_nist5(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
+int scanhash_pentablake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
+
 int scanhash_pluck(int thr_id, uint32_t *pdata,
                             unsigned char *scratchbuf, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done, int N);
@@ -266,11 +276,7 @@ int scanhash_x14(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 int scanhash_x15(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
-int scanhash_zr5(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-                            uint32_t max_nonce, uint64_t *hashes_done);
-
-int scanhash_pentablake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-                            uint32_t max_nonce, uint64_t *hashes_done);
+int scanhash_zr5(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 
 void cryptonight_hash(void* output, const void* input, int input_len);
 
@@ -481,14 +487,16 @@ void sha256d(unsigned char *hash, const unsigned char *data, int len);
 void animehash(void *state, const void *input);
 void blakehash(void *state, const void *input);
 void blakecoinhash(void *state, const void *input);
+void blake2s_hash(void *output, const void *input);
 void cryptonight_hash(void* output, const void* input, int len);
+void droplp_hash(void *output, const void *input);
 void groestlhash(void *output, const void *input);
 void heavyhash(unsigned char* output, const unsigned char* input, int len);
 void quarkhash(void *state, const void *input);
 void freshhash(void* output, const void* input, uint32_t len);
 void keccakhash(void *state, const void *input);
 void inkhash(void *state, const void *input); /* shavite */
-void luffa_hash(void *output, const void *input);
+void luffahash(void *output, const void *input);
 void lyra2_hash(void *state, const void *input);
 void myriadhash(void *output, const void *input);
 void neoscrypt(unsigned char *output, const unsigned char *password, uint32_t profile);

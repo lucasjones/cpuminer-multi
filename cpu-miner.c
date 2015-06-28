@@ -82,8 +82,10 @@ enum algos {
 	ALGO_ANIME,       /* Animecoin (Quark variant) */
 	ALGO_BLAKE,       /* Blake 256 */
 	ALGO_BLAKECOIN,   /* Simplified 8 rounds Blake 256 */
+	ALGO_BLAKE2S,     /* Blake2s */
 	ALGO_CRYPTONIGHT, /* CryptoNight */
 	ALGO_DMD_GR,      /* Diamond */
+	ALGO_DROP,        /* Dropcoin */
 	ALGO_FRESH,       /* Fresh */
 	ALGO_GROESTL,     /* Groestl */
 	ALGO_LUFFA,       /* Luffa (Joincoin, Doom) */
@@ -115,8 +117,10 @@ static const char *algo_names[] = {
 	"anime",
 	"blake",
 	"blakecoin",
+	"blake2s",
 	"cryptonight",
 	"dmd-gr",
+	"drop",
 	"fresh",
 	"groestl",
 	"luffa",
@@ -239,8 +243,10 @@ Options:\n\
                           anime        Animecoin\n\
                           blake        Blake-256 (SFR)\n\
                           blakecoin    Blakecoin\n\
+                          blake2s      Blake-2 S\n\
                           cryptonight  CryptoNight\n\
                           dmd-gr       Diamond-Groestl\n\
+                          drop         Dropcoin\n\
                           fresh        Fresh\n\
                           groestl      GroestlCoin\n\
                           heavy        Heavy\n\
@@ -641,7 +647,7 @@ static bool work_decode(const json_t *val, struct work *work)
 	int data_size = sizeof(work->data), target_size = sizeof(work->target);
 	int adata_sz = ARRAY_SIZE(work->data), atarget_sz = ARRAY_SIZE(work->target);
 
-	if (opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
+	if (opt_algo == ALGO_DROP || opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
 		data_size = 80; target_size = 32;
 		adata_sz = data_size /  sizeof(uint32_t);
 		atarget_sz = target_size /  sizeof(uint32_t);
@@ -663,7 +669,7 @@ static bool work_decode(const json_t *val, struct work *work)
 	for (i = 0; i < adata_sz; i++)
 		work->data[i] = le32dec(work->data + i);
 
-	if (opt_algo == ALGO_ZR5) {
+	if (opt_algo == ALGO_DROP || opt_algo == ALGO_ZR5) {
 		#define POK_BOOL_MASK 0x00008000
 		#define POK_DATA_MASK 0xFFFF0000
 		if (work->data[0] & POK_BOOL_MASK) {
@@ -1173,7 +1179,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			le32enc(&ntime, work->data[17]);
 			le32enc(&nonce, work->data[19]);
 
-			if (opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
+			if (opt_algo == ALGO_DROP || opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
 				/* reversed */
 				be32enc(&ntime, work->data[17]);
 				be32enc(&nonce, work->data[19]);
@@ -1287,7 +1293,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			json_decref(val);
 			return true;
 
-		} else if (opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
+		} else if (opt_algo == ALGO_DROP || opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
 			/* different data size */
 			data_size = 80;
 		}
@@ -1723,7 +1729,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 		work->data[17] = le32dec(sctx->job.ntime);
 		work->data[18] = le32dec(sctx->job.nbits);
 
-		if (opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
+		if (opt_algo == ALGO_DROP || opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
 			/* reversed endian */
 			for (i = 0; i <= 18; i++)
 				work->data[i] = swab32(work->data[i]);
@@ -1742,6 +1748,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 		}
 
 		switch (opt_algo) {
+			case ALGO_DROP:
 			case ALGO_SCRYPT:
 			case ALGO_NEOSCRYPT:
 			case ALGO_PLUCK:
@@ -1886,8 +1893,8 @@ static void *miner_thread(void *userdata)
 		int wkcmp_sz = 19*4;
 		int rc;
 
-		if (opt_algo == ALGO_ZR5) {
-			// Duplicates
+		if (opt_algo == ALGO_DROP || opt_algo == ALGO_ZR5) {
+			// Duplicates: ignore pok in pdata[0]
 			wkcmp_sz -= sizeof(uint32_t);
 			wkcmp_offset = 1;
 		}
@@ -1999,6 +2006,7 @@ static void *miner_thread(void *userdata)
 			case ALGO_CRYPTONIGHT:
 				max64 = 0x40LL;
 				break;
+			case ALGO_DROP:
 			case ALGO_PLUCK:
 				max64 = 0x1ff;
 				break;
@@ -2026,6 +2034,7 @@ static void *miner_thread(void *userdata)
 				break;
 			case ALGO_BLAKE:
 			case ALGO_BLAKECOIN:
+			case ALGO_BLAKE2S:
 			case ALGO_SKEIN:
 			case ALGO_SKEIN2:
 				max64 = 0x7ffffLL;
@@ -2084,6 +2093,13 @@ static void *miner_thread(void *userdata)
 		case ALGO_BLAKECOIN:
 			rc = scanhash_blakecoin(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
+			break;
+		case ALGO_BLAKE2S:
+			rc = scanhash_blake2s(thr_id, work.data, work.target, max_nonce,
+					&hashes_done);
+			break;
+		case ALGO_DROP:
+			rc = scanhash_drop(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_FRESH:
 			rc = scanhash_fresh(thr_id, work.data, work.target, max_nonce,
@@ -2151,8 +2167,7 @@ static void *miner_thread(void *userdata)
 					&hashes_done);
 			break;
 		case ALGO_ZR5:
-			rc = scanhash_zr5(thr_id, work.data, work.target, max_nonce,
-					&hashes_done);
+			rc = scanhash_zr5(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_PENTABLAKE:
 			rc = scanhash_pentablake(thr_id, work.data, work.target, max_nonce,
@@ -2583,14 +2598,14 @@ void parse_arg(int key, char *arg)
 
 	switch(key) {
 	case 'a':
-		for (i = 0; i < ARRAY_SIZE(algo_names); i++) {
+		for (i = 0; i < ALGO_COUNT; i++) {
 			v = (int) strlen(algo_names[i]);
 			if (!strncmp(arg, algo_names[i], v)) {
 				if (arg[v] == '\0') {
 					opt_algo = (enum algos) i;
 					break;
 				}
-				if (arg[v] == ':' && i == ALGO_SCRYPT) {
+				if (arg[v] == ':') {
 					char *ep;
 					v = strtol(arg+v+1, &ep, 10);
 					if (*ep || v & (v-1) || v < 2)
@@ -2601,11 +2616,23 @@ void parse_arg(int key, char *arg)
 				}
 			}
 		}
-		if (i == ARRAY_SIZE(algo_names)) {
-			fprintf(stderr, "unknown algorithm -- '%s'\n", arg);
+		if (i == ALGO_COUNT) {
+			// some aliases...
+			if (!strcasecmp("blake2", arg))
+				i = opt_algo = ALGO_BLAKE2S;
+			else if (!strcasecmp("diamond", arg))
+				i = opt_algo = ALGO_DMD_GR;
+			else if (!strcasecmp("droplp", arg))
+				i = opt_algo = ALGO_DROP;
+			else if (!strcasecmp("ziftr", arg))
+				i = opt_algo = ALGO_ZR5;
+			else
+				applog(LOG_ERR, "Unknown algo parameter '%s'", arg);
+		}
+		if (i == ALGO_COUNT) {
 			show_usage_and_exit(1);
 		}
-		if (opt_algo == ALGO_SCRYPT)
+		if (!opt_nfactor && opt_algo == ALGO_SCRYPT)
 			opt_nfactor = 9;
 		break;
 	case 'b':
