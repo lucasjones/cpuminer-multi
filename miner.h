@@ -200,6 +200,9 @@ int scanhash_blakecoin(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 int scanhash_blake2s(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
+int scanhash_c11(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
+
 int scanhash_drop(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 
 int scanhash_sha256d(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
@@ -488,6 +491,7 @@ void animehash(void *state, const void *input);
 void blakehash(void *state, const void *input);
 void blakecoinhash(void *state, const void *input);
 void blake2s_hash(void *output, const void *input);
+void c11hash(void *output, const void *input);
 void cryptonight_hash(void* output, const void* input, int len);
 void droplp_hash(void *output, const void *input);
 void groestlhash(void *output, const void *input);

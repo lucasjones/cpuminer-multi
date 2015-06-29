@@ -204,6 +204,7 @@
     <ClCompile Include="algo\blake.c" />
     <ClCompile Include="algo\blakecoin.c" />
     <ClCompile Include="algo\blake2.c" />
+    <ClCompile Include="algo\c11.c" />
     <ClCompile Include="algo\cryptonight.c" />
     <ClCompile Include="algo\drop.c" />
     <ClCompile Include="algo\fresh.c" />
@@ -261,8 +262,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\ccminer\compat\jansson\config.h" />
-    <ClInclude Include="..\ccminer\compat\jansson\jansson.h" />
+    <ClInclude Include="compat\jansson\config.h" />
+    <ClInclude Include="compat\jansson\jansson.h" />
     <ClInclude Include="compat.h" />
     <ClInclude Include="compat\getopt\getopt.h" />
     <ClInclude Include="compat\inttypes.h" />

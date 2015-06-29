@@ -167,6 +167,9 @@
     <ClCompile Include="algo\blakecoin.c">
       <Filter>algo</Filter>
     </ClCompile>
+    <ClCompile Include="algo\c11.c">
+      <Filter>algo</Filter>
+    </ClCompile>
     <ClCompile Include="algo\cryptonight.c">
       <Filter>algo</Filter>
     </ClCompile>
@@ -340,10 +343,10 @@
     <ClInclude Include="compat\cpuminer-config.h">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\ccminer\compat\jansson\jansson.h">
+    <ClInclude Include="compat\jansson\jansson.h">
       <Filter>jansson</Filter>
     </ClInclude>
-    <ClInclude Include="..\ccminer\compat\jansson\config.h">
+    <ClInclude Include="compat\jansson\config.h">
       <Filter>jansson</Filter>
     </ClInclude>
     <ClInclude Include="crypto\blake2s.h">

@@ -1793,6 +1793,9 @@ void print_hash_tests(void)
 	blake2s_hash(&hash[0], &buf[0]);
 	printpfx("blake2s", hash);
 
+	c11hash(&hash[0], &buf[0]);
+	printpfx("c11", hash);
+
 	cryptonight_hash(&hash[0], &buf[0], 76);
 	printpfx("cryptonight", hash);
 

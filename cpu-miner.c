@@ -83,6 +83,7 @@ enum algos {
 	ALGO_BLAKE,       /* Blake 256 */
 	ALGO_BLAKECOIN,   /* Simplified 8 rounds Blake 256 */
 	ALGO_BLAKE2S,     /* Blake2s */
+	ALGO_C11,         /* C11 Chaincoin/Flaxcoin X11 variant */
 	ALGO_CRYPTONIGHT, /* CryptoNight */
 	ALGO_DMD_GR,      /* Diamond */
 	ALGO_DROP,        /* Dropcoin */
@@ -118,6 +119,7 @@ static const char *algo_names[] = {
 	"blake",
 	"blakecoin",
 	"blake2s",
+	"c11",
 	"cryptonight",
 	"dmd-gr",
 	"drop",
@@ -244,6 +246,7 @@ Options:\n\
                           blake        Blake-256 (SFR)\n\
                           blakecoin    Blakecoin\n\
                           blake2s      Blake-2 S\n\
+                          c11/flax     C11\n\
                           cryptonight  CryptoNight\n\
                           dmd-gr       Diamond-Groestl\n\
                           drop         Dropcoin\n\
@@ -2013,6 +2016,7 @@ static void *miner_thread(void *userdata)
 			case ALGO_LYRA2:
 				max64 = 0xffff;
 				break;
+			case ALGO_C11:
 			case ALGO_DMD_GR:
 			case ALGO_FRESH:
 			case ALGO_GROESTL:
@@ -2095,8 +2099,10 @@ static void *miner_thread(void *userdata)
 					&hashes_done);
 			break;
 		case ALGO_BLAKE2S:
-			rc = scanhash_blake2s(thr_id, work.data, work.target, max_nonce,
-					&hashes_done);
+			rc = scanhash_blake2s(thr_id, work.data, work.target, max_nonce, &hashes_done);
+			break;
+		case ALGO_C11:
+			rc = scanhash_c11(thr_id, work.data, work.target, max_nonce, &hashes_done);
 			break;
 		case ALGO_DROP:
 			rc = scanhash_drop(thr_id, &work, max_nonce, &hashes_done);
@@ -2620,6 +2626,8 @@ void parse_arg(int key, char *arg)
 			// some aliases...
 			if (!strcasecmp("blake2", arg))
 				i = opt_algo = ALGO_BLAKE2S;
+			else if (!strcasecmp("flax", arg))
+				i = opt_algo = ALGO_C11;
 			else if (!strcasecmp("diamond", arg))
 				i = opt_algo = ALGO_DMD_GR;
 			else if (!strcasecmp("droplp", arg))
