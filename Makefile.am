@@ -51,6 +51,7 @@ cpuminer_SOURCES = \
   algo/blake.c \
   algo/blakecoin.c \
   algo/blake2.c \
+  algo/bmw256.c \
   algo/c11.c \
   algo/cryptonight.c \
   algo/drop.c \

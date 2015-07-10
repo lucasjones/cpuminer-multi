@@ -204,6 +204,7 @@
     <ClCompile Include="algo\blake.c" />
     <ClCompile Include="algo\blakecoin.c" />
     <ClCompile Include="algo\blake2.c" />
+    <ClCompile Include="algo\bmw256.c" />
     <ClCompile Include="algo\c11.c" />
     <ClCompile Include="algo\cryptonight.c" />
     <ClCompile Include="algo\drop.c" />

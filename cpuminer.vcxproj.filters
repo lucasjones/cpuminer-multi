@@ -257,6 +257,9 @@
     <ClCompile Include="algo\drop.c">
       <Filter>algo</Filter>
     </ClCompile>
+    <ClCompile Include="algo\bmw256.c">
+      <Filter>algo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sha3\sph_blake.h">

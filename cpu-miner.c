@@ -83,6 +83,7 @@ enum algos {
 	ALGO_BLAKE,       /* Blake 256 */
 	ALGO_BLAKECOIN,   /* Simplified 8 rounds Blake 256 */
 	ALGO_BLAKE2S,     /* Blake2s */
+	ALGO_BMW,         /* BMW 256 */
 	ALGO_C11,         /* C11 Chaincoin/Flaxcoin X11 variant */
 	ALGO_CRYPTONIGHT, /* CryptoNight */
 	ALGO_DMD_GR,      /* Diamond */
@@ -119,6 +120,7 @@ static const char *algo_names[] = {
 	"blake",
 	"blakecoin",
 	"blake2s",
+	"bmw",
 	"c11",
 	"cryptonight",
 	"dmd-gr",
@@ -246,6 +248,7 @@ Options:\n\
                           blake        Blake-256 (SFR)\n\
                           blakecoin    Blakecoin\n\
                           blake2s      Blake-2 S\n\
+                          bmw          BMW 256\n\
                           c11/flax     C11\n\
                           cryptonight  CryptoNight\n\
                           dmd-gr       Diamond-Groestl\n\
@@ -2033,6 +2036,7 @@ static void *miner_thread(void *userdata)
 			case ALGO_X15:
 				max64 = 0x1ffff;
 				break;
+			case ALGO_BMW:
 			case ALGO_PENTABLAKE:
 				max64 = 0x3ffff;
 				break;
@@ -2100,6 +2104,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_BLAKE2S:
 			rc = scanhash_blake2s(thr_id, work.data, work.target, max_nonce, &hashes_done);
+			break;
+		case ALGO_BMW:
+			rc = scanhash_bmw(thr_id, work.data, work.target, max_nonce, &hashes_done);
 			break;
 		case ALGO_C11:
 			rc = scanhash_c11(thr_id, work.data, work.target, max_nonce, &hashes_done);
