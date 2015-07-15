@@ -345,11 +345,10 @@ extern struct thr_info *thr_info;
 extern int longpoll_thr_id;
 extern int stratum_thr_id;
 extern int api_thr_id;
+extern int opt_n_threads;
 extern struct work_restart *work_restart;
-extern bool jsonrpc_2;
-extern bool aes_ni_supported;
-
 extern uint32_t opt_work_size;
+extern double *thr_hashrates;
 extern uint64_t global_hashrate;
 extern double stratum_diff;
 extern double net_diff;
@@ -358,6 +357,8 @@ extern double net_hashrate;
 #define JSON_RPC_LONGPOLL	(1 << 0)
 #define JSON_RPC_QUIET_404	(1 << 1)
 #define JSON_RPC_IGNOREERR  (1 << 2)
+
+#define JSON_BUF_LEN 512
 
 #define CL_N    "\x1B[0m"
 #define CL_RED  "\x1B[31m"
@@ -397,10 +398,10 @@ extern json_t *json_rpc_call(CURL *curl, const char *url, const char *userpass,
 void bin2hex(char *s, const unsigned char *p, size_t len);
 char *abin2hex(const unsigned char *p, size_t len);
 bool hex2bin(unsigned char *p, const char *hexstr, size_t len);
+bool jobj_binary(const json_t *obj, const char *key, void *buf, size_t buflen);
 int varint_encode(unsigned char *p, uint64_t n);
 size_t address_to_script(unsigned char *out, size_t outsz, const char *addr);
-int timeval_subtract(struct timeval *result, struct timeval *x,
-	struct timeval *y);
+int timeval_subtract(struct timeval *result, struct timeval *x, struct timeval *y);
 bool fulltest(const uint32_t *hash, const uint32_t *target);
 void diff_to_target(uint32_t *target, double diff);
 void get_currentalgo(char* buf, int sz);
@@ -469,8 +470,21 @@ bool stratum_subscribe(struct stratum_ctx *sctx);
 bool stratum_authorize(struct stratum_ctx *sctx, const char *user, const char *pass);
 bool stratum_handle_method(struct stratum_ctx *sctx, const char *s);
 
-bool rpc2_job_decode(const json_t *job, struct work *work);
+/* rpc 2.0 (xmr) */
+extern bool jsonrpc_2;
+extern bool aes_ni_supported;
+extern char rpc2_id[64];
+extern char *rpc2_blob;
+extern size_t rpc2_bloblen;
+extern uint32_t rpc2_target;
+extern char *rpc2_job_id;
+
+json_t *json_rpc2_call(CURL *curl, const char *url, const char *userpass, const char *rpc_req, int *curl_err, int flags);
+bool rpc2_login(CURL *curl);
 bool rpc2_login_decode(const json_t *val);
+bool rpc2_workio_login(CURL *curl);
+bool rpc2_stratum_job(struct stratum_ctx *sctx, json_t *params);
+bool rpc2_job_decode(const json_t *job, struct work *work);
 
 struct thread_q;
 

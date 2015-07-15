@@ -57,7 +57,6 @@ BOOL WINAPI ConsoleHandler(DWORD);
 #endif
 
 #define LP_SCANTIME		60
-#define JSON_BUF_LEN 345
 
 enum workio_commands {
 	WC_GET_WORK,
@@ -150,6 +149,7 @@ bool opt_debug = false;
 bool opt_protocol = false;
 bool opt_benchmark = false;
 bool opt_redirect = true;
+bool opt_extranonce = false;
 bool want_longpoll = true;
 bool have_longpoll = false;
 bool have_gbt = true;
@@ -175,10 +175,10 @@ int opt_n_threads = 0;
 int opt_affinity = -1;
 int opt_priority = 0;
 int num_cpus;
-static char *rpc_url;
-static char *rpc_userpass;
-static char *rpc_user, *rpc_pass;
-static char *short_url = NULL;
+char *rpc_url;
+char *rpc_userpass;
+char *rpc_user, *rpc_pass;
+char *short_url = NULL;
 static unsigned char pk_script[25] = { 0 };
 static size_t pk_script_size = 0;
 static char coinbase_sig[101] = { 0 };
@@ -186,25 +186,25 @@ char *opt_cert;
 char *opt_proxy;
 long opt_proxy_type;
 struct thr_info *thr_info;
-static int work_thr_id;
+int work_thr_id;
 int longpoll_thr_id = -1;
 int stratum_thr_id = -1;
 int api_thr_id = -1;
 bool stratum_need_reset = false;
 struct work_restart *work_restart = NULL;
-static struct stratum_ctx stratum;
+struct stratum_ctx stratum;
 bool jsonrpc_2 = false;
-static char rpc2_id[64] = "";
-static char *rpc2_blob = NULL;
-static size_t rpc2_bloblen = 0;
-static uint32_t rpc2_target = 0;
-static char *rpc2_job_id = NULL;
+char rpc2_id[64] = "";
+char *rpc2_blob = NULL;
+size_t rpc2_bloblen = 0;
+uint32_t rpc2_target = 0;
+char *rpc2_job_id = NULL;
 bool aes_ni_supported = false;
 double opt_diff_factor = 1.0;
-static pthread_mutex_t rpc2_job_lock;
-static pthread_mutex_t rpc2_login_lock;
+pthread_mutex_t rpc2_job_lock;
+pthread_mutex_t rpc2_login_lock;
 pthread_mutex_t applog_lock;
-static pthread_mutex_t stats_lock;
+pthread_mutex_t stats_lock;
 uint32_t zr5_pok = 0;
 
 uint32_t accepted_count = 0L;
@@ -379,13 +379,12 @@ static struct option const options[] = {
 	{ 0, 0, 0, 0 }
 };
 
-static struct work g_work;
-static time_t g_work_time;
+static struct work g_work = { 0 };
+static time_t g_work_time = 0;
 static pthread_mutex_t g_work_lock;
 static bool submit_old = false;
 static char *lp_id;
 
-static bool rpc2_login(CURL *curl);
 static void workio_cmd_free(struct workio_cmd *wc);
 
 
@@ -459,71 +458,6 @@ void proper_exit(int reason)
 	exit(reason);
 }
 
-json_t *json_rpc2_call_recur(CURL *curl, const char *url,
-		const char *userpass, json_t *rpc_req,
-		int *curl_err, int flags, int recur)
-{
-	if(recur >= 5) {
-		if(opt_debug)
-			applog(LOG_DEBUG, "Failed to call rpc command after %i tries", recur);
-		return NULL;
-	}
-	if(!strcmp(rpc2_id, "")) {
-		if(opt_debug)
-			applog(LOG_DEBUG, "Tried to call rpc2 command before authentication");
-		return NULL;
-	}
-	json_t *params = json_object_get(rpc_req, "params");
-	if (params) {
-		json_t *auth_id = json_object_get(params, "id");
-		if (auth_id) {
-			json_string_set(auth_id, rpc2_id);
-		}
-	}
-	json_t *res = json_rpc_call(curl, url, userpass, json_dumps(rpc_req, 0),
-			curl_err, flags | JSON_RPC_IGNOREERR);
-	if(!res) goto end;
-	json_t *error = json_object_get(res, "error");
-	if(!error) goto end;
-	json_t *message;
-	if(json_is_string(error))
-		message = error;
-	else
-		message = json_object_get(error, "message");
-	if(!message || !json_is_string(message)) goto end;
-	const char *mes = json_string_value(message);
-	if(!strcmp(mes, "Unauthenticated")) {
-		pthread_mutex_lock(&rpc2_login_lock);
-		rpc2_login(curl);
-		sleep(1);
-		pthread_mutex_unlock(&rpc2_login_lock);
-		return json_rpc2_call_recur(curl, url, userpass, rpc_req,
-				curl_err, flags, recur + 1);
-	} else if(!strcmp(mes, "Low difficulty share") || !strcmp(mes, "Block expired") || !strcmp(mes, "Invalid job id") || !strcmp(mes, "Duplicate share")) {
-		json_t *result = json_object_get(res, "result");
-		if(!result) {
-			goto end;
-		}
-		json_object_set(result, "reject-reason", json_string(mes));
-	} else {
-		applog(LOG_ERR, "json_rpc2.0 error: %s", mes);
-		return NULL;
-	}
-	end:
-	return res;
-}
-
-json_t *json_rpc2_call(CURL *curl, const char *url,
-		const char *userpass, const char *rpc_req,
-		int *curl_err, int flags)
-{
-	json_t* req_json = JSON_LOADS(rpc_req, NULL);
-	json_t* res = json_rpc2_call_recur(curl, url, userpass, req_json,
-			curl_err, flags, 0);
-	json_decref(req_json);
-	return res;
-}
-
 static inline void work_free(struct work *w)
 {
 	if (w->txs) free(w->txs);
@@ -545,106 +479,6 @@ static inline void work_copy(struct work *dest, const struct work *src)
 		dest->xnonce2 = (uchar*) malloc(src->xnonce2_len);
 		memcpy(dest->xnonce2, src->xnonce2, src->xnonce2_len);
 	}
-}
-
-static bool jobj_binary(const json_t *obj, const char *key,
-			void *buf, size_t buflen)
-{
-	const char *hexstr;
-	json_t *tmp;
-
-	tmp = json_object_get(obj, key);
-	if (unlikely(!tmp)) {
-		applog(LOG_ERR, "JSON key '%s' not found", key);
-		return false;
-	}
-	hexstr = json_string_value(tmp);
-	if (unlikely(!hexstr)) {
-		applog(LOG_ERR, "JSON key '%s' is not a string", key);
-		return false;
-	}
-	if (!hex2bin((uchar*) buf, hexstr, buflen))
-		return false;
-
-	return true;
-}
-
-bool rpc2_job_decode(const json_t *job, struct work *work)
-{
-	if (!jsonrpc_2) {
-		applog(LOG_ERR, "Tried to decode job without JSON-RPC 2.0");
-		return false;
-	}
-	json_t *tmp;
-	tmp = json_object_get(job, "job_id");
-	if (!tmp) {
-		applog(LOG_ERR, "JSON invalid job id");
-		goto err_out;
-	}
-	const char *job_id = json_string_value(tmp);
-	tmp = json_object_get(job, "blob");
-	if (!tmp) {
-		applog(LOG_ERR, "JSON invalid blob");
-		goto err_out;
-	}
-	const char *hexblob = json_string_value(tmp);
-	size_t blobLen = strlen(hexblob);
-	if (blobLen % 2 != 0 || ((blobLen / 2) < 40 && blobLen != 0) || (blobLen / 2) > 128) {
-		applog(LOG_ERR, "JSON invalid blob length");
-		goto err_out;
-	}
-	if (blobLen != 0) {
-		pthread_mutex_lock(&rpc2_job_lock);
-		uchar *blob = (uchar*) malloc(blobLen / 2);
-		if (!hex2bin(blob, hexblob, blobLen / 2)) {
-			applog(LOG_ERR, "JSON invalid blob");
-			pthread_mutex_unlock(&rpc2_job_lock);
-			goto err_out;
-		}
-		if (rpc2_blob) {
-			free(rpc2_blob);
-		}
-		rpc2_bloblen = blobLen / 2;
-		rpc2_blob = (char*) malloc(rpc2_bloblen);
-		memcpy(rpc2_blob, blob, blobLen / 2);
-
-		free(blob);
-
-		uint32_t target;
-		jobj_binary(job, "target", &target, 4);
-		if(rpc2_target != target) {
-			double hashrate = 0.0;
-			pthread_mutex_lock(&stats_lock);
-			for (int i = 0; i < opt_n_threads; i++)
-				hashrate += thr_hashrates[i];
-			pthread_mutex_unlock(&stats_lock);
-			double difficulty = (((double) 0xffffffff) / target);
-			applog(LOG_NOTICE, "Pool set diff to %g", difficulty);
-			rpc2_target = target;
-		}
-
-		if (rpc2_job_id) {
-			free(rpc2_job_id);
-		}
-		rpc2_job_id = strdup(job_id);
-		pthread_mutex_unlock(&rpc2_job_lock);
-	}
-	if(work) {
-		if (!rpc2_blob) {
-			applog(LOG_WARNING, "Requested work before work was received");
-			goto err_out;
-		}
-		memcpy(work->data, rpc2_blob, rpc2_bloblen);
-		memset(work->target, 0xff, sizeof(work->target));
-		work->target[7] = rpc2_target;
-		if (work->job_id)
-			free(work->job_id);
-		work->job_id = strdup(rpc2_job_id);
-	}
-	return true;
-
-err_out:
-	return false;
 }
 
 static bool work_decode(const json_t *val, struct work *work)
@@ -686,55 +520,6 @@ static bool work_decode(const json_t *val, struct work *work)
 
 	for (i = 0; i < atarget_sz; i++)
 		work->target[i] = le32dec(work->target + i);
-
-	return true;
-
-err_out:
-	return false;
-}
-
-bool rpc2_login_decode(const json_t *val)
-{
-	const char *id;
-	const char *s;
-
-	json_t *res = json_object_get(val, "result");
-	if(!res) {
-		applog(LOG_ERR, "JSON invalid result");
-		goto err_out;
-	}
-
-	json_t *tmp;
-	tmp = json_object_get(res, "id");
-	if(!tmp) {
-		applog(LOG_ERR, "JSON inval id");
-		goto err_out;
-	}
-	id = json_string_value(tmp);
-	if(!id) {
-		applog(LOG_ERR, "JSON id is not a string");
-		goto err_out;
-	}
-
-	memcpy(&rpc2_id, id, 64);
-
-	if(opt_debug)
-		applog(LOG_DEBUG, "Auth id: %s", id);
-
-	tmp = json_object_get(res, "status");
-	if(!tmp) {
-		applog(LOG_ERR, "JSON inval status");
-		goto err_out;
-	}
-	s = json_string_value(tmp);
-	if(!s) {
-		applog(LOG_ERR, "JSON status is not a string");
-		goto err_out;
-	}
-	if(strcmp(s, "OK")) {
-		applog(LOG_ERR, "JSON returned status \"%s\"", s);
-		return false;
-	}
 
 	return true;
 
@@ -1105,13 +890,6 @@ static int share_result(int result, struct work *work, const char *reason)
 
 	switch (opt_algo) {
 	case ALGO_CRYPTONIGHT:
-		sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate);
-		applog(LOG_NOTICE, "accepted: %lu/%lu (%.2f%%), %s H/s at diff %g %s",
-			accepted_count, accepted_count + rejected_count,
-			100. * accepted_count / (accepted_count + rejected_count), s,
-			(((double) 0xffffffff) / (work ? work->target[7] : rpc2_target)),
-			sres);
-		break;
 	case ALGO_PLUCK:
 		sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate);
 		applog(LOG_NOTICE, "accepted: %lu/%lu (%.2f%%), %s H/s %s",
@@ -1292,10 +1070,20 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			}
 			res = json_object_get(val, "result");
 			json_t *status = json_object_get(res, "status");
-			reason = json_object_get(res, "reject-reason");
-			share_result(!strcmp(status ? json_string_value(status) : "", "OK"), work,
-					reason ? json_string_value(reason) : NULL);
-
+			bool valid = !strcmp(status ? json_string_value(status) : "", "OK");
+			if (valid)
+				share_result(valid, work, NULL);
+			else {
+				json_t *error = json_object_get(res, "error");
+				const char *sreason = json_string_value(json_object_get(res, "message"));
+				share_result(valid, work, sreason);
+				if (!strcasecmp("Invalid job id", sreason)) {
+					work_free(work);
+					work_copy(work, &g_work);
+					g_work_time = 0;
+					restart_threads();
+				}
+			}
 			json_decref(val);
 			return true;
 
@@ -1419,53 +1207,6 @@ start:
 	return rc;
 }
 
-static bool rpc2_login(CURL *curl)
-{
-	json_t *val;
-	bool rc = false;
-	struct timeval tv_start, tv_end, diff;
-	char s[JSON_BUF_LEN];
-
-	if (!jsonrpc_2)
-		return false;
-
-	snprintf(s, JSON_BUF_LEN, "{\"method\": \"login\", \"params\": {"
-		"\"login\": \"%s\", \"pass\": \"%s\", \"agent\": \"%s\"}, \"id\": 1}",
-		rpc_user, rpc_pass, USER_AGENT);
-
-	gettimeofday(&tv_start, NULL);
-	val = json_rpc_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
-	gettimeofday(&tv_end, NULL);
-
-	if (!val)
-		goto end;
-
-//	applog(LOG_DEBUG, "JSON value: %s", json_dumps(val, 0));
-
-	rc = rpc2_login_decode(val);
-
-	json_t *result = json_object_get(val, "result");
-
-	if (!result)
-		goto end;
-
-	json_t *job = json_object_get(result, "job");
-
-	if (!rpc2_job_decode(job, &g_work)) {
-		goto end;
-	}
-
-	if (opt_debug && rc) {
-		timeval_subtract(&diff, &tv_end, &tv_start);
-		applog(LOG_DEBUG, "DEBUG: authenticated in %d ms",
-				diff.tv_sec * 1000 + diff.tv_usec / 1000);
-	}
-
-	json_decref(val);
-end:
-	return rc;
-}
-
 static void workio_cmd_free(struct workio_cmd *wc)
 {
 	if (!wc)
@@ -1534,7 +1275,53 @@ static bool workio_submit_work(struct workio_cmd *wc, CURL *curl)
 	return true;
 }
 
-static bool workio_login(CURL *curl)
+bool rpc2_login(CURL *curl)
+{
+	json_t *val;
+	bool rc = false;
+	struct timeval tv_start, tv_end, diff;
+	char s[JSON_BUF_LEN];
+
+	if (!jsonrpc_2)
+		return false;
+
+	snprintf(s, JSON_BUF_LEN, "{\"method\": \"login\", \"params\": {"
+		"\"login\": \"%s\", \"pass\": \"%s\", \"agent\": \"%s\"}, \"id\": 1}",
+		rpc_user, rpc_pass, USER_AGENT);
+
+	gettimeofday(&tv_start, NULL);
+	val = json_rpc_call(curl, rpc_url, rpc_userpass, s, NULL, 0);
+	gettimeofday(&tv_end, NULL);
+
+	if (!val)
+		goto end;
+
+//	applog(LOG_DEBUG, "JSON value: %s", json_dumps(val, 0));
+
+	rc = rpc2_login_decode(val);
+
+	json_t *result = json_object_get(val, "result");
+
+	if (!result)
+		goto end;
+
+	json_t *job = json_object_get(result, "job");
+	if (!rpc2_job_decode(job, &g_work)) {
+		goto end;
+	}
+
+	if (opt_debug && rc) {
+		timeval_subtract(&diff, &tv_end, &tv_start);
+		applog(LOG_DEBUG, "DEBUG: authenticated in %d ms",
+				diff.tv_sec * 1000 + diff.tv_usec / 1000);
+	}
+
+	json_decref(val);
+end:
+	return rc;
+}
+
+bool rpc2_workio_login(CURL *curl)
 {
 	int failures = 0;
 	if (opt_benchmark)
@@ -1573,7 +1360,7 @@ static void *workio_thread(void *userdata)
 	}
 
 	if(jsonrpc_2 && !have_stratum) {
-		ok = workio_login(curl);
+		ok = rpc2_workio_login(curl);
 	}
 
 	while (ok) {
@@ -1688,9 +1475,8 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 	pthread_mutex_lock(&sctx->work_lock);
 
 	if (jsonrpc_2) {
-		free(work->job_id);
-		memcpy(work, &sctx->work, sizeof(struct work));
-		work->job_id = strdup(sctx->work.job_id);
+		work_free(work);
+		work_copy(work, &sctx->work);
 		pthread_mutex_unlock(&sctx->work_lock);
 	} else {
 		free(work->job_id);
@@ -1773,6 +1559,23 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 				diff_to_target(work->target, sctx->job.diff / opt_diff_factor);
 		}
 	}
+}
+
+bool rpc2_stratum_job(struct stratum_ctx *sctx, json_t *params)
+{
+	bool ret = false;
+	pthread_mutex_lock(&sctx->work_lock);
+	ret = rpc2_job_decode(params, &sctx->work);
+
+	if (ret) {
+		work_free(&g_work);
+		work_copy(&g_work, &sctx->work);
+		g_work_time = 0;
+	}
+
+	pthread_mutex_unlock(&sctx->work_lock);
+
+	return ret;
 }
 
 static bool wanna_mine(int thr_id)
@@ -1889,21 +1692,26 @@ static void *miner_thread(void *userdata)
 		}
 	}
 
-	uint32_t *nonceptr = (uint32_t*) (((char*)work.data) + (jsonrpc_2 ? 39 : 76));
-
 	while (1) {
 		uint64_t hashes_done;
 		struct timeval tv_start, tv_end, diff;
 		int64_t max64;
 		int wkcmp_offset = 0;
-		int wkcmp_sz = 19*4;
-		int rc;
+		int nonce_oft = 19*sizeof(uint32_t); // 76
+		int wkcmp_sz = nonce_oft;
+		int rc = 0;
 
 		if (opt_algo == ALGO_DROP || opt_algo == ALGO_ZR5) {
-			// Duplicates: ignore pok in pdata[0]
+			// Duplicates: ignore pok in data[0]
 			wkcmp_sz -= sizeof(uint32_t);
 			wkcmp_offset = 1;
 		}
+
+		if (jsonrpc_2) {
+			wkcmp_sz = nonce_oft = 39;
+		}
+
+		uint32_t *nonceptr = (uint32_t*) (((char*)work.data) + nonce_oft);
 
 		if (have_stratum) {
 			while (!jsonrpc_2 && time(NULL) >= g_work_time + 120)
@@ -1915,11 +1723,14 @@ static void *miner_thread(void *userdata)
 			}
 
 			pthread_mutex_lock(&g_work_lock);
-			if ((*nonceptr) >= end_nonce
-				&& !(jsonrpc_2 ? memcmp(work.data, g_work.data, 39) ||
-						memcmp(((uint8_t*) work.data) + 43, ((uint8_t*) g_work.data) + 43, 33)
-				  : memcmp(&work.data[wkcmp_offset], &g_work.data[wkcmp_offset], wkcmp_sz)))
+
+			if ( (*nonceptr) >= end_nonce
+				&& !( memcmp(&work.data[wkcmp_offset], &g_work.data[wkcmp_offset], wkcmp_sz) ||
+				 jsonrpc_2 ? memcmp(((uint8_t*) work.data) + 43, ((uint8_t*) g_work.data) + 43, 33) : 0))
+			{
 				stratum_gen_work(&stratum, &g_work);
+			}
+
 		} else {
 
 			int min_scantime = have_longpoll ? LP_SCANTIME : opt_scantime;
@@ -1941,14 +1752,12 @@ static void *miner_thread(void *userdata)
 				continue;
 			}
 		}
-		if (jsonrpc_2
-			? memcmp(work.data, g_work.data, 39) ||
-				memcmp(((uint8_t*) work.data) + 43, ((uint8_t*) g_work.data) + 43, 33)
-			: memcmp(&work.data[wkcmp_offset], &g_work.data[wkcmp_offset], wkcmp_sz))
+		if (memcmp(&work.data[wkcmp_offset], &g_work.data[wkcmp_offset], wkcmp_sz) ||
+			jsonrpc_2 ? memcmp(((uint8_t*) work.data) + 43, ((uint8_t*) g_work.data) + 43, 33) : 0)
 		{
 			work_free(&work);
 			work_copy(&work, &g_work);
-			nonceptr = (uint32_t*) (((char*)work.data) + (jsonrpc_2 ? 39 : 76));
+			nonceptr = (uint32_t*) (((char*)work.data) + nonce_oft);
 			*nonceptr = 0xffffffffU / opt_n_threads * thr_id;
 		} else
 			++(*nonceptr);
@@ -1956,7 +1765,7 @@ static void *miner_thread(void *userdata)
 		work_restart[thr_id].restart = 0;
 
 		/* prevent scans before a job is received */
-		if (have_stratum && work.data[0] == 0 && !opt_benchmark) {
+		if (have_stratum && !work.data[0] && !opt_benchmark) {
 			sleep(1);
 			continue;
 		}
@@ -2313,9 +2122,9 @@ start:
 		char *req = NULL;
 		int err;
 
-		if(jsonrpc_2) {
+		if (jsonrpc_2) {
 			pthread_mutex_lock(&rpc2_login_lock);
-			if(!strcmp(rpc2_id, "")) {
+			if (rpc2_id && !strlen(rpc2_id)) {
 				sleep(1);
 				continue;
 			}
@@ -2414,7 +2223,8 @@ static bool stratum_handle_response(char *buf)
 	if (!id_val || json_is_null(id_val))
 		goto out;
 
-	if (jsonrpc_2) {
+	if (jsonrpc_2)
+	{
 		if (!res_val && !err_val)
 			goto out;
 
@@ -2425,15 +2235,15 @@ static bool stratum_handle_response(char *buf)
 		} else {
 			valid = json_is_null(err_val);
 		}
+		share_result(valid, NULL, err_val ? json_string_value(err_val) : NULL);
+
 	} else {
+
 		if (!res_val || json_integer_value(id_val) < 4)
 			goto out;
-
 		valid = json_is_true(res_val);
+		share_result(valid, NULL, err_val ? json_string_value(json_array_get(err_val, 1)) : NULL);
 	}
-
-	share_result(valid, NULL,
-			err_val ? (jsonrpc_2 ? json_string_value(err_val) : json_string_value(json_array_get(err_val, 1))) : NULL);
 
 	ret = true;
 
@@ -2487,6 +2297,11 @@ static void *stratum_thread(void *userdata)
 				if (!opt_benchmark)
 					applog(LOG_ERR, "...retry after %d seconds", opt_fail_pause);
 				sleep(opt_fail_pause);
+			}
+
+			if (jsonrpc_2) {
+				work_free(&g_work);
+				work_copy(&g_work, &stratum.work);
 			}
 		}
 

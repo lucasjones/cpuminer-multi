@@ -92,11 +92,9 @@ static char *buffer = NULL;
 static time_t startup = 0;
 static int bye = 0;
 
-extern int opt_n_threads;
 extern char *opt_api_allow;
 extern int opt_api_listen; /* port */
 extern int opt_api_remote;
-extern double *thr_hashrates;
 extern uint64_t global_hashrate;
 extern uint32_t accepted_count;
 extern uint32_t rejected_count;

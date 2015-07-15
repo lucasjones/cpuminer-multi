@@ -37,6 +37,11 @@ typedef __uint128_t uint128_t;
 
 #define MEMORY         (1 << 21) /* 2 MiB */
 #define ITER           (1 << 20)
+
+// Lite
+//#define MEMORY (1 << 20)
+//#define ITER   (1 << 19)
+
 #define AES_BLOCK_SIZE  16
 #define AES_KEY_SIZE    32 /*16*/
 #define INIT_SIZE_BLK   8
@@ -298,7 +303,8 @@ void cryptonight_hash_ctx_aes_ni(void* output, const void* input, int len, struc
 }
 
 int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-		uint32_t max_nonce, uint64_t *hashes_done) {
+		uint32_t max_nonce, uint64_t *hashes_done)
+{
 	uint32_t *nonceptr = (uint32_t*) (((char*)pdata) + 39);
 	uint32_t n = *nonceptr - 1;
 	const uint32_t first_nonce = n + 1;
