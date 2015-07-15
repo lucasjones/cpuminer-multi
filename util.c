@@ -2054,6 +2054,7 @@ void print_hash_tests(void)
 	memset(&buf[0], 0, sizeof(buf));
 	printpfx("pluck", hash);
 
+	init_quarkhash_contexts();
 	quarkhash(&hash[0], &buf[0]);
 	printpfx("quark", hash);
 

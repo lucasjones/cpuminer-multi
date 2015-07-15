@@ -35,6 +35,7 @@ Algorithms
  * ✓ __nist5__ (MistCoin [MIC], TalkCoin [TAC], ...)
  * ✓ __pentablake__ (Joincoin)
  * ✓ __pluck__ (Supcoin [SUP])
+ * ✓ __quark__ (Quarkcoin)
  * ✓ __qubit__ (MyriadCoin [MYR])
  * ✓ __skein__ (Skeincoin, Myriadcoin, Xedoscoin, ...)
  * ✓ __skein2__ (Woodcoin)
@@ -49,7 +50,6 @@ Algorithms
  * ? hefty1 (Heavycoin)
  * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
  * ? luffa (Joincoin, Doomcoin)
- * ? quark (Quarkcoin)
  * ? qubit (Qubitcoin, Myriadcoin)
  * ? shavite3 (INKcoin)
 
