@@ -149,7 +149,7 @@ bool opt_debug = false;
 bool opt_protocol = false;
 bool opt_benchmark = false;
 bool opt_redirect = true;
-bool opt_extranonce = false;
+bool opt_extranonce = true;
 bool want_longpoll = true;
 bool have_longpoll = false;
 bool have_gbt = true;
@@ -298,6 +298,7 @@ Options:\n\
       --no-getwork      disable getwork support\n\
       --no-gbt          disable getblocktemplate support\n\
       --no-stratum      disable X-Stratum support\n\
+      --no-extranonce   disable Stratum extranonce support\n\
       --no-redirect     ignore requests to change the URL of the mining server\n\
   -q, --quiet           disable per-thread hashmeter output\n\
       --no-color        disable colored output\n\
@@ -355,6 +356,7 @@ static struct option const options[] = {
 	{ "no-longpoll", 0, NULL, 1003 },
 	{ "no-redirect", 0, NULL, 1009 },
 	{ "no-stratum", 0, NULL, 1007 },
+	{ "no-extranonce", 0, NULL, 1012 },
 	{ "max-temp", 1, NULL, 1060 },
 	{ "max-diff", 1, NULL, 1061 },
 	{ "max-rate", 1, NULL, 1062 },
@@ -2674,6 +2676,7 @@ void parse_arg(int key, char *arg)
 		exit(0);
 	case 1007:
 		want_stratum = false;
+		opt_extranonce = false;
 		break;
 	case 1008:
 		opt_time_limit = atoi(arg);
@@ -2686,6 +2689,9 @@ void parse_arg(int key, char *arg)
 		break;
 	case 1011:
 		have_gbt = false;
+		break;
+	case 1012:
+		opt_extranonce = false;
 		break;
 	case 1013:			/* --coinbase-addr */
 		pk_script_size = address_to_script(pk_script, sizeof(pk_script), arg);
