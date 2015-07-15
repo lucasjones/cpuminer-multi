@@ -381,7 +381,7 @@ static struct option const options[] = {
 	{ 0, 0, 0, 0 }
 };
 
-static struct work g_work = { 0 };
+static struct work g_work = {{ 0 }};
 static time_t g_work_time = 0;
 static pthread_mutex_t g_work_lock;
 static bool submit_old = false;
@@ -1076,8 +1076,8 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			if (valid)
 				share_result(valid, work, NULL);
 			else {
-				json_t *error = json_object_get(res, "error");
-				const char *sreason = json_string_value(json_object_get(res, "message"));
+				json_t *err = json_object_get(res, "error");
+				const char *sreason = json_string_value(json_object_get(err, "message"));
 				share_result(valid, work, sreason);
 				if (!strcasecmp("Invalid job id", sreason)) {
 					work_free(work);
@@ -2125,12 +2125,12 @@ start:
 		int err;
 
 		if (jsonrpc_2) {
+			char s[128];
 			pthread_mutex_lock(&rpc2_login_lock);
-			if (rpc2_id && !strlen(rpc2_id)) {
+			if (!strlen(rpc2_id)) {
 				sleep(1);
 				continue;
 			}
-			char s[128];
 			snprintf(s, 128, "{\"method\": \"getjob\", \"params\": {\"id\": \"%s\"}, \"id\":1}\r\n", rpc2_id);
 			pthread_mutex_unlock(&rpc2_login_lock);
 			val = json_rpc2_call(curl, rpc_url, rpc_userpass, s, &err, JSON_RPC_LONGPOLL);
