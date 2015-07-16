@@ -2931,9 +2931,12 @@ int main(int argc, char *argv[]) {
 		init_quarkhash_contexts();
 	} else if(opt_algo == ALGO_CRYPTONIGHT) {
 		jsonrpc_2 = true;
+		opt_extranonce = false;
 		aes_ni_supported = has_aes_ni();
-		applog(LOG_INFO, "Using JSON-RPC 2.0");
-		applog(LOG_INFO, "CPU Supports AES-NI: %s", aes_ni_supported ? "YES" : "NO");
+		if (!opt_quiet) {
+			applog(LOG_INFO, "Using JSON-RPC 2.0");
+			applog(LOG_INFO, "CPU Supports AES-NI: %s", aes_ni_supported ? "YES" : "NO");
+		}
 	}
 
 	if (!opt_benchmark && !rpc_url) {

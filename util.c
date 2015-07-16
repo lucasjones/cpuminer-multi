@@ -1551,7 +1551,10 @@ bool rpc2_job_decode(const json_t *job, struct work *work)
 				hashrate += thr_hashrates[i];
 			pthread_mutex_unlock(&stats_lock);
 			double difficulty = (((double) 0xffffffff) / target);
-			applog(LOG_WARNING, "Stratum difficulty set to %g", difficulty);
+			if (!opt_quiet) {
+				// xmr pool diff can change a lot...
+				applog(LOG_WARNING, "Stratum difficulty set to %g", difficulty);
+			}
 			stratum_diff = difficulty;
 			rpc2_target = target;
 		}

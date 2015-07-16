@@ -50,7 +50,6 @@ Algorithms
  * ? hefty1 (Heavycoin)
  * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
  * ? luffa (Joincoin, Doomcoin)
- * ? qubit (Qubitcoin, Myriadcoin)
  * ? shavite3 (INKcoin)
 
 #### Planned support for
