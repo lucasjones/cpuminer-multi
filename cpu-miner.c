@@ -431,7 +431,7 @@ static inline void affine_to_cpu(int id, int cpu)
 	CPU_SET(cpu, &set);
 	cpuset_setaffinity(CPU_LEVEL_WHICH, CPU_WHICH_TID, -1, sizeof(cpuset_t), &set);
 }
-#else /* Windows */
+#elif defined(WIN32) /* Windows */
 static inline void drop_policy(void) { }
 static void affine_to_cpu_mask(int id, uint8_t mask) {
 	if (id == -1)
@@ -439,6 +439,9 @@ static void affine_to_cpu_mask(int id, uint8_t mask) {
 	else
 		SetThreadAffinityMask(GetCurrentThread(), mask);
 }
+#else
+static inline void drop_policy(void) { }
+static void affine_to_cpu_mask(int id, uint8_t mask) { }
 #endif
 
 void get_currentalgo(char* buf, int sz)
