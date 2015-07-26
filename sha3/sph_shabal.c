@@ -717,6 +717,7 @@ sph_shabal224_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)
 	shabal_close(cc, ub, n, dst, 7);
 }
 
+#endif
 /* see sph_shabal.h */
 void
 sph_shabal256_init(void *cc)
@@ -745,6 +746,7 @@ sph_shabal256_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)
 	shabal_close(cc, ub, n, dst, 8);
 }
 
+#if 0
 /* see sph_shabal.h */
 void
 sph_shabal384_init(void *cc)

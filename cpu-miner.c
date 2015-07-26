@@ -79,6 +79,7 @@ enum algos {
 	ALGO_NEOSCRYPT,   /* NeoScrypt(128, 2, 1) with Salsa20/20 and ChaCha20/20 */
 	ALGO_QUARK,       /* Quark */
 	ALGO_ANIME,       /* Animecoin (Quark variant) */
+	ALGO_AXIOM,       /* Shabal 256 Memohash */
 	ALGO_BLAKE,       /* Blake 256 */
 	ALGO_BLAKECOIN,   /* Simplified 8 rounds Blake 256 */
 	ALGO_BLAKE2S,     /* Blake2s */
@@ -116,6 +117,7 @@ static const char *algo_names[] = {
 	"neoscrypt",
 	"quark",
 	"anime",
+	"axiom",
 	"blake",
 	"blakecoin",
 	"blake2s",
@@ -894,6 +896,7 @@ static int share_result(int result, struct work *work, const char *reason)
 		sres = (result ? "(yes!!!)" : "(nooooo)");
 
 	switch (opt_algo) {
+	case ALGO_AXIOM:
 	case ALGO_CRYPTONIGHT:
 	case ALGO_PLUCK:
 		sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate);
@@ -1545,6 +1548,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 		}
 
 		switch (opt_algo) {
+			//case ALGO_AXIOM:
 			case ALGO_DROP:
 			case ALGO_SCRYPT:
 			case ALGO_NEOSCRYPT:
@@ -1823,6 +1827,7 @@ static void *miner_thread(void *userdata)
 				else if (opt_nfactor > 16)
 					max64 = 0xF;
 				break;
+			case ALGO_AXIOM:
 			case ALGO_CRYPTONIGHT:
 				max64 = 0x40LL;
 				break;
@@ -1907,6 +1912,9 @@ static void *miner_thread(void *userdata)
 		case ALGO_ANIME:
 			rc = scanhash_anime(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
+			break;
+		case ALGO_AXIOM:
+			rc = scanhash_axiom(thr_id, work.data, work.target, max_nonce, &hashes_done);
 			break;
 		case ALGO_BLAKE:
 			rc = scanhash_blake(thr_id, work.data, work.target, max_nonce,
@@ -2021,6 +2029,7 @@ static void *miner_thread(void *userdata)
 		}
 		if (!opt_quiet) {
 			switch(opt_algo) {
+			case ALGO_AXIOM:
 			case ALGO_CRYPTONIGHT:
 			case ALGO_PLUCK:
 				applog(LOG_INFO, "CPU #%d: %.2f H/s", thr_id, thr_hashrates[thr_id]);
