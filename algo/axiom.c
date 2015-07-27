@@ -10,7 +10,7 @@ static __thread uint32_t _ALIGN(128) M[65536][8];
 void axiomhash(void *output, const void *input)
 {
 	sph_shabal256_context ctx;
-	const int R = 2, N = 65536;
+	const int N = 65536;
 
 	sph_shabal256_init(&ctx);
 	sph_shabal256(&ctx, input, 80);
@@ -22,21 +22,24 @@ void axiomhash(void *output, const void *input)
 		sph_shabal256_close(&ctx, M[i]);
 	}
 
-	for(int r = 1; r < R; r++)
+	for(int b = 0; b < N; b++)
 	{
-		for(int b = 0; b < N; b++)
-		{
-			const int p = b > 0 ? b - 1 : 0xFFFF;
-			const int q = M[p][0] % 0xFFFF;
-			const int j = (b + q) % N;
+		const int p = b > 0 ? b - 1 : 0xFFFF;
+		const int q = M[p][0] % 0xFFFF;
+		const int j = (b + q) % N;
 
-			//sph_shabal256_init(&ctx);
-			sph_shabal256(&ctx, M[p], 32);
-			sph_shabal256(&ctx, M[j], 32);
-			sph_shabal256_close(&ctx, M[b]);
-		}
+		//sph_shabal256_init(&ctx);
+#if 0
+		sph_shabal256(&ctx, M[p], 32);
+		sph_shabal256(&ctx, M[j], 32);
+#else
+		uint8_t _ALIGN(128) hash[64];
+		memcpy(hash, M[p], 32);
+		memcpy(&hash[32], M[j], 32);
+		sph_shabal256(&ctx, hash, 64);
+#endif
+		sph_shabal256_close(&ctx, M[b]);
 	}
-
 	memcpy(output, M[N-1], 32);
 }
 
