@@ -163,6 +163,7 @@ bool use_syslog = false;
 bool use_colors = true;
 static bool opt_background = false;
 bool opt_quiet = false;
+bool opt_randomize = false;
 static int opt_retries = -1;
 static int opt_fail_pause = 10;
 static int opt_time_limit = 0;
@@ -291,6 +292,7 @@ Options:\n\
   -T, --timeout=N       timeout for long poll and stratum (default: 300 seconds)\n\
   -s, --scantime=N      upper bound on time spent scanning current work when\n\
                           long polling is unavailable, in seconds (default: 5)\n\
+      --randomize       Randomize scan range start to reduce duplicates\n\
   -f, --diff-factor     Divide req. difficulty by this factor (std is 1.0)\n\
   -m, --diff-multiplier Multiply difficulty by this factor (std is 1.0)\n\
   -n, --nfactor         neoscrypt N-Factor\n\
@@ -369,6 +371,7 @@ static struct option const options[] = {
 	{ "quiet", 0, NULL, 'q' },
 	{ "retries", 1, NULL, 'r' },
 	{ "retry-pause", 1, NULL, 'R' },
+	{ "randomize", 0, NULL, 1024 },
 	{ "scantime", 1, NULL, 's' },
 #ifdef HAVE_SYSLOG_H
 	{ "syslog", 0, NULL, 'S' },
@@ -1768,6 +1771,8 @@ static void *miner_thread(void *userdata)
 			work_copy(&work, &g_work);
 			nonceptr = (uint32_t*) (((char*)work.data) + nonce_oft);
 			*nonceptr = 0xffffffffU / opt_n_threads * thr_id;
+			if (opt_randomize)
+				nonceptr[0] += ((rand()*4) & UINT32_MAX) / opt_n_threads;
 		} else
 			++(*nonceptr);
 		pthread_mutex_unlock(&g_work_lock);
@@ -2766,6 +2771,9 @@ void parse_arg(int key, char *arg)
 		p = strstr(arg, "G");
 		if (p) d *= 1e9;
 		opt_max_rate = d;
+		break;
+	case 1024:
+		opt_randomize = true;
 		break;
 	case 'V':
 		show_version_and_exit();
