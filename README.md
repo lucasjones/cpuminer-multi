@@ -23,6 +23,7 @@ Algorithms
  * ✓ __scrypt__ (Litecoin, Dogecoin, Feathercoin, ...)
  * ✓ __scrypt:N__
  * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, ...)
+ * ✓ __axiom__ (Axiom Shabal-256 based MemoHash)
  * ✓ __blake__ (Saffron [SFR] Blake-256)
  * ✓ __bmw__ (Midnight [MDT] BMW-256)
  * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
@@ -137,7 +138,7 @@ Donations for the work done in this fork are accepted :
 
 Tanguy Pruvot :
 * BTC: `1FhDPLPpw18X4srecguG3MxJYe4a1JsZnd`
-* NEOS:`NaEcVrdzoCWHUYXb7X8QoafoKS9UV69Yk4`
+* ZRC: `ZX6LmrCwphNgitxvDnf8TX6Tsegfxpeozx`
 
 Lucas Jones :
 * MRO: `472haywQKoxFzf7asaQ4XKBc2foAY4ezk8HiN63ifW4iAbJiLnfmJfhHSR9XmVKw2WYPnszJV9MEHj9Z5WMK9VCNHaGLDmJ`

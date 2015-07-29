@@ -8,6 +8,7 @@ version 1.1 (Tanguy Pruvot)
 - Add Animecoin algo (Quark variant)
 - Add Dropcoin pok algo
 - Add BMW-256 (MDT) algo
+- Add Axiom algo
 - Change some logged strings
 - Use all cores by default, not N-1
 - Handle a default config to run without params

@@ -248,6 +248,7 @@ Options:\n\
                           scrypt:N     scrypt(N, 1, 1)\n\
                           sha256d      SHA-256d\n\
                           anime        Animecoin\n\
+                          axiom        Axiom MemoHash\n\
                           blake        Blake-256 (SFR)\n\
                           blakecoin    Blakecoin\n\
                           blake2s      Blake-2 S\n\
