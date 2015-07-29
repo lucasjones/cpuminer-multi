@@ -508,6 +508,7 @@ void print_hash_tests(void);
 
 void sha256d(unsigned char *hash, const unsigned char *data, int len);
 void animehash(void *state, const void *input);
+void axiomhash(void *state, const void *input);
 void blakehash(void *state, const void *input);
 void blakecoinhash(void *state, const void *input);
 void blake2s_hash(void *output, const void *input);
