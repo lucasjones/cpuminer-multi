@@ -45,7 +45,7 @@
 #endif
 
 #ifdef __GNUC__
-#ifdef NOASM
+#if defined(NOASM) || defined(__arm__)
 #define ASM 0
 #else
 #define ASM 1
@@ -1005,16 +1005,15 @@ void neoscrypt(uchar *output, const uchar *password, uint32_t profile)
 
 static bool fulltest_le(const uint *hash, const uint *target)
 {
-    uint i;
-    bool rc;
+    bool rc = false;
 
-    for (i = 7; i >= 0; i--) {
+    for (int i = 7; i >= 0; i--) {
         if (hash[i] > target[i]) {
-            rc = 0;
+            rc = false;
             break;
         }
         if(hash[i] < target[i]) {
-            rc = 1;
+            rc = true;
             break;
         }
     }

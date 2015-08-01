@@ -29,7 +29,7 @@
 #include "miner.h"
 #endif
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(__arm__)
 #define ASM 1
 /* #define WIN64 0 */
 #endif

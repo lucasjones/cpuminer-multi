@@ -28,14 +28,56 @@
  * ---------------------------------------------------------------------------
  */
 static const char _NR[] = {
-	0x4e,0x61,0x62,0x69,0x6c,0x20,0x53,0x2e,0x20,
-	0x41,0x6c,0x20,0x52,0x61,0x6d,0x6c,0x69,0x00 };
+  0x4e,0x61,0x62,0x69,0x6c,0x20,0x53,0x2e,0x20,
+  0x41,0x6c,0x20,0x52,0x61,0x6d,0x6c,0x69,0x00
+};
+
+#include <sys/types.h>
+#define NO_OLDNAMES /* timeb is still defined in mingw */
 
 #include "miner.h"
 
 #include <stddef.h>
-#include <time.h> 
-#include <sys/timeb.h>
+#include <time.h>
+
+// Only used by ftime, which was removed from POSIX 2008.
+struct timeb {
+  time_t          time;
+  unsigned short  millitm;
+  short           timezone;
+  short           dstflag;
+};
+
+#ifdef _MSC_VER
+struct timezone {
+  int  tz_minuteswest; /* minutes W of Greenwich */
+  int  tz_dsttime;     /* type of dst correction */
+};
+#endif
+
+// This was removed from POSIX 2008.
+static int ftime(struct timeb* tb) {
+  struct timeval  tv;
+  struct timezone tz;
+
+  if (gettimeofday(&tv, &tz) < 0)
+    return -1;
+
+  tb->time    = tv.tv_sec;
+  tb->millitm = (tv.tv_usec + 500) / 1000;
+
+  if (tb->millitm == 1000) {
+    ++tb->time;
+    tb->millitm = 0;
+  }
+
+  tb->timezone = tz.tz_minuteswest;
+  tb->dstflag  = tz.tz_dsttime;
+
+  return 0;
+}
+
+
 #if !((defined(__FreeBSD__) && __FreeBSD__ >= 10) || defined(__APPLE__))
 #include <malloc.h>
 #endif

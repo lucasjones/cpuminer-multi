@@ -16,12 +16,17 @@
 #define inline __inline
 #endif
 
+#ifndef LITTLE_ENDIAN
+#define LITTLE_ENDIAN 0x1234
+#define BIG_ENDIAN 0x4321
+#endif
+
+#if !defined(BYTE_ORDER) && (defined(__LITTLE_ENDIAN__) || defined(__arm__) || defined(WIN32))
+#define BYTE_ORDER LITTLE_ENDIAN
+#endif
+
 #if defined(WIN32)
 #include <stdlib.h>
-//#define IS_LITTLE_ENDIAN (1 == *(unsigned char *)&(const int){1})
-#define LITTLE_ENDIAN 1234
-#define BIG_ENDIAN 4321
-#define BYTE_ORDER LITTLE_ENDIAN
 
 static inline uint32_t rol32(uint32_t x, int r) {
   return _rotl(x, r);
@@ -50,8 +55,6 @@ static inline uint64_t hi_dword(uint64_t val) {
 static inline uint64_t lo_dword(uint64_t val) {
   return val & 0xFFFFFFFF;
 }
-
-extern uint64_t mul128(uint64_t multiplier, uint64_t multiplicand, uint64_t* product_hi);
 
 static inline uint64_t div_with_reminder(uint64_t dividend, uint32_t divisor, uint32_t* remainder) {
   dividend |= ((uint64_t)*remainder) << 32;

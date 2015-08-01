@@ -85,7 +85,7 @@ extern int fast_aesb_pseudo_round_mut(uint8_t *val, uint8_t *expandedKey);
 #define fast_aesb_pseudo_round_mut aesb_pseudo_round_mut
 #endif
 
-#ifdef NOASM
+#if defined(NOASM) || !defined(__x86_64__)
 static uint64_t mul128(uint64_t multiplier, uint64_t multiplicand, uint64_t* product_hi) {
 	// multiplier   = ab = a * 2^32 + b
 	// multiplicand = cd = c * 2^32 + d

@@ -411,6 +411,10 @@ static inline void drop_policy(void)
 #endif
 }
 
+#ifdef __BIONIC__
+#define pthread_setaffinity_np(tid,sz,s) {} /* only do process affinity */
+#endif
+
 static void affine_to_cpu_mask(int id, uint8_t mask) {
 	cpu_set_t set;
 	CPU_ZERO(&set);
@@ -426,17 +430,7 @@ static void affine_to_cpu_mask(int id, uint8_t mask) {
 		pthread_setaffinity_np(thr_info[id].pth, sizeof(&set), &set);
 	}
 }
-#elif defined(__FreeBSD__) /* FreeBSD specific policy and affinity management */
-#include <sys/cpuset.h>
-static inline void drop_policy(void) { }
 
-static inline void affine_to_cpu(int id, int cpu)
-{
-	cpuset_t set;
-	CPU_ZERO(&set);
-	CPU_SET(cpu, &set);
-	cpuset_setaffinity(CPU_LEVEL_WHICH, CPU_WHICH_TID, -1, sizeof(cpuset_t), &set);
-}
 #elif defined(WIN32) /* Windows */
 static inline void drop_policy(void) { }
 static void affine_to_cpu_mask(int id, uint8_t mask) {
