@@ -179,7 +179,7 @@ static int opt_scrypt_n = 1024;
 static int opt_pluck_n = 128;
 static unsigned int opt_nfactor = 6;
 int opt_n_threads = 0;
-int opt_affinity = -1;
+int64_t opt_affinity = -1L;
 int opt_priority = 0;
 int num_cpus;
 char *rpc_url;
@@ -421,12 +421,12 @@ static inline void drop_policy(void)
 #define pthread_setaffinity_np(tid,sz,s) {} /* only do process affinity */
 #endif
 
-static void affine_to_cpu_mask(int id, uint8_t mask) {
+static void affine_to_cpu_mask(int id, unsigned long mask) {
 	cpu_set_t set;
 	CPU_ZERO(&set);
 	for (uint8_t i = 0; i < num_cpus; i++) {
 		// cpu mask
-		if (mask & (1<<i)) { CPU_SET(i, &set); }
+		if (mask & (1UL<<i)) { CPU_SET(i, &set); }
 	}
 	if (id == -1) {
 		// process affinity
@@ -439,7 +439,7 @@ static void affine_to_cpu_mask(int id, uint8_t mask) {
 
 #elif defined(WIN32) /* Windows */
 static inline void drop_policy(void) { }
-static void affine_to_cpu_mask(int id, uint8_t mask) {
+static void affine_to_cpu_mask(int id, unsigned long mask) {
 	if (id == -1)
 		SetProcessAffinityMask(GetCurrentProcess(), mask);
 	else
@@ -447,7 +447,7 @@ static void affine_to_cpu_mask(int id, uint8_t mask) {
 }
 #else
 static inline void drop_policy(void) { }
-static void affine_to_cpu_mask(int id, uint8_t mask) { }
+static void affine_to_cpu_mask(int id, unsigned long mask) { }
 #endif
 
 void get_currentalgo(char* buf, int sz)
@@ -1684,12 +1684,12 @@ static void *miner_thread(void *userdata)
 			if (opt_debug)
 				applog(LOG_DEBUG, "Binding thread %d to cpu %d (mask %x)", thr_id,
 						thr_id % num_cpus, (1 << (thr_id % num_cpus)));
-			affine_to_cpu_mask(thr_id, 1 << (thr_id % num_cpus));
-		} else if (opt_affinity != -1) {
+			affine_to_cpu_mask(thr_id, 1UL << (thr_id % num_cpus));
+		} else if (opt_affinity != -1L) {
 			if (opt_debug)
 				applog(LOG_DEBUG, "Binding thread %d to cpu mask %x", thr_id,
 						opt_affinity);
-			affine_to_cpu_mask(thr_id, opt_affinity);
+			affine_to_cpu_mask(thr_id, (unsigned long)opt_affinity);
 		}
 	}
 
@@ -2455,6 +2455,7 @@ void parse_arg(int key, char *arg)
 {
 	char *p;
 	int v, i;
+	uint64_t ul;
 	double d;
 
 	switch(key) {
@@ -2759,12 +2760,14 @@ void parse_arg(int key, char *arg)
 		use_colors = false;
 		break;
 	case 1020:
-		v = atoi(arg);
-		if (v < -1)
-			v = -1;
-		if (v > (1<<num_cpus)-1)
-			v = -1;
-		opt_affinity = v;
+		p = strstr(arg, "0x");
+		if (p)
+			ul = strtoul(p, NULL, 16);
+		else
+			ul = atol(arg);
+		if (ul > (1UL<<num_cpus)-1)
+			ul = -1;
+		opt_affinity = ul;
 		break;
 	case 1021:
 		v = atoi(arg);
@@ -3054,7 +3057,7 @@ int main(int argc, char *argv[]) {
 	if (opt_affinity != -1) {
 		if (!opt_quiet)
 			applog(LOG_DEBUG, "Binding process to cpu mask %x", opt_affinity);
-		affine_to_cpu_mask(-1, opt_affinity);
+		affine_to_cpu_mask(-1, (unsigned long)opt_affinity);
 	}
 
 #ifdef HAVE_SYSLOG_H
