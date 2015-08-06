@@ -44,7 +44,7 @@
  *
  * @return 0 if the key is generated correctly; -1 if there is an error (usually due to lack of memory for allocation)
  */
-int LYRA2(void *K, uint64_t kLen, const void *pwd, uint64_t pwdlen, const void *salt, uint64_t saltlen, uint64_t timeCost, uint64_t nRows, uint64_t nCols)
+int LYRA2(void *K, uint64_t kLen, const void *pwd, uint64_t pwdlen, const void *salt, uint64_t saltlen, uint64_t timeCost, const uint16_t nRows, const uint16_t nCols)
 {
 	//============================= Basic variables ============================//
 	int64_t row = 2; //index of row to be processed

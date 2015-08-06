@@ -161,7 +161,7 @@ void absorbBlockBlake2Safe(uint64_t *state, const uint64_t *in)
  * @param state     The current state of the sponge
  * @param rowOut    Row to receive the data squeezed
  */
-void reducedSqueezeRow0(uint64_t* state, uint64_t* rowOut, uint64_t nCols)
+void reducedSqueezeRow0(uint64_t* state, uint64_t* rowOut, const uint32_t nCols)
 {
 	uint64_t* ptrWord = rowOut + (nCols-1)*BLOCK_LEN_INT64; //In Lyra2: pointer to M[0][C-1]
 	unsigned int i;
@@ -197,7 +197,7 @@ void reducedSqueezeRow0(uint64_t* state, uint64_t* rowOut, uint64_t nCols)
  * @param rowIn		Row to feed the sponge
  * @param rowOut	Row to receive the sponge's output
  */
-void reducedDuplexRow1(uint64_t *state, uint64_t *rowIn, uint64_t *rowOut, uint64_t nCols)
+void reducedDuplexRow1(uint64_t *state, uint64_t *rowIn, uint64_t *rowOut, const uint32_t nCols)
 {
 	uint64_t* ptrWordIn = rowIn;				//In Lyra2: pointer to prev
 	uint64_t* ptrWordOut = rowOut + (nCols-1)*BLOCK_LEN_INT64; //In Lyra2: pointer to row
@@ -257,7 +257,7 @@ void reducedDuplexRow1(uint64_t *state, uint64_t *rowIn, uint64_t *rowOut, uint6
  * @param rowOut         Row receiving the output
  *
  */
-void reducedDuplexRowSetup(uint64_t *state, uint64_t *rowIn, uint64_t *rowInOut, uint64_t *rowOut, uint64_t nCols)
+void reducedDuplexRowSetup(uint64_t *state, uint64_t *rowIn, uint64_t *rowInOut, uint64_t *rowOut, const uint32_t nCols)
 {
 	uint64_t* ptrWordIn = rowIn;				//In Lyra2: pointer to prev
 	uint64_t* ptrWordInOut = rowInOut;				//In Lyra2: pointer to row*
@@ -333,7 +333,7 @@ void reducedDuplexRowSetup(uint64_t *state, uint64_t *rowIn, uint64_t *rowInOut,
  * @param rowOut         Row receiving the output
  *
  */
-void reducedDuplexRow(uint64_t *state, uint64_t *rowIn, uint64_t *rowInOut, uint64_t *rowOut, uint64_t nCols)
+void reducedDuplexRow(uint64_t *state, uint64_t *rowIn, uint64_t *rowInOut, uint64_t *rowOut, const uint32_t nCols)
 {
 	uint64_t* ptrWordInOut = rowInOut; //In Lyra2: pointer to row*
 	uint64_t* ptrWordIn = rowIn; //In Lyra2: pointer to prev
