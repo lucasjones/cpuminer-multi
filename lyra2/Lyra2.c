@@ -44,7 +44,7 @@
  *
  * @return 0 if the key is generated correctly; -1 if there is an error (usually due to lack of memory for allocation)
  */
-int LYRA2(void *K, uint64_t kLen, const void *pwd, uint64_t pwdlen, const void *salt, uint64_t saltlen, uint64_t timeCost, const uint16_t nRows, const uint16_t nCols)
+int LYRA2(void *K, int64_t kLen, const void *pwd, int32_t pwdlen, const void *salt, int32_t saltlen, int64_t timeCost, const int16_t nRows, const int16_t nCols)
 {
 	//============================= Basic variables ============================//
 	int64_t row = 2; //index of row to be processed
@@ -55,6 +55,7 @@ int LYRA2(void *K, uint64_t kLen, const void *pwd, uint64_t pwdlen, const void *
 	int64_t window = 2; //Visitation window (used to define which rows can be revisited during Setup)
 	int64_t gap = 1; //Modifier to the step, assuming the values 1 or -1
 	int64_t i; //auxiliary iteration counter
+	int64_t v64; // 64bit var for memcpy
 	//==========================================================================/
 
 	//========== Initializing the Memory Matrix and pointers to it =============//
@@ -65,7 +66,7 @@ int LYRA2(void *K, uint64_t kLen, const void *pwd, uint64_t pwdlen, const void *
 	// for Lyra2REv2, nCols = 4, v1 was using 8
 	const int64_t BLOCK_LEN = (nCols == 4) ? BLOCK_LEN_BLAKE2_SAFE_INT64 : BLOCK_LEN_BLAKE2_SAFE_BYTES;
 
-	i = (int64_t) ((int64_t) nRows * (int64_t) ROW_LEN_BYTES);
+	i = (int64_t)ROW_LEN_BYTES * nRows;
 	uint64_t *wholeMatrix = malloc(i);
 	if (wholeMatrix == NULL) {
 		return -1;
@@ -73,13 +74,13 @@ int LYRA2(void *K, uint64_t kLen, const void *pwd, uint64_t pwdlen, const void *
 	memset(wholeMatrix, 0, i);
 
 	//Allocates pointers to each row of the matrix
-	uint64_t **memMatrix = malloc(nRows * sizeof (uint64_t*));
+	uint64_t **memMatrix = malloc(sizeof(uint64_t*) * nRows);
 	if (memMatrix == NULL) {
 		return -1;
 	}
 	//Places the pointers in the correct positions
 	uint64_t *ptrWord = wholeMatrix;
-	for (i = 0; i < (int64_t) nRows; i++) {
+	for (i = 0; i < nRows; i++) {
 		memMatrix[i] = ptrWord;
 		ptrWord += ROW_LEN_INT64;
 	}
@@ -90,32 +91,37 @@ int LYRA2(void *K, uint64_t kLen, const void *pwd, uint64_t pwdlen, const void *
 	//but this ensures that the password copied locally will be overwritten as soon as possible
 
 	//First, we clean enough blocks for the password, salt, basil and padding
-	uint64_t nBlocksInput = ((saltlen + pwdlen + 6 * sizeof (uint64_t)) / BLOCK_LEN_BLAKE2_SAFE_BYTES) + 1;
+	int64_t nBlocksInput = ((saltlen + pwdlen + 6 * sizeof(uint64_t)) / BLOCK_LEN_BLAKE2_SAFE_BYTES) + 1;
 
 	byte *ptrByte = (byte*) wholeMatrix;
-	memset(ptrByte, 0, (size_t) nBlocksInput * BLOCK_LEN_BLAKE2_SAFE_BYTES);
+	memset(ptrByte, 0, nBlocksInput * BLOCK_LEN_BLAKE2_SAFE_BYTES);
 
 	//Prepends the password
-	memcpy(ptrByte, pwd, (size_t) pwdlen);
+	memcpy(ptrByte, pwd, pwdlen);
 	ptrByte += pwdlen;
 
 	//Concatenates the salt
-	memcpy(ptrByte, salt, (size_t) saltlen);
+	memcpy(ptrByte, salt, saltlen);
 	ptrByte += saltlen;
 
 	//Concatenates the basil: every integer passed as parameter, in the order they are provided by the interface
-	memcpy(ptrByte, &kLen, sizeof (uint64_t));
-	ptrByte += sizeof (uint64_t);
-	memcpy(ptrByte, &pwdlen, sizeof (uint64_t));
-	ptrByte += sizeof (uint64_t);
-	memcpy(ptrByte, &saltlen, sizeof (uint64_t));
-	ptrByte += sizeof (uint64_t);
-	memcpy(ptrByte, &timeCost, sizeof (uint64_t));
-	ptrByte += sizeof (uint64_t);
-	memcpy(ptrByte, &nRows, sizeof (uint64_t));
-	ptrByte += sizeof (uint64_t);
-	memcpy(ptrByte, &nCols, sizeof (uint64_t));
-	ptrByte += sizeof (uint64_t);
+	memcpy(ptrByte, &kLen, sizeof(int64_t));
+	ptrByte += sizeof(uint64_t);
+	v64 = pwdlen;
+	memcpy(ptrByte, &v64, sizeof(int64_t));
+	ptrByte += sizeof(uint64_t);
+	v64 = saltlen;
+	memcpy(ptrByte, &v64, sizeof(int64_t));
+	ptrByte += sizeof(uint64_t);
+	v64 = timeCost;
+	memcpy(ptrByte, &v64, sizeof(int64_t));
+	ptrByte += sizeof(uint64_t);
+	v64 = nRows;
+	memcpy(ptrByte, &v64, sizeof(int64_t));
+	ptrByte += sizeof(uint64_t);
+	v64 = nCols;
+	memcpy(ptrByte, &v64, sizeof(int64_t));
+	ptrByte += sizeof(uint64_t);
 
 	//Now comes the padding
 	*ptrByte = 0x80; //first byte of padding: right after the password
@@ -126,7 +132,7 @@ int LYRA2(void *K, uint64_t kLen, const void *pwd, uint64_t pwdlen, const void *
 
 	//======================= Initializing the Sponge State ====================//
 	//Sponge state: 16 uint64_t, BLOCK_LEN_INT64 words of them for the bitrate (b) and the remainder for the capacity (c)
-	uint64_t *state = malloc(16 * sizeof (uint64_t));
+	uint64_t *state = malloc(sizeof(uint64_t) * 16);
 	if (state == NULL) {
 		return -1;
 	}
@@ -136,7 +142,7 @@ int LYRA2(void *K, uint64_t kLen, const void *pwd, uint64_t pwdlen, const void *
 	//================================ Setup Phase =============================//
 	//Absorbing salt, password and basil: this is the only place in which the block length is hard-coded to 512 bits
 	ptrWord = wholeMatrix;
-	for (i = 0; i < (int64_t) nBlocksInput; i++) {
+	for (i = 0; i < nBlocksInput; i++) {
 		absorbBlockBlake2Safe(state, ptrWord); //absorbs each block of pad(pwd || salt || basil)
 		ptrWord += BLOCK_LEN; //goes to next block of pad(pwd || salt || basil)
 	}
@@ -165,14 +171,14 @@ int LYRA2(void *K, uint64_t kLen, const void *pwd, uint64_t pwdlen, const void *
 		gap = -gap; //inverts the modifier to the step
 	}
 
-	} while (row < (int64_t) nRows);
+	} while (row < nRows);
 	//==========================================================================/
 
 	//============================ Wandering Phase =============================//
 	row = 0; //Resets the visitation to the first row of the memory matrix
-	for (tau = 1; tau <= (int64_t) timeCost; tau++) {
+	for (tau = 1; tau <= timeCost; tau++) {
 		//Step is approximately half the number of all rows of the memory matrix for an odd tau; otherwise, it is -1
-		step = (tau % 2 == 0) ? -1 : (int64_t)nRows / 2 - 1;
+		step = (tau % 2 == 0) ? -1 : nRows / 2 - 1;
 		do {
 			//Selects a pseudorandom index row*
 			//------------------------------------------------------------------------------------------
@@ -209,7 +215,7 @@ int LYRA2(void *K, uint64_t kLen, const void *pwd, uint64_t pwdlen, const void *
 	free(wholeMatrix);
 
 	//Wiping out the sponge's internal state before freeing it
-	memset(state, 0, 16 * sizeof (uint64_t));
+	memset(state, 0, sizeof(uint64_t) * 16);
 	free(state);
 	//==========================================================================/
 
