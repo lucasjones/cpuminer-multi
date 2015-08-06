@@ -92,7 +92,8 @@ enum algos {
 	ALGO_FRESH,       /* Fresh */
 	ALGO_GROESTL,     /* Groestl */
 	ALGO_LUFFA,       /* Luffa (Joincoin, Doom) */
-	ALGO_LYRA2,       /* Lyra2RE (Vertcoin) */
+	ALGO_LYRA2,       /* Lyra2RE */
+	ALGO_LYRA2REV2,   /* Lyra2REv2 (Vertcoin) */
 	ALGO_MYR_GR,      /* Myriad Groestl */
 	ALGO_NIST5,       /* Nist5 */
 	ALGO_PENTABLAKE,  /* Pentablake */
@@ -132,6 +133,7 @@ static const char *algo_names[] = {
 	"groestl",
 	"luffa",
 	"lyra2",
+	"lyra2rev2",
 	"myr-gr",
 	"nist5",
 	"pentablake",
@@ -250,7 +252,7 @@ Options:\n\
                           scrypt:N     scrypt(N, 1, 1)\n\
                           sha256d      SHA-256d\n\
                           anime        Animecoin\n\
-                          axiom        Axiom MemoHash\n\
+                          axiom        Shabal-256 MemoHash\n\
                           blake        Blake-256 (SFR)\n\
                           blakecoin    Blakecoin\n\
                           blake2s      Blake-2 S\n\
@@ -266,6 +268,7 @@ Options:\n\
                           keccak       Keccak\n\
                           luffa        Luffa\n\
                           lyra2        Lyra2RE\n\
+                          lyra2rev2    Lyra2REv2 (Vertcoin)\n\
                           myr-gr       Myriad-Groestl\n\
                           neoscrypt    NeoScrypt(128, 2, 1)\n\
                           nist5        Nist5\n\
@@ -1568,6 +1571,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 				break;
 			case ALGO_KECCAK:
 			case ALGO_LYRA2:
+			case ALGO_LYRA2REV2:
 				diff_to_target(work->target, sctx->job.diff / (128.0 * opt_diff_factor));
 				break;
 			default:
@@ -1845,6 +1849,7 @@ static void *miner_thread(void *userdata)
 				max64 = 0x1ff;
 				break;
 			case ALGO_LYRA2:
+			case ALGO_LYRA2REV2:
 				max64 = 0xffff;
 				break;
 			case ALGO_C11:
@@ -1966,6 +1971,10 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_LYRA2:
 			rc = scanhash_lyra2(thr_id, work.data, work.target, max_nonce,
+				&hashes_done);
+			break;
+		case ALGO_LYRA2REV2:
+			rc = scanhash_lyra2rev2(thr_id, work.data, work.target, max_nonce,
 				&hashes_done);
 			break;
 		case ALGO_MYR_GR:
@@ -2480,6 +2489,8 @@ void parse_arg(int key, char *arg)
 				i = opt_algo = ALGO_DMD_GR;
 			else if (!strcasecmp("droplp", arg))
 				i = opt_algo = ALGO_DROP;
+			else if (!strcasecmp("lyra2v2", arg))
+				i = opt_algo = ALGO_LYRA2REV2;
 			else if (!strcasecmp("ziftr", arg))
 				i = opt_algo = ALGO_ZR5;
 			else

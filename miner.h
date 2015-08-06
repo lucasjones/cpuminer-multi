@@ -245,6 +245,9 @@ int scanhash_luffa(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 int scanhash_lyra2(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
+int scanhash_lyra2rev2(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
+
 int scanhash_myriad(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
@@ -526,6 +529,7 @@ void keccakhash(void *state, const void *input);
 void inkhash(void *state, const void *input); /* shavite */
 void luffahash(void *output, const void *input);
 void lyra2_hash(void *state, const void *input);
+void lyra2rev2_hash(void *state, const void *input);
 void myriadhash(void *output, const void *input);
 void neoscrypt(unsigned char *output, const unsigned char *password, uint32_t profile);
 void nist5hash(void *output, const void *input);

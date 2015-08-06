@@ -31,7 +31,8 @@ Algorithms
  * ✓ __dmd-gr__ (Diamond-Groestl)
  * ✓ __fresh__ (FreshCoin)
  * ✓ __groestl__ (Groestlcoin)
- * ✓ __lyra2__ (VertCoin [VTC])
+ * ✓ __lyra2__ (Lyrabar, Cryptocoin)
+ * ✓ __lyra2REv2__ (VertCoin [VTC])
  * ✓ __myr-gr__ (Myriad-Groestl)
  * ✓ __neoscrypt__ (Feathercoin)
  * ✓ __nist5__ (MistCoin [MIC], TalkCoin [TAC], ...)
@@ -49,6 +50,7 @@ Algorithms
  * ✓ __zr5__ (Ziftrcoin [ZRC])
 
 #### Implemented, but untested
+ * ? blake2s
  * ? hefty1 (Heavycoin)
  * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
  * ? luffa (Joincoin, Doomcoin)
@@ -59,23 +61,24 @@ Algorithms
  
 Dependencies
 ============
-* libcurl http://curl.haxx.se/libcurl/
-* jansson http://www.digip.org/jansson/ (jansson is included in-tree)
-* openssl https://www.openssl.org/
-* pthreads
-* zlib (for curl/ssl)
+ * libcurl http://curl.haxx.se/libcurl/
+ * jansson http://www.digip.org/jansson/ (jansson source is included in-tree)
+ * openssl libcrypto https://www.openssl.org/
+ * pthreads
+ * zlib (for curl/ssl)
 
 Download
 ========
-* Binary releases:  https://github.com/LucasJones/cpuminer-multi/releases
-* Windows releases: https://github.com/tpruvot/cpuminer-multi/releases
-* Git tree:   https://github.com/LucasJones/cpuminer-multi
-  * Clone with `git clone https://github.com/LucasJones/cpuminer-multi`
+ * Windows releases: https://github.com/tpruvot/cpuminer-multi/releases
+ * Git tree:   https://github.com/tpruvot/cpuminer-multi
+   * Clone with `git clone https://github.com/tpruvot/cpuminer-multi`
 
 Build
 =====
 
 #### Basic *nix build instructions:
+ * just use ./build.sh
+_OR_
  * ./autogen.sh	# only needed if building from git repo
  * ./nomacro.pl	# only needed if building on Mac OS X or with Clang
  * ./configure CFLAGS="*-march=native*"
@@ -90,10 +93,10 @@ Build
  * All the required .lib files are now included in tree (windows only)
  * AVX enabled by default for x64 platform (AVX2 and XOP could also be used)
 
-#### Basic Windows build instructions, using MinGW:
- * Install MinGW and the MSYS Developer Tool Kit (http://www.mingw.org/)
+#### Basic Windows build instructions, using MinGW64:
+ * Install MinGW64 and the MSYS Developer Tool Kit (http://www.mingw.org/)
    * Make sure you have mstcpip.h in MinGW\include
- * If using MinGW-w64, install pthreads-w64
+ * install pthreads-w64
  * Install libcurl devel (http://curl.haxx.se/download.html)
    * Make sure you have libcurl.m4 in MinGW\share\aclocal
    * Make sure you have curl-config in MinGW\bin

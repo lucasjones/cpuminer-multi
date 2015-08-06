@@ -217,6 +217,7 @@
     <ClCompile Include="algo\ink.c" />
     <ClCompile Include="algo\luffa.c" />
     <ClCompile Include="algo\lyra2re.c" />
+    <ClCompile Include="algo\lyra2rev2.c" />
     <ClCompile Include="algo\myr-groestl.c" />
     <ClCompile Include="algo\neoscrypt.c" />
     <ClCompile Include="algo\nist5.c" />
