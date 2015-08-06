@@ -966,6 +966,8 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 				break;
 			case ALGO_CRYPTONIGHT:
 				cryptonight_hash(hash, work->data, 76);
+			default:
+				break;
 			}
 			char *hashhex = abin2hex(hash, 32);
 			snprintf(s, JSON_BUF_LEN,
@@ -1070,6 +1072,8 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 				break;
 			case ALGO_CRYPTONIGHT:
 				cryptonight_hash(hash, work->data, 76);
+			default:
+				break;
 			}
 			hashhex = abin2hex(&hash[0], 32);
 			snprintf(s, JSON_BUF_LEN,
