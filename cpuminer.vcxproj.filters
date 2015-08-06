@@ -170,6 +170,9 @@
     <ClCompile Include="algo\c11.c">
       <Filter>algo</Filter>
     </ClCompile>
+    <ClCompile Include="algo\cryptolight.c">
+      <Filter>algo</Filter>
+    </ClCompile>
     <ClCompile Include="algo\cryptonight.c">
       <Filter>algo</Filter>
     </ClCompile>

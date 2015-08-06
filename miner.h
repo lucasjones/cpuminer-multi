@@ -287,7 +287,8 @@ int scanhash_x15(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 
 int scanhash_zr5(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 
-void cryptonight_hash(void* output, const void* input, int input_len);
+int scanhash_cryptolight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
 
 int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
@@ -514,6 +515,7 @@ void blakecoinhash(void *state, const void *input);
 void blake2s_hash(void *output, const void *input);
 void bmwhash(void *output, const void *input);
 void c11hash(void *output, const void *input);
+void cryptolight_hash(void* output, const void* input, int len);
 void cryptonight_hash(void* output, const void* input, int len);
 void droplp_hash(void *output, const void *input);
 void groestlhash(void *output, const void *input);

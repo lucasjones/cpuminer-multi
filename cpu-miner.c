@@ -85,6 +85,7 @@ enum algos {
 	ALGO_BLAKE2S,     /* Blake2s */
 	ALGO_BMW,         /* BMW 256 */
 	ALGO_C11,         /* C11 Chaincoin/Flaxcoin X11 variant */
+	ALGO_CRYPTOLIGHT, /* cryptonight-light (Aeon) */
 	ALGO_CRYPTONIGHT, /* CryptoNight */
 	ALGO_DMD_GR,      /* Diamond */
 	ALGO_DROP,        /* Dropcoin */
@@ -123,6 +124,7 @@ static const char *algo_names[] = {
 	"blake2s",
 	"bmw",
 	"c11",
+	"cryptolight",
 	"cryptonight",
 	"dmd-gr",
 	"drop",
@@ -254,7 +256,8 @@ Options:\n\
                           blake2s      Blake-2 S\n\
                           bmw          BMW 256\n\
                           c11/flax     C11\n\
-                          cryptonight  CryptoNight\n\
+                          cryptolight  Cryptonight-light\n\
+                          cryptonight  Monero\n\
                           dmd-gr       Diamond-Groestl\n\
                           drop         Dropcoin\n\
                           fresh        Fresh\n\
@@ -895,6 +898,7 @@ static int share_result(int result, struct work *work, const char *reason)
 
 	switch (opt_algo) {
 	case ALGO_AXIOM:
+	case ALGO_CRYPTOLIGHT:
 	case ALGO_CRYPTONIGHT:
 	case ALGO_PLUCK:
 		sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate);
@@ -954,8 +958,10 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 
 			bin2hex(noncestr, (const unsigned char *)work->data + 39, 4);
 			switch(opt_algo) {
+			case ALGO_CRYPTOLIGHT:
+				cryptolight_hash(hash, work->data, 76);
+				break;
 			case ALGO_CRYPTONIGHT:
-			default:
 				cryptonight_hash(hash, work->data, 76);
 			}
 			char *hashhex = abin2hex(hash, 32);
@@ -1056,8 +1062,10 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			bin2hex(noncestr, (const unsigned char *)work->data + 39, 4);
 
 			switch(opt_algo) {
+			case ALGO_CRYPTOLIGHT:
+				cryptolight_hash(hash, work->data, 76);
+				break;
 			case ALGO_CRYPTONIGHT:
-			default:
 				cryptonight_hash(hash, work->data, 76);
 			}
 			hashhex = abin2hex(&hash[0], 32);
@@ -1828,6 +1836,7 @@ static void *miner_thread(void *userdata)
 					max64 = 0xF;
 				break;
 			case ALGO_AXIOM:
+			case ALGO_CRYPTOLIGHT:
 			case ALGO_CRYPTONIGHT:
 				max64 = 0x40LL;
 				break;
@@ -1933,6 +1942,12 @@ static void *miner_thread(void *userdata)
 		case ALGO_C11:
 			rc = scanhash_c11(thr_id, work.data, work.target, max_nonce, &hashes_done);
 			break;
+		case ALGO_CRYPTOLIGHT:
+			rc = scanhash_cryptolight(thr_id, work.data, work.target, max_nonce, &hashes_done);
+			break;
+		case ALGO_CRYPTONIGHT:
+			rc = scanhash_cryptonight(thr_id, work.data, work.target, max_nonce, &hashes_done);
+			break;
 		case ALGO_DROP:
 			rc = scanhash_drop(thr_id, &work, max_nonce, &hashes_done);
 			break;
@@ -2008,11 +2023,6 @@ static void *miner_thread(void *userdata)
 			rc = scanhash_pentablake(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
 			break;
-		case ALGO_CRYPTONIGHT:
-			rc = scanhash_cryptonight(thr_id, work.data, work.target,
-					max_nonce, &hashes_done);
-			break;
-
 		default:
 			/* should never happen */
 			goto out;
@@ -2030,6 +2040,7 @@ static void *miner_thread(void *userdata)
 		if (!opt_quiet) {
 			switch(opt_algo) {
 			case ALGO_AXIOM:
+			case ALGO_CRYPTOLIGHT:
 			case ALGO_CRYPTONIGHT:
 			case ALGO_PLUCK:
 				applog(LOG_INFO, "CPU #%d: %.2f H/s", thr_id, thr_hashrates[thr_id]);
@@ -2047,6 +2058,7 @@ static void *miner_thread(void *userdata)
 				hashrate += thr_hashrates[i];
 			if (i == opt_n_threads) {
 				switch(opt_algo) {
+				case ALGO_CRYPTOLIGHT:
 				case ALGO_CRYPTONIGHT:
 					sprintf(s, "%.3f", hashrate);
 					applog(LOG_NOTICE, "Total: %s H/s", s);
@@ -2460,6 +2472,8 @@ void parse_arg(int key, char *arg)
 			// some aliases...
 			if (!strcasecmp("blake2", arg))
 				i = opt_algo = ALGO_BLAKE2S;
+			else if (!strcasecmp("cryptonight-light", arg))
+				i = opt_algo = ALGO_CRYPTOLIGHT;
 			else if (!strcasecmp("flax", arg))
 				i = opt_algo = ALGO_C11;
 			else if (!strcasecmp("diamond", arg))
@@ -2942,7 +2956,7 @@ int main(int argc, char *argv[]) {
 
 	if (opt_algo == ALGO_QUARK) {
 		init_quarkhash_contexts();
-	} else if(opt_algo == ALGO_CRYPTONIGHT) {
+	} else if(opt_algo == ALGO_CRYPTONIGHT || opt_algo == ALGO_CRYPTOLIGHT) {
 		jsonrpc_2 = true;
 		opt_extranonce = false;
 		aes_ni_supported = has_aes_ni();

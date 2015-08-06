@@ -2,8 +2,6 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-// Modified for CPUminer by Lucas Jones
-
 #include "miner.h"
 
 #if defined(__arm__) || defined(_MSC_VER)
@@ -35,7 +33,7 @@ typedef __uint128_t uint128_t;
 
 #endif
 
-#define LITE 0
+#define LITE 1
 #if LITE /* cryptonight-light */
 #define MEMORY (1 << 20)
 #define ITER   (1 << 19)
@@ -168,7 +166,7 @@ struct cryptonight_ctx {
 	oaes_ctx* aes_ctx;
 };
 
-static void cryptonight_hash_ctx(void* output, const void* input, int len, struct cryptonight_ctx* ctx)
+static void cryptolight_hash_ctx(void* output, const void* input, int len, struct cryptonight_ctx* ctx)
 {
 	hash_process(&ctx->state.hs, (const uint8_t*) input, len);
 	ctx->aes_ctx = (oaes_ctx*) oaes_alloc();
@@ -237,13 +235,13 @@ static void cryptonight_hash_ctx(void* output, const void* input, int len, struc
 	oaes_free((OAES_CTX **) &ctx->aes_ctx);
 }
 
-void cryptonight_hash(void* output, const void* input, int len) {
+void cryptolight_hash(void* output, const void* input, int len) {
 	struct cryptonight_ctx *ctx = (struct cryptonight_ctx*)malloc(sizeof(struct cryptonight_ctx));
-	cryptonight_hash_ctx(output, input, len, ctx);
+	cryptolight_hash_ctx(output, input, len, ctx);
 	free(ctx);
 }
 
-static void cryptonight_hash_ctx_aes_ni(void* output, const void* input, int len, struct cryptonight_ctx* ctx)
+static void cryptolight_hash_ctx_aes_ni(void* output, const void* input, int len, struct cryptonight_ctx* ctx)
 {
 	hash_process(&ctx->state.hs, (const uint8_t*)input, len);
 	ctx->aes_ctx = (oaes_ctx*) oaes_alloc();
@@ -312,7 +310,7 @@ static void cryptonight_hash_ctx_aes_ni(void* output, const void* input, int len
 	oaes_free((OAES_CTX **) &ctx->aes_ctx);
 }
 
-int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+int scanhash_cryptolight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 		uint32_t max_nonce, uint64_t *hashes_done)
 {
 	uint32_t *nonceptr = (uint32_t*) (((char*)pdata) + 39);
@@ -326,7 +324,7 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	if (aes_ni_supported) {
 		do {
 			*nonceptr = ++n;
-			cryptonight_hash_ctx_aes_ni(hash, pdata, 76, ctx);
+			cryptolight_hash_ctx_aes_ni(hash, pdata, 76, ctx);
 			if (unlikely(hash[7] < ptarget[7])) {
 				*hashes_done = n - first_nonce + 1;
 				free(ctx);
@@ -336,7 +334,7 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	} else {
 		do {
 			*nonceptr = ++n;
-			cryptonight_hash_ctx(hash, pdata, 76, ctx);
+			cryptolight_hash_ctx(hash, pdata, 76, ctx);
 			if (unlikely(hash[7] < ptarget[7])) {
 				*hashes_done = n - first_nonce + 1;
 				free(ctx);

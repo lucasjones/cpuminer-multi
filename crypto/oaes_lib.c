@@ -64,7 +64,7 @@ static int ftime(struct timeb* tb) {
     return -1;
 
   tb->time    = tv.tv_sec;
-  tb->millitm = (tv.tv_usec + 500) / 1000;
+  tb->millitm = (unsigned short) ((tv.tv_usec + 500) / 1000);
 
   if (tb->millitm == 1000) {
     ++tb->time;

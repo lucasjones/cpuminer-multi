@@ -55,6 +55,7 @@ cpuminer_SOURCES = \
   algo/bmw256.c \
   algo/c11.c \
   algo/cryptonight.c \
+  algo/cryptolight.c \
   algo/drop.c \
   algo/fresh.c \
   algo/groestl.c \

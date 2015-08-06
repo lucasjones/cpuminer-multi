@@ -27,6 +27,7 @@ Algorithms
  * ✓ __blake__ (Saffron [SFR] Blake-256)
  * ✓ __bmw__ (Midnight [MDT] BMW-256)
  * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
+ * ✓ __cryptonight-light__ (Aeon)
  * ✓ __dmd-gr__ (Diamond-Groestl)
  * ✓ __fresh__ (FreshCoin)
  * ✓ __groestl__ (Groestlcoin)
