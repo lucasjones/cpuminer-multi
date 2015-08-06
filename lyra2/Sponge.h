@@ -24,15 +24,6 @@
 
 #include <stdint.h>
 
-#if defined(__GNUC__)
-#define ALIGN __attribute__ ((aligned(32)))
-#elif defined(_MSC_VER)
-#define ALIGN __declspec(align(32))
-#else
-#define ALIGN
-#endif
-
-
 /* Blake2b IV Array */
 static const uint64_t blake2b_IV[8] =
 {
@@ -43,8 +34,12 @@ static const uint64_t blake2b_IV[8] =
 };
 
 /* Blake2b's rotation */
-static __inline uint64_t rotr64( const uint64_t w, const unsigned c ){
+static __inline uint64_t rotr64(const uint64_t w, const unsigned c) {
+#ifdef _MSC_VER
+	return _rotr64(w, c);
+#else
 	return ( w >> c ) | ( w << ( 64 - c ) );
+#endif
 }
 
 /* Blake2b's G function */
