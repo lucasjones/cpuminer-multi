@@ -94,7 +94,6 @@ int LYRA2(void *K, int64_t kLen, const void *pwd, int32_t pwdlen, const void *sa
 	int64_t nBlocksInput = ((saltlen + pwdlen + 6 * sizeof(uint64_t)) / BLOCK_LEN_BLAKE2_SAFE_BYTES) + 1;
 
 	byte *ptrByte = (byte*) wholeMatrix;
-	memset(ptrByte, 0, nBlocksInput * BLOCK_LEN_BLAKE2_SAFE_BYTES);
 
 	//Prepends the password
 	memcpy(ptrByte, pwd, pwdlen);
@@ -103,6 +102,8 @@ int LYRA2(void *K, int64_t kLen, const void *pwd, int32_t pwdlen, const void *sa
 	//Concatenates the salt
 	memcpy(ptrByte, salt, saltlen);
 	ptrByte += saltlen;
+
+	memset(ptrByte, 0, nBlocksInput * BLOCK_LEN_BLAKE2_SAFE_BYTES - (saltlen + pwdlen));
 
 	//Concatenates the basil: every integer passed as parameter, in the order they are provided by the interface
 	memcpy(ptrByte, &kLen, sizeof(int64_t));
@@ -132,10 +133,7 @@ int LYRA2(void *K, int64_t kLen, const void *pwd, int32_t pwdlen, const void *sa
 
 	//======================= Initializing the Sponge State ====================//
 	//Sponge state: 16 uint64_t, BLOCK_LEN_INT64 words of them for the bitrate (b) and the remainder for the capacity (c)
-	uint64_t *state = malloc(sizeof(uint64_t) * 16);
-	if (state == NULL) {
-		return -1;
-	}
+	uint64_t state[16];
 	initState(state);
 	//==========================================================================/
 
@@ -182,8 +180,8 @@ int LYRA2(void *K, int64_t kLen, const void *pwd, int32_t pwdlen, const void *sa
 		do {
 			//Selects a pseudorandom index row*
 			//------------------------------------------------------------------------------------------
-			//rowa = ((unsigned int)state[0]) & (nRows-1);  //(USE THIS IF nRows IS A POWER OF 2)
-			rowa = ((uint64_t) (state[0])) % nRows; //(USE THIS FOR THE "GENERIC" CASE)
+			rowa = state[0] & (unsigned int)(nRows-1);  //(USE THIS IF nRows IS A POWER OF 2)
+			//rowa = state[0] % nRows; //(USE THIS FOR THE "GENERIC" CASE)
 			//------------------------------------------------------------------------------------------
 
 			//Performs a reduced-round duplexing operation over M[row*] XOR M[prev], updating both M[row*] and M[row]
@@ -194,13 +192,12 @@ int LYRA2(void *K, int64_t kLen, const void *pwd, int32_t pwdlen, const void *sa
 
 			//updates row: goes to the next row to be computed
 			//------------------------------------------------------------------------------------------
-			//row = (row + step) & (nRows-1); //(USE THIS IF nRows IS A POWER OF 2)
-			row = (row + step) % nRows; //(USE THIS FOR THE "GENERIC" CASE)
+			row = (row + step) & (unsigned int)(nRows-1); //(USE THIS IF nRows IS A POWER OF 2)
+			//row = (row + step) % nRows; //(USE THIS FOR THE "GENERIC" CASE)
 			//------------------------------------------------------------------------------------------
 
 		} while (row != 0);
 	}
-	//==========================================================================/
 
 	//============================ Wrap-up Phase ===============================//
 	//Absorbs the last block of the memory matrix
@@ -208,16 +205,10 @@ int LYRA2(void *K, int64_t kLen, const void *pwd, int32_t pwdlen, const void *sa
 
 	//Squeezes the key
 	squeeze(state, K, (unsigned int) kLen);
-	//==========================================================================/
 
 	//========================= Freeing the memory =============================//
 	free(memMatrix);
 	free(wholeMatrix);
-
-	//Wiping out the sponge's internal state before freeing it
-	memset(state, 0, sizeof(uint64_t) * 16);
-	free(state);
-	//==========================================================================/
 
 	return 0;
 }
