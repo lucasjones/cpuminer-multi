@@ -9,3 +9,5 @@ before_script:
 script:
   - ./configure
   - make
+
+sudo: false
