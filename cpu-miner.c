@@ -1561,7 +1561,6 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 		}
 
 		switch (opt_algo) {
-			//case ALGO_AXIOM:
 			case ALGO_DROP:
 			case ALGO_SCRYPT:
 			case ALGO_NEOSCRYPT:
@@ -1571,11 +1570,11 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_FRESH:
 			case ALGO_DMD_GR:
 			case ALGO_GROESTL:
+			case ALGO_LYRA2REV2:
 				diff_to_target(work->target, sctx->job.diff / (256.0 * opt_diff_factor));
 				break;
 			case ALGO_KECCAK:
 			case ALGO_LYRA2:
-			case ALGO_LYRA2REV2:
 				diff_to_target(work->target, sctx->job.diff / (128.0 * opt_diff_factor));
 				break;
 			default:
