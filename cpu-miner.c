@@ -132,7 +132,7 @@ static const char *algo_names[] = {
 	"fresh",
 	"groestl",
 	"luffa",
-	"lyra2",
+	"lyra2re",
 	"lyra2rev2",
 	"myr-gr",
 	"nist5",
@@ -2493,6 +2493,8 @@ void parse_arg(int key, char *arg)
 				i = opt_algo = ALGO_DMD_GR;
 			else if (!strcasecmp("droplp", arg))
 				i = opt_algo = ALGO_DROP;
+			else if (!strcasecmp("lyra2", arg))
+				i = opt_algo = ALGO_LYRA2;
 			else if (!strcasecmp("lyra2v2", arg))
 				i = opt_algo = ALGO_LYRA2REV2;
 			else if (!strcasecmp("ziftr", arg))
