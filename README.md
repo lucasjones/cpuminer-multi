@@ -31,7 +31,7 @@ Algorithms
  * ✓ __dmd-gr__ (Diamond-Groestl)
  * ✓ __fresh__ (FreshCoin)
  * ✓ __groestl__ (Groestlcoin)
- * ✓ __lyra2__ (Lyrabar, Cryptocoin)
+ * ✓ __lyra2RE__ (Lyrabar, Cryptocoin)
  * ✓ __lyra2REv2__ (VertCoin [VTC])
  * ✓ __myr-gr__ (Myriad-Groestl)
  * ✓ __neoscrypt__ (Feathercoin)
@@ -81,7 +81,7 @@ Build
 _OR_
  * ./autogen.sh	# only needed if building from git repo
  * ./nomacro.pl	# only needed if building on Mac OS X or with Clang
- * ./configure CFLAGS="*-march=native*"
+ * ./configure CFLAGS="*-march=native*" --with-crypto --with-curl
    * # Use -march=native if building for a single machine
  * make
 

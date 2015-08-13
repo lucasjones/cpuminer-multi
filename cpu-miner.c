@@ -267,7 +267,7 @@ Options:\n\
                           heavy        Heavy\n\
                           keccak       Keccak\n\
                           luffa        Luffa\n\
-                          lyra2        Lyra2RE\n\
+                          lyra2re      Lyra2RE\n\
                           lyra2rev2    Lyra2REv2 (Vertcoin)\n\
                           myr-gr       Myriad-Groestl\n\
                           neoscrypt    NeoScrypt(128, 2, 1)\n\
@@ -2465,7 +2465,7 @@ void parse_arg(int key, char *arg)
 	case 'a':
 		for (i = 0; i < ALGO_COUNT; i++) {
 			v = (int) strlen(algo_names[i]);
-			if (!strncmp(arg, algo_names[i], v)) {
+			if (v && !strncasecmp(arg, algo_names[i], v)) {
 				if (arg[v] == '\0') {
 					opt_algo = (enum algos) i;
 					break;

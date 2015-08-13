@@ -2045,7 +2045,7 @@ void print_hash_tests(void)
 	printpfx("luffa", hash);
 
 	lyra2_hash(&hash[0], &buf[0]);
-	printpfx("lyra2", hash);
+	printpfx("lyra2re", hash);
 
 	lyra2_hash(&hash[0], &buf[0]);
 	printpfx("lyra2rev2", hash);
