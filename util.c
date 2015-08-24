@@ -616,6 +616,52 @@ err_out:
 	return NULL;
 }
 
+/* used to load a remote config */
+json_t* json_load_url(char* cfg_url, json_error_t *err)
+{
+	char err_str[CURL_ERROR_SIZE] = { 0 };
+	struct data_buffer all_data = { 0 };
+	int rc = 0; json_t *cfg = NULL;
+	CURL *curl = curl_easy_init();
+	if (unlikely(!curl)) {
+		applog(LOG_ERR, "Remote config init failed!");
+		return NULL;
+	}
+	curl_easy_setopt(curl, CURLOPT_URL, cfg_url);
+	curl_easy_setopt(curl, CURLOPT_FRESH_CONNECT, 1);
+	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 15);
+	curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, err_str);
+	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+	curl_easy_setopt(curl, CURLOPT_TCP_NODELAY, 1);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, all_data_cb);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &all_data);
+	if (opt_proxy) {
+		curl_easy_setopt(curl, CURLOPT_PROXY, opt_proxy);
+		curl_easy_setopt(curl, CURLOPT_PROXYTYPE, opt_proxy_type);
+	} else if (getenv("http_proxy")) {
+		if (getenv("all_proxy"))
+			curl_easy_setopt(curl, CURLOPT_PROXY, getenv("all_proxy"));
+		else if (getenv("ALL_PROXY"))
+			curl_easy_setopt(curl, CURLOPT_PROXY, getenv("ALL_PROXY"));
+		else
+			curl_easy_setopt(curl, CURLOPT_PROXY, "");
+	}
+	rc = curl_easy_perform(curl);
+	if (rc) {
+		applog(LOG_ERR, "Remote config read failed: %s", err_str);
+		goto err_out;
+	}
+	if (!all_data.buf || !all_data.len) {
+		applog(LOG_ERR, "Empty data received for config");
+		goto err_out;
+	}
+
+	cfg = JSON_LOADS((char*)all_data.buf, err);
+err_out:
+	curl_easy_cleanup(curl);
+	return cfg;
+}
+
 void bin2hex(char *s, const unsigned char *p, size_t len)
 {
 	for (size_t i = 0; i < len; i++)

@@ -2549,7 +2549,12 @@ void parse_arg(int key, char *arg)
 		break;
 	case 'c': {
 		json_error_t err;
-		json_t *config = JSON_LOAD_FILE(arg, &err);
+		json_t *config;
+		if (arg && strstr(arg, "://")) {
+			config = json_load_url(arg, &err);
+		} else {
+			config = JSON_LOADF(arg, &err);
+		}
 		if (!json_is_object(config)) {
 			if (err.line < 0)
 				fprintf(stderr, "%s\n", err.text);

@@ -161,11 +161,13 @@ static inline void le16enc(void *pp, uint16_t x)
 
 #if JANSSON_MAJOR_VERSION >= 2
 #define JSON_LOADS(str, err_ptr) json_loads(str, 0, err_ptr)
-#define JSON_LOAD_FILE(path, err_ptr) json_load_file(path, 0, err_ptr)
+#define JSON_LOADF(path, err_ptr) json_load_file(path, 0, err_ptr)
 #else
 #define JSON_LOADS(str, err_ptr) json_loads(str, err_ptr)
-#define JSON_LOAD_FILE(path, err_ptr) json_load_file(path, err_ptr)
+#define JSON_LOADF(path, err_ptr) json_load_file(path, err_ptr)
 #endif
+
+json_t* json_load_url(char* cfg_url, json_error_t *err);
 
 void sha256_init(uint32_t *state);
 void sha256_transform(uint32_t *state, const uint32_t *block, int swap);

@@ -1,7 +1,9 @@
 Version 1.2
 - Add cryptonight-light (Aeon)
 - Add Lyra2REv2 algo (Vertcoin)
+- Allow to load a remote config with curl
 - Algorithm parameter is now case insensitive
+- Drop anime algo (dead coin)
 - Checkup on arm, tested ok on Tegra K1 (CyanogenMod 12.1)
 
 version 1.1 (Tanguy Pruvot)
