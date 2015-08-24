@@ -4,6 +4,9 @@
 #ifdef WIN32
 
 #include <windows.h>
+#include <time.h>
+
+#define localtime_r(src, dst) localtime_s(dst, src)
 
 #define sleep(secs) Sleep((secs) * 1000)
 

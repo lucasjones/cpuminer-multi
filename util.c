@@ -110,15 +110,10 @@ void applog(int prio, const char *fmt, ...)
 		const char* color = "";
 		char *f;
 		int len;
-		time_t now;
-		struct tm tm, *tm_p;
+		struct tm tm;
+		time_t now = time(NULL);
 
-		time(&now);
-
-		pthread_mutex_lock(&applog_lock);
-		tm_p = localtime(&now);
-		memcpy(&tm, tm_p, sizeof(struct tm));
-		pthread_mutex_unlock(&applog_lock);
+		localtime_r(&now, &tm);
 
 		switch (prio) {
 			case LOG_ERR:     color = CL_RED; break;
