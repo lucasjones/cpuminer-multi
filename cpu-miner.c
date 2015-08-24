@@ -78,7 +78,6 @@ enum algos {
 	ALGO_HEAVY,       /* Heavy */
 	ALGO_NEOSCRYPT,   /* NeoScrypt(128, 2, 1) with Salsa20/20 and ChaCha20/20 */
 	ALGO_QUARK,       /* Quark */
-	ALGO_ANIME,       /* Animecoin (Quark variant) */
 	ALGO_AXIOM,       /* Shabal 256 Memohash */
 	ALGO_BLAKE,       /* Blake 256 */
 	ALGO_BLAKECOIN,   /* Simplified 8 rounds Blake 256 */
@@ -118,7 +117,6 @@ static const char *algo_names[] = {
 	"heavy",
 	"neoscrypt",
 	"quark",
-	"anime",
 	"axiom",
 	"blake",
 	"blakecoin",
@@ -251,7 +249,6 @@ Options:\n\
                           scrypt       scrypt(1024, 1, 1) (default)\n\
                           scrypt:N     scrypt(N, 1, 1)\n\
                           sha256d      SHA-256d\n\
-                          anime        Animecoin\n\
                           axiom        Shabal-256 MemoHash\n\
                           blake        Blake-256 (SFR)\n\
                           blakecoin    Blakecoin\n\
@@ -1924,10 +1921,6 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_QUARK:
 			rc = scanhash_quark(thr_id, work.data, work.target, max_nonce,
-					&hashes_done);
-			break;
-		case ALGO_ANIME:
-			rc = scanhash_anime(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
 			break;
 		case ALGO_AXIOM:

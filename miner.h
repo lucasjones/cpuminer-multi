@@ -190,9 +190,6 @@ void sha256_transform_8way(uint32_t *state, const uint32_t *block, int swap);
 
 struct work;
 
-int scanhash_anime(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-                            uint32_t max_nonce, uint64_t *hashes_done);
-
 int scanhash_axiom(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
@@ -513,7 +510,6 @@ void format_hashrate(double hashrate, char *output);
 void print_hash_tests(void);
 
 void sha256d(unsigned char *hash, const unsigned char *data, int len);
-void animehash(void *state, const void *input);
 void axiomhash(void *state, const void *input);
 void blakehash(void *state, const void *input);
 void blakecoinhash(void *state, const void *input);

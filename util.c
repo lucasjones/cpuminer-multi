@@ -2045,9 +2045,6 @@ void print_hash_tests(void)
 
 	//buf[0] = 1; buf[64] = 2; // for endian tests
 
-	animehash(&hash[0], &buf[0]);
-	printpfx("anime", hash);
-
 	axiomhash(&hash[0], &buf[0]);
 	printpfx("axiom", hash);
 
@@ -2091,10 +2088,10 @@ void print_hash_tests(void)
 	printpfx("luffa", hash);
 
 	lyra2_hash(&hash[0], &buf[0]);
-	printpfx("lyra2re", hash);
+	printpfx("lyra2", hash);
 
-	lyra2_hash(&hash[0], &buf[0]);
-	printpfx("lyra2rev2", hash);
+	lyra2rev2_hash(&hash[0], &buf[0]);
+	printpfx("lyra2v2", hash);
 
 	myriadhash(&hash[0], &buf[0]);
 	printpfx("myr-gr", hash);
