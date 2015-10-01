@@ -99,6 +99,7 @@ enum algos {
 	ALGO_PLUCK,       /* Pluck (Supcoin) */
 	ALGO_QUBIT,       /* Qubit */
 	ALGO_SHAVITE3,    /* Shavite3 */
+	ALGO_SIB,         /* X11 + gost (Sibcoin) */
 	ALGO_SKEIN,       /* Skein */
 	ALGO_SKEIN2,      /* Double skein (Woodcoin) */
 	ALGO_S3,          /* S3 */
@@ -138,6 +139,7 @@ static const char *algo_names[] = {
 	"pluck",
 	"qubit",
 	"shavite3",
+	"sib",
 	"skein",
 	"skein2",
 	"s3",
@@ -150,9 +152,11 @@ static const char *algo_names[] = {
 };
 
 bool opt_debug = false;
+bool opt_debug_diff = false;
 bool opt_protocol = false;
 bool opt_benchmark = false;
 bool opt_redirect = true;
+bool opt_showdiff = false;
 bool opt_extranonce = true;
 bool want_longpoll = true;
 bool have_longpoll = false;
@@ -274,6 +278,7 @@ Options:\n\
                           quark        Quark\n\
                           qubit        Qubit\n\
                           shavite3     Shavite3\n\
+                          sib          X11 + gost (SibCoin)\n\
                           skein        Skein+Sha (Skeincoin)\n\
                           skein2       Double Skein (Woodcoin)\n\
                           s3           S3\n\
@@ -347,7 +352,7 @@ static struct option const options[] = {
 	{ "benchmark", 0, NULL, 1005 },
 	{ "cputest", 0, NULL, 1006 },
 	{ "cert", 1, NULL, 1001 },
-	{ "coinbase-addr", 1, NULL, 1013 },
+	{ "coinbase-addr", 1, NULL, 1016 },
 	{ "coinbase-sig", 1, NULL, 1015 },
 	{ "config", 1, NULL, 'c' },
 	{ "cpu-affinity", 1, NULL, 1020 },
@@ -377,6 +382,7 @@ static struct option const options[] = {
 	{ "retry-pause", 1, NULL, 'R' },
 	{ "randomize", 0, NULL, 1024 },
 	{ "scantime", 1, NULL, 's' },
+	{ "show-diff", 0, NULL, 1013 },
 #ifdef HAVE_SYSLOG_H
 	{ "syslog", 0, NULL, 'S' },
 #endif
@@ -489,6 +495,26 @@ static inline void work_copy(struct work *dest, const struct work *src)
 	}
 }
 
+/* compute nbits to get the network diff */
+static void calc_network_diff(struct work *work)
+{
+	// sample for diff 43.281 : 1c05ea29
+	// todo: endian reversed on longpoll could be zr5 specific...
+	uint32_t nbits = have_longpoll ? work->data[18] : swab32(work->data[18]);
+	uint32_t bits = (nbits & 0xffffff);
+	int16_t shift = (swab32(nbits) & 0xff); // 0x1c = 28
+
+	uint64_t diffone = 0x0000FFFF00000000ull;
+	double d = (double)0x0000ffff / (double)bits;
+
+	for (int m=shift; m < 29; m++) d *= 256.0;
+	for (int m=29; m < shift; m++) d /= 256.0;
+	if (opt_debug_diff)
+		applog(LOG_DEBUG, "net diff: %f -> shift %u, bits %08x", d, shift, bits);
+
+	net_diff = d;
+}
+
 static bool work_decode(const json_t *val, struct work *work)
 {
 	int i;
@@ -516,6 +542,16 @@ static bool work_decode(const json_t *val, struct work *work)
 
 	for (i = 0; i < adata_sz; i++)
 		work->data[i] = le32dec(work->data + i);
+	for (i = 0; i < atarget_sz; i++)
+		work->target[i] = le32dec(work->target + i);
+
+	if ((opt_showdiff || opt_max_diff > 0.) && !allow_mininginfo)
+		calc_network_diff(work);
+
+	work->targetdiff = target_to_diff(work->target);
+
+	// for api stats, on longpoll pools
+	stratum_diff = work->targetdiff;
 
 	if (opt_algo == ALGO_DROP || opt_algo == ALGO_ZR5) {
 		#define POK_BOOL_MASK 0x00008000
@@ -525,9 +561,6 @@ static bool work_decode(const json_t *val, struct work *work)
 			zr5_pok = work->data[0] & POK_DATA_MASK;
 		}
 	}
-
-	for (i = 0; i < atarget_sz; i++)
-		work->target[i] = le32dec(work->target + i);
 
 	return true;
 
@@ -561,8 +594,11 @@ static bool get_mininginfo(CURL *curl, struct work *work)
 		// "networkhashps": 56475980
 		if (res) {
 			json_t *key = json_object_get(res, "difficulty");
-			if (key && json_is_real(key)) {
-				net_diff = json_real_value(key);
+			if (key) {
+				if (json_is_object(key))
+					key = json_object_get(key, "proof-of-work");
+				if (json_is_real(key))
+					net_diff = json_real_value(key);
 			}
 			key = json_object_get(res, "networkhashps");
 			if (key && json_is_integer(key)) {
@@ -1539,6 +1575,9 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 		work->data[17] = le32dec(sctx->job.ntime);
 		work->data[18] = le32dec(sctx->job.nbits);
 
+		if (opt_showdiff || opt_max_diff > 0.)
+			calc_network_diff(work);
+
 		if (opt_algo == ALGO_DROP || opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
 			/* reversed endian */
 			for (i = 0; i <= 18; i++)
@@ -1562,20 +1601,20 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_SCRYPT:
 			case ALGO_NEOSCRYPT:
 			case ALGO_PLUCK:
-				diff_to_target(work->target, sctx->job.diff / (65536.0 * opt_diff_factor));
+				work_set_target(work, sctx->job.diff / (65536.0 * opt_diff_factor));
 				break;
 			case ALGO_FRESH:
 			case ALGO_DMD_GR:
 			case ALGO_GROESTL:
 			case ALGO_LYRA2REV2:
-				diff_to_target(work->target, sctx->job.diff / (256.0 * opt_diff_factor));
+				work_set_target(work, sctx->job.diff / (256.0 * opt_diff_factor));
 				break;
 			case ALGO_KECCAK:
 			case ALGO_LYRA2:
-				diff_to_target(work->target, sctx->job.diff / (128.0 * opt_diff_factor));
+				work_set_target(work, sctx->job.diff / (128.0 * opt_diff_factor));
 				break;
 			default:
-				diff_to_target(work->target, sctx->job.diff / opt_diff_factor);
+				work_set_target(work, sctx->job.diff / opt_diff_factor);
 		}
 	}
 }
@@ -1857,16 +1896,14 @@ static void *miner_thread(void *userdata)
 			case ALGO_FRESH:
 			case ALGO_GROESTL:
 			case ALGO_MYR_GR:
+			case ALGO_SIB:
 			case ALGO_X11:
-				max64 = 0x3ffff;
-				break;
 			case ALGO_X13:
-				max64 = 0x3ffff;
-				break;
 			case ALGO_X14:
 				max64 = 0x3ffff;
 				break;
 			case ALGO_X15:
+			case ALGO_ZR5:
 				max64 = 0x1ffff;
 				break;
 			case ALGO_BMW:
@@ -1991,6 +2028,10 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_SHAVITE3:
 			rc = scanhash_ink(thr_id, work.data, work.target, max_nonce,
+					&hashes_done);
+			break;
+		case ALGO_SIB:
+			rc = scanhash_sib(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
 			break;
 		case ALGO_SKEIN:
@@ -2146,7 +2187,7 @@ start:
 	}
 
 	if (!opt_quiet)
-		applog(LOG_INFO, "Longpoll enabled for %s", lp_url);
+		applog(LOG_BLUE, "Long-polling on %s", lp_url);
 
 	while (1) {
 		json_t *val;
@@ -2183,6 +2224,7 @@ start:
 		if (likely(val)) {
 			bool rc;
 			char *start_job_id;
+			double start_diff = 0.0;
 			json_t *res, *soval;
 			res = json_object_get(val, "result");
 			if (!jsonrpc_2) {
@@ -2196,9 +2238,19 @@ start:
 			else
 				rc = work_decode(res, &g_work);
 			if (rc) {
-				if (g_work.job_id && strcmp(start_job_id, g_work.job_id)) {
-					if (opt_debug)
-						applog(LOG_BLUE, "Longpoll pushed new work");
+				bool newblock = g_work.job_id && strcmp(start_job_id, g_work.job_id);
+				newblock |= (start_diff != net_diff); // the best is the height but... longpoll...
+				if (newblock) {
+					start_diff = net_diff;
+					if (!opt_quiet) {
+						char netinfo[64] = { 0 };
+						if (net_diff > 0.) {
+							sprintf(netinfo, ", diff %.3f", net_diff);
+						}
+						if (opt_showdiff)
+							sprintf(&netinfo[strlen(netinfo)], ", target %.3f", g_work.targetdiff);
+						applog(LOG_BLUE, "%s detected new block%s", short_url, netinfo);
+					}
 					time(&g_work_time);
 					restart_threads();
 				}
@@ -2345,9 +2397,16 @@ static void *stratum_thread(void *userdata)
 			pthread_mutex_unlock(&g_work_lock);
 
 			if (stratum.job.clean || jsonrpc_2) {
-				if (!opt_quiet)
-					applog(LOG_BLUE, "%s %s block %d", short_url, algo_names[opt_algo],
-						stratum.bloc_height);
+				static uint32_t last_bloc_height;
+				if (!opt_quiet) {
+					last_bloc_height = stratum.bloc_height;
+					if (net_diff > 0.)
+						applog(LOG_BLUE, "%s block %d, diff %.3f", algo_names[opt_algo],
+							stratum.bloc_height, net_diff);
+					else
+						applog(LOG_BLUE, "%s %s block %d", short_url, algo_names[opt_algo],
+							stratum.bloc_height);
+				}
 				restart_threads();
 			} else if (opt_debug && !opt_quiet) {
 					applog(LOG_BLUE, "%s asks job %d for block %d", short_url,
@@ -2490,6 +2549,8 @@ void parse_arg(int key, char *arg)
 				i = opt_algo = ALGO_LYRA2;
 			else if (!strcasecmp("lyra2v2", arg))
 				i = opt_algo = ALGO_LYRA2REV2;
+			else if (!strcasecmp("sibcoin", arg))
+				i = opt_algo = ALGO_SIB;
 			else if (!strcasecmp("ziftr", arg))
 				i = opt_algo = ALGO_ZR5;
 			else
@@ -2732,7 +2793,10 @@ void parse_arg(int key, char *arg)
 	case 1012:
 		opt_extranonce = false;
 		break;
-	case 1013:			/* --coinbase-addr */
+	case 1013:
+		opt_showdiff = true;
+		break;
+	case 1016:			/* --coinbase-addr */
 		pk_script_size = address_to_script(pk_script, sizeof(pk_script), arg);
 		if (!pk_script_size) {
 			fprintf(stderr, "invalid address -- '%s'\n", arg);

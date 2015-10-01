@@ -197,6 +197,7 @@
     <ClCompile Include="lyra2\Sponge.c" />
     <ClCompile Include="crypto\blake2s.c" />
     <ClCompile Include="sha3\sph_hefty1.c" />
+    <ClCompile Include="uint256.cpp" />
     <ClCompile Include="util.c">
       <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
     </ClCompile>
@@ -229,6 +230,7 @@
     <ClCompile Include="algo\scrypt.c">
       <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
     </ClCompile>
+    <ClCompile Include="algo\sibcoin.c" />
     <ClCompile Include="algo\skein.c" />
     <ClCompile Include="algo\skein2.c" />
     <ClCompile Include="algo\x11.c" />
@@ -260,6 +262,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="sha3\sph_whirlpool.c" />
+    <ClCompile Include="sha3\sph_gost.c" />
     <ClCompile Include="sha3\md_helper.c">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
@@ -288,6 +291,7 @@
     <ClInclude Include="lyra2\Lyra2.h" />
     <ClInclude Include="lyra2\Sponge.h" />
     <ClInclude Include="miner.h" />
+    <ClInclude Include="uint256.h" />
     <ClInclude Include="res\resource.h" />
     <ClInclude Include="scryptjane\scrypt-jane-chacha.h" />
     <ClInclude Include="scryptjane\scrypt-jane-hash.h" />
@@ -313,6 +317,7 @@
     <ClInclude Include="sha3\sph_cubehash.h" />
     <ClInclude Include="sha3\sph_echo.h" />
     <ClInclude Include="sha3\sph_fugue.h" />
+    <ClInclude Include="sha3\sph_gost.h" />
     <ClInclude Include="sha3\sph_groestl.h" />
     <ClInclude Include="sha3\sph_haval.h" />
     <ClInclude Include="sha3\sph_hefty1.h" />

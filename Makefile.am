@@ -18,6 +18,7 @@ dist_man_MANS	= cpuminer.1
 cpuminer_SOURCES = \
   cpu-miner.c util.c \
   api.c sysinfos.c \
+  uint256.cpp \
   sha3/sph_keccak.c \
   sha3/sph_hefty1.c \
   sha3/sph_groestl.c \
@@ -33,6 +34,7 @@ cpuminer_SOURCES = \
   sha3/sph_echo.c \
   sha3/sph_hamsi.c \
   sha3/sph_fugue.c \
+  sha3/sph_gost.c \
   sha3/sph_sha2.c \
   sha3/sph_sha2big.c \
   sha3/sph_shabal.c \
@@ -73,6 +75,7 @@ cpuminer_SOURCES = \
   algo/qubit.c \
   algo/scrypt.c \
   algo/sha2.c \
+  algo/sibcoin.c \
   algo/skein.c \
   algo/skein2.c \
   algo/s3.c \

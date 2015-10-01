@@ -55,6 +55,7 @@ Algorithms
  * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
  * ? luffa (Joincoin, Doomcoin)
  * ? shavite3 (INKcoin)
+ * ? sib X11 + gost (SibCoin)
 
 #### Planned support for
  * *scrypt-jane* (YaCoin, CopperBars, Pennies, Tickets, etc..)

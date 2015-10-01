@@ -935,6 +935,33 @@ void diff_to_target(uint32_t *target, double diff)
 	}
 }
 
+// Only used by stratum pools
+void work_set_target(struct work* work, double diff)
+{
+	diff_to_target(work->target, diff);
+	work->targetdiff = diff;
+}
+
+// Only used by longpoll pools
+double target_to_diff(uint32_t* target)
+{
+	uchar* tgt = (uchar*) target;
+	uint64_t m =
+		(uint64_t)tgt[29] << 56 |
+		(uint64_t)tgt[28] << 48 |
+		(uint64_t)tgt[27] << 40 |
+		(uint64_t)tgt[26] << 32 |
+		(uint64_t)tgt[25] << 24 |
+		(uint64_t)tgt[24] << 16 |
+		(uint64_t)tgt[23] << 8  |
+		(uint64_t)tgt[22] << 0;
+
+	if (!m)
+		return 0.;
+	else
+		return (double)0x0000ffff00000000/m;
+}
+
 #ifdef WIN32
 #define socket_blocks() (WSAGetLastError() == WSAEWOULDBLOCK)
 #else
@@ -2116,6 +2143,9 @@ void print_hash_tests(void)
 
 	sha256d((uint8_t*) &hash[0], (uint8_t*)&buf[0], 64);
 	printpfx("sha256d", hash);
+
+	sibhash(&hash[0], &buf[0]);
+	printpfx("sib", hash);
 
 	skeinhash(&hash[0], &buf[0]);
 	printpfx("skein", hash);

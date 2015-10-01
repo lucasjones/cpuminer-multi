@@ -266,6 +266,9 @@ int scanhash_pluck(int thr_id, uint32_t *pdata,
 int scanhash_qubit(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
+int scanhash_sib(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
+                            uint32_t max_nonce, uint64_t *hashes_done);
+
 int scanhash_skein(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
@@ -332,6 +335,7 @@ struct work_restart {
 extern bool opt_debug;
 extern bool opt_benchmark;
 extern bool opt_protocol;
+extern bool opt_showdiff;
 extern bool opt_quiet;
 extern bool opt_redirect;
 extern int opt_timeout;
@@ -409,7 +413,12 @@ int varint_encode(unsigned char *p, uint64_t n);
 size_t address_to_script(unsigned char *out, size_t outsz, const char *addr);
 int timeval_subtract(struct timeval *result, struct timeval *x, struct timeval *y);
 bool fulltest(const uint32_t *hash, const uint32_t *target);
-void diff_to_target(uint32_t *target, double diff);
+void work_set_target(struct work* work, double diff);
+double target_to_diff(uint32_t* target);
+
+double hash_target_ratio(uint32_t* hash, uint32_t* target);
+void work_set_target_ratio(uint32_t* hash, uint32_t* target, struct work* work);
+
 void get_currentalgo(char* buf, int sz);
 bool has_aes_ni(void);
 void bestcpu_feature(char *outbuf, int maxsz);
@@ -418,6 +427,10 @@ float cpu_temp(int core);
 struct work {
 	uint32_t data[32];
 	uint32_t target[8];
+
+	double targetdiff;
+	double shareratio;
+	double sharediff;
 
 	int height;
 	char *txs;
@@ -455,6 +468,7 @@ struct stratum_ctx {
 	pthread_mutex_t sock_lock;
 
 	double next_diff;
+	double sharediff;
 
 	char *session_id;
 	size_t xnonce1_size;
@@ -534,6 +548,7 @@ void nist5hash(void *output, const void *input);
 void pluck_hash(uint32_t *hash, const uint32_t *data, uchar *hashbuffer, const int N);
 void pentablakehash(void *output, const void *input);
 void qubithash(void *output, const void *input);
+void sibhash(void *output, const void *input);
 void skeinhash(void *state, const void *input);
 void skein2hash(void *state, const void *input);
 void s3hash(void *output, const void *input);
