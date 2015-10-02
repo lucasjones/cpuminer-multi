@@ -145,6 +145,7 @@ AC_ARG_WITH([curl],
 
 if test -n "$with_curl" ; then
    LIBCURL_CFLAGS="$LIBCURL_CFLAGS -I$with_curl/include"
+   LIBCURL_CPPFLAGS="$LIBCURL_CPPFLAGS -I$with_curl/include"
    LIBCURL_LDFLAGS="-L$with_curl/lib $LIBCURL_LDFLAGS"
    LIBCURL="-lcurl -lz"
 fi
@@ -155,11 +156,13 @@ AC_ARG_WITH([crypto],
 
 if test -n "$with_crypto" ; then
    LIBCURL_CFLAGS="$LIBCURL_CFLAGS -I$with_crypto/include"
+   LIBCURL_CPPFLAGS="$LIBCURL_CPPFLAGS -I$with_crypto/include"
    LIBCURL_LDFLAGS="-L$with_crypto/lib $LIBCURL_LDFLAGS"
    LIBCURL="$LIBCURL -lssl -lcrypto"
 fi
 
 CFLAGS="$CFLAGS $LIBCURL_CFLAGS"
+CPPFLAGS="$CPPFLAGS $LIBCURL_CPPFLAGS"
 LDFLAGS="$LDFLAGS $LIBCURL_LDFLAGS"
 
 #AC_CHECK_LIB([z],[gzopen],[],[])

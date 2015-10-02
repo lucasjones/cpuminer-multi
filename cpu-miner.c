@@ -504,7 +504,6 @@ static void calc_network_diff(struct work *work)
 	uint32_t bits = (nbits & 0xffffff);
 	int16_t shift = (swab32(nbits) & 0xff); // 0x1c = 28
 
-	uint64_t diffone = 0x0000FFFF00000000ull;
 	double d = (double)0x0000ffff / (double)bits;
 
 	for (int m=shift; m < 29; m++) d *= 256.0;
@@ -2398,7 +2397,7 @@ static void *stratum_thread(void *userdata)
 
 			if (stratum.job.clean || jsonrpc_2) {
 				static uint32_t last_bloc_height;
-				if (!opt_quiet) {
+				if (!opt_quiet && last_bloc_height != stratum.bloc_height) {
 					last_bloc_height = stratum.bloc_height;
 					if (net_diff > 0.)
 						applog(LOG_BLUE, "%s block %d, diff %.3f", algo_names[opt_algo],

@@ -6,7 +6,9 @@
 #include <windows.h>
 #include <time.h>
 
+#ifndef localtime_r
 #define localtime_r(src, dst) localtime_s(dst, src)
+#endif
 
 #define sleep(secs) Sleep((secs) * 1000)
 

@@ -3,6 +3,7 @@
   <ItemGroup>
     <ClCompile Include="cpu-miner.c" />
     <ClCompile Include="util.c" />
+    <ClCompile Include="uint256.cpp" />
     <ClCompile Include="sha3\sph_blake.c">
       <Filter>sph</Filter>
     </ClCompile>
@@ -64,6 +65,9 @@
       <Filter>sph</Filter>
     </ClCompile>
     <ClCompile Include="sha3\aes_helper.c">
+      <Filter>sph</Filter>
+    </ClCompile>
+    <ClCompile Include="sha3\sph_gost.c">
       <Filter>sph</Filter>
     </ClCompile>
     <ClCompile Include="compat\winansi.c">
@@ -266,6 +270,9 @@
     <ClCompile Include="algo\axiom.c">
       <Filter>algo</Filter>
     </ClCompile>
+    <ClCompile Include="algo\sibcoin.c">
+      <Filter>algo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sha3\sph_blake.h">
@@ -322,6 +329,9 @@
     <ClInclude Include="sha3\sph_whirlpool.h">
       <Filter>sph</Filter>
     </ClInclude>
+    <ClInclude Include="sha3\sph_gost.h">
+      <Filter>sph</Filter>
+    </ClInclude>
     <ClInclude Include="compat.h">
       <Filter>compat</Filter>
     </ClInclude>
@@ -350,6 +360,9 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="compat\cpuminer-config.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="uint256.h">
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="compat\jansson\jansson.h">

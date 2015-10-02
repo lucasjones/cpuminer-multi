@@ -939,7 +939,7 @@ static void hash_X(unsigned char *IV,const unsigned char *message,unsigned long 
 
 	g_N(N,hash,m);
 	v512[63] = len & 0xFF;
-	v512[62] = len >> 8;
+	v512[62] = (unsigned char) (len >> 8);
 	AddModulo512(N,v512,N);
 
 	AddModulo512(Sigma,m,Sigma);
