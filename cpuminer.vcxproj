@@ -231,6 +231,7 @@
     <ClCompile Include="algo\scrypt.c">
       <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
     </ClCompile>
+    <ClCompile Include="algo\scrypt-jane.c" />
     <ClCompile Include="algo\sibcoin.c" />
     <ClCompile Include="algo\skein.c" />
     <ClCompile Include="algo\skein2.c" />

@@ -77,6 +77,7 @@ cpuminer_SOURCES = \
   algo/pluck.c \
   algo/qubit.c \
   algo/scrypt.c \
+  algo/scrypt-jane.c \
   algo/sha2.c \
   algo/sibcoin.c \
   algo/skein.c \
@@ -117,6 +118,7 @@ cpuminer_CFLAGS   = -Wno-pointer-sign -Wno-pointer-to-int-cast $(disable_flags)
 
 if HAVE_WINDOWS
 cpuminer_CFLAGS += -Wl,--stack,10485760
+cpuminer_LDADD += -lcrypt32 -lgdi32
 endif
 
 if HAVE_WINDOWS
