@@ -79,6 +79,7 @@ enum algos {
 	ALGO_NEOSCRYPT,   /* NeoScrypt(128, 2, 1) with Salsa20/20 and ChaCha20/20 */
 	ALGO_QUARK,       /* Quark */
 	ALGO_AXIOM,       /* Shabal 256 Memohash */
+	ALGO_BASTION,
 	ALGO_BLAKE,       /* Blake 256 */
 	ALGO_BLAKECOIN,   /* Simplified 8 rounds Blake 256 */
 	ALGO_BLAKE2S,     /* Blake2s */
@@ -119,6 +120,7 @@ static const char *algo_names[] = {
 	"neoscrypt",
 	"quark",
 	"axiom",
+	"bastion",
 	"blake",
 	"blakecoin",
 	"blake2s",
@@ -1961,6 +1963,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_AXIOM:
 			rc = scanhash_axiom(thr_id, work.data, work.target, max_nonce, &hashes_done);
+			break;
+		case ALGO_BASTION:
+			rc = scanhash_bastion(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_BLAKE:
 			rc = scanhash_blake(thr_id, work.data, work.target, max_nonce,

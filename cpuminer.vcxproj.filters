@@ -165,6 +165,9 @@
     <ClCompile Include="compat\jansson\strconv.c">
       <Filter>jansson</Filter>
     </ClCompile>
+    <ClCompile Include="algo\bastion.c">
+      <Filter>algo</Filter>
+    </ClCompile>
     <ClCompile Include="algo\blake.c">
       <Filter>algo</Filter>
     </ClCompile>

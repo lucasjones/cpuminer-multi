@@ -2070,6 +2070,9 @@ void print_hash_tests(void)
 	axiomhash(&hash[0], &buf[0]);
 	printpfx("axiom", hash);
 
+	bastionhash(&hash[0], &buf[0]);
+	printpfx("bastion", hash);
+
 	blakehash(&hash[0], &buf[0]);
 	printpfx("blake", hash);
 
