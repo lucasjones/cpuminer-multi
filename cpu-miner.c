@@ -108,6 +108,7 @@ enum algos {
 	ALGO_X13,         /* X13 */
 	ALGO_X14,         /* X14 */
 	ALGO_X15,         /* X15 Whirlpool */
+	ALGO_YESCRYPT,
 	ALGO_ZR5,
 	ALGO_COUNT
 };
@@ -149,6 +150,7 @@ static const char *algo_names[] = {
 	"x13",
 	"x14",
 	"x15",
+	"yescrypt",
 	"zr5",
 	"\0"
 };
@@ -288,6 +290,7 @@ Options:\n\
                           x13          X13\n\
                           x14          X14\n\
                           x15          X15\n\
+                          yescrypt     Yescrypt\n\
                           zr5          ZR5\n\
   -o, --url=URL         URL of mining server\n\
   -O, --userpass=U:P    username:password pair for mining server\n\
@@ -1602,6 +1605,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_SCRYPT:
 			case ALGO_NEOSCRYPT:
 			case ALGO_PLUCK:
+			case ALGO_YESCRYPT:
 				work_set_target(work, sctx->job.diff / (65536.0 * opt_diff_factor));
 				break;
 			case ALGO_FRESH:
@@ -2065,6 +2069,9 @@ static void *miner_thread(void *userdata)
 		case ALGO_X15:
 			rc = scanhash_x15(thr_id, work.data, work.target, max_nonce,
 					&hashes_done);
+			break;
+		case ALGO_YESCRYPT:
+			rc = scanhash_yescrypt(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_ZR5:
 			rc = scanhash_zr5(thr_id, &work, max_nonce, &hashes_done);

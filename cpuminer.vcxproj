@@ -238,7 +238,11 @@
     <ClCompile Include="algo\x13.c" />
     <ClCompile Include="algo\x14.c" />
     <ClCompile Include="algo\x15.c" />
+    <ClCompile Include="algo\yescrypt.c" />
     <ClCompile Include="algo\zr5.c" />
+    <ClCompile Include="yescrypt\yescrypt-best.c" />
+    <ClCompile Include="yescrypt\yescrypt-common.c" />
+    <ClCompile Include="yescrypt\sha256_Y.c" />
     <ClCompile Include="sha3\aes_helper.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -333,6 +337,10 @@
     <ClInclude Include="sha3\sph_hamsi.h" />
     <ClInclude Include="sha3\sph_types.h" />
     <ClInclude Include="sha3\sph_whirlpool.h" />
+    <ClInclude Include="yescrypt\sha256_Y.h" />
+    <ClInclude Include="yescrypt\sysendian.h" />
+    <ClInclude Include="yescrypt\yescrypt-platform.h" />
+    <ClInclude Include="yescrypt\yescrypt.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="asm\neoscrypt_asm.S">

@@ -292,6 +292,8 @@ int scanhash_x14(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 int scanhash_x15(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
                             uint32_t max_nonce, uint64_t *hashes_done);
 
+int scanhash_yescrypt(int thr_id, struct work *work, uint64_t max_nonce, uint64_t *hashes_done);
+
 int scanhash_zr5(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 
 int scanhash_cryptolight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
@@ -419,7 +421,7 @@ void work_set_target(struct work* work, double diff);
 double target_to_diff(uint32_t* target);
 
 double hash_target_ratio(uint32_t* hash, uint32_t* target);
-void work_set_target_ratio(uint32_t* hash, uint32_t* target, struct work* work);
+void work_set_target_ratio(struct work* work, uint32_t* hash);
 
 void get_currentalgo(char* buf, int sz);
 bool has_aes_ni(void);

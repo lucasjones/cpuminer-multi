@@ -31,6 +31,12 @@
     <ClCompile Include="sha3\sph_hamsi_helper.c">
       <Filter>sph</Filter>
     </ClCompile>
+    <ClCompile Include="sha3\sph_haval.c">
+      <Filter>sph</Filter>
+    </ClCompile>
+    <ClCompile Include="sha3\sph_hefty1.c">
+      <Filter>sph</Filter>
+    </ClCompile>
     <ClCompile Include="sha3\sph_jh.c">
       <Filter>sph</Filter>
     </ClCompile>
@@ -123,9 +129,6 @@
     </ClCompile>
     <ClCompile Include="crypto\c_keccak.c">
       <Filter>crypto</Filter>
-    </ClCompile>
-    <ClCompile Include="sha3\sph_hefty1.c">
-      <Filter>sph</Filter>
     </ClCompile>
     <ClCompile Include="lyra2\Lyra2.c">
       <Filter>crypto</Filter>
@@ -276,6 +279,18 @@
     <ClCompile Include="algo\sibcoin.c">
       <Filter>algo</Filter>
     </ClCompile>
+    <ClCompile Include="algo\yescrypt.c">
+      <Filter>algo</Filter>
+    </ClCompile>
+    <ClCompile Include="yescrypt\yescrypt-common.c">
+      <Filter>yescrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="yescrypt\yescrypt-best.c">
+      <Filter>yescrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="yescrypt\sha256_Y.c">
+      <Filter>yescrypt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sha3\sph_blake.h">
@@ -300,6 +315,9 @@
       <Filter>sph</Filter>
     </ClInclude>
     <ClInclude Include="sha3\sph_haval.h">
+      <Filter>sph</Filter>
+    </ClInclude>
+    <ClInclude Include="sha3\sph_hefty1.h">
       <Filter>sph</Filter>
     </ClInclude>
     <ClInclude Include="sha3\sph_jh.h">
@@ -392,9 +410,6 @@
     <ClInclude Include="crypto\c_keccak.h">
       <Filter>crypto</Filter>
     </ClInclude>
-    <ClInclude Include="sha3\sph_hefty1.h">
-      <Filter>sph</Filter>
-    </ClInclude>
     <ClInclude Include="crypto\oaes_lib.h">
       <Filter>crypto</Filter>
     </ClInclude>
@@ -470,6 +485,18 @@
     <ClInclude Include="res\resource.h">
       <Filter>res</Filter>
     </ClInclude>
+    <ClInclude Include="yescrypt\sha256_Y.h">
+      <Filter>yescrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="yescrypt\sysendian.h">
+      <Filter>yescrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="yescrypt\yescrypt.h">
+      <Filter>yescrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="yescrypt\yescrypt-platform.h">
+      <Filter>yescrypt</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="sph">
@@ -507,6 +534,9 @@
     </Filter>
     <Filter Include="res">
       <UniqueIdentifier>{5969f6d8-98c0-49c9-8e4c-51c54b5f0e16}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="yescrypt">
+      <UniqueIdentifier>{678c0f76-3cd5-418b-bc6b-84a10d81f789}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

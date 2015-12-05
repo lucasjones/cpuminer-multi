@@ -5,6 +5,8 @@ Version 1.2 (Tanguy Pruvot)
 - Algorithm parameter is now case insensitive
 - Drop anime algo (dead coin)
 - Add Sib(coin) algo
+- Add Bastion algo
+- Add Yescrypt algo
 - Compute and show network diff in pools too
 - Checkup on arm, tested ok on Tegra K1 (CyanogenMod 12.1)
 
