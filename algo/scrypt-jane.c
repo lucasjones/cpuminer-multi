@@ -10,6 +10,10 @@
 
 /* Only the instrinsics versions are optimized for hard-coded values - mikaelh */
 #define CPU_X86_FORCE_INTRINSICS
+
+#undef SCRYPT_KECCAK512
+#undef SCRYPT_CHACHA
+#undef SCRYPT_CHOOSE_COMPILETIME
 #define SCRYPT_KECCAK512
 #define SCRYPT_CHACHA
 #define SCRYPT_CHOOSE_COMPILETIME
