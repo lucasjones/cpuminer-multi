@@ -6,7 +6,7 @@ Version 1.2 (Tanguy Pruvot)
 - Drop anime algo (dead coin)
 - Add Sib(coin) algo
 - Add Bastion algo
-- Add Yescrypt algo
+- Add Yescrypt and scrypt-jane algos
 - Compute and show network diff in pools too
 - Checkup on arm, tested ok on Tegra K1 (CyanogenMod 12.1)
 

@@ -72,8 +72,6 @@ struct workio_cmd {
 };
 
 enum algos {
-	ALGO_SCRYPT,      /* scrypt */
-	ALGO_SHA256D,     /* SHA-256d */
 	ALGO_KECCAK,      /* Keccak */
 	ALGO_HEAVY,       /* Heavy */
 	ALGO_NEOSCRYPT,   /* NeoScrypt(128, 2, 1) with Salsa20/20 and ChaCha20/20 */
@@ -99,7 +97,10 @@ enum algos {
 	ALGO_PENTABLAKE,  /* Pentablake */
 	ALGO_PLUCK,       /* Pluck (Supcoin) */
 	ALGO_QUBIT,       /* Qubit */
+	ALGO_SCRYPT,      /* scrypt */
+	ALGO_SCRYPTJANE,  /* Chacha */
 	ALGO_SHAVITE3,    /* Shavite3 */
+	ALGO_SHA256D,     /* SHA-256d */
 	ALGO_SIB,         /* X11 + gost (Sibcoin) */
 	ALGO_SKEIN,       /* Skein */
 	ALGO_SKEIN2,      /* Double skein (Woodcoin) */
@@ -110,13 +111,10 @@ enum algos {
 	ALGO_X15,         /* X15 Whirlpool */
 	ALGO_YESCRYPT,
 	ALGO_ZR5,
-	ALGO_SCRYPTJANE,
 	ALGO_COUNT
 };
 
 static const char *algo_names[] = {
-	"scrypt",
-	"sha256d",
 	"keccak",
 	"heavy",
 	"neoscrypt",
@@ -142,7 +140,10 @@ static const char *algo_names[] = {
 	"pentablake",
 	"pluck",
 	"qubit",
+	"scrypt",
+	"scrypt-jane",
 	"shavite3",
+	"sha256d",
 	"sib",
 	"skein",
 	"skein2",
@@ -153,7 +154,6 @@ static const char *algo_names[] = {
 	"x15",
 	"yescrypt",
 	"zr5",
-	"scryptjane",
 	"\0"
 };
 
@@ -256,9 +256,6 @@ static char const usage[] = "\
 Usage: " PACKAGE_NAME " [OPTIONS]\n\
 Options:\n\
   -a, --algo=ALGO       specify the algorithm to use\n\
-                          scrypt       scrypt(1024, 1, 1) (default)\n\
-                          scrypt:N     scrypt(N, 1, 1)\n\
-                          sha256d      SHA-256d\n\
                           axiom        Shabal-256 MemoHash\n\
                           blake        Blake-256 (SFR)\n\
                           blakecoin    Blakecoin\n\
@@ -283,7 +280,11 @@ Options:\n\
                           pentablake   Pentablake\n\
                           quark        Quark\n\
                           qubit        Qubit\n\
+                          scrypt       scrypt(1024, 1, 1) (default)\n\
+                          scrypt:N     scrypt(N, 1, 1)\n\
+                          scrypt-jane:N (with N factor from 4 to 30)\n\
                           shavite3     Shavite3\n\
+                          sha256d      SHA-256d\n\
                           sib          X11 + gost (SibCoin)\n\
                           skein        Skein+Sha (Skeincoin)\n\
                           skein2       Double Skein (Woodcoin)\n\
@@ -294,7 +295,6 @@ Options:\n\
                           x15          X15\n\
                           yescrypt     Yescrypt\n\
                           zr5          ZR5\n\
-                          scryptjane:N\n\
   -o, --url=URL         URL of mining server\n\
   -O, --userpass=U:P    username:password pair for mining server\n\
   -u, --user=USERNAME   username for mining server\n\
@@ -2559,7 +2559,16 @@ void parse_arg(int key, char *arg)
 				}
 			}
 		}
+
 		if (i == ALGO_COUNT) {
+
+			if (strstr(arg, ":")) {
+				// pick and strip the optional factor
+				char *nf = strstr(arg, ":");
+				opt_scrypt_n = strtol(&nf[1], NULL, 10);
+				*nf = '\0';
+			}
+
 			// some aliases...
 			if (!strcasecmp("blake2", arg))
 				i = opt_algo = ALGO_BLAKE2S;
@@ -2575,6 +2584,8 @@ void parse_arg(int key, char *arg)
 				i = opt_algo = ALGO_LYRA2;
 			else if (!strcasecmp("lyra2v2", arg))
 				i = opt_algo = ALGO_LYRA2REV2;
+			else if (!strcasecmp("scryptjane", arg))
+				i = opt_algo = ALGO_SCRYPTJANE;
 			else if (!strcasecmp("sibcoin", arg))
 				i = opt_algo = ALGO_SIB;
 			else if (!strcasecmp("ziftr", arg))
