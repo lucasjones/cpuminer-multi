@@ -2142,6 +2142,15 @@ void print_hash_tests(void)
 	qubithash(&hash[0], &buf[0]);
 	printpfx("qubit", hash);
 
+	scrypthash(&hash[0], &buf[0], 1024);
+	printpfx("scrypt", hash);
+
+	scrypthash(&hash[0], &buf[0], 2048);
+	printpfx("scrypt:2048", hash);
+
+	scryptjanehash(&hash[0], &buf[0], 9);
+	printpfx("scrypt-jane", hash);
+
 	inkhash(&hash[0], &buf[0]);
 	printpfx("shavite3", hash);
 
@@ -2171,6 +2180,9 @@ void print_hash_tests(void)
 
 	x15hash(&hash[0], &buf[0]);
 	printpfx("x15", hash);
+
+	yescrypthash(&hash[0], &buf[0]);
+	printpfx("yescrypt", hash);
 
 	//zr5hash(&hash[0], &buf[0]);
 	zr5hash_pok(&hash[0], (uint32_t*) &buf[0]);

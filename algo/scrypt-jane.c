@@ -188,3 +188,32 @@ int scanhash_scryptjane(int Nfactor, int thr_id, uint32_t *pdata, const uint32_t
 	scrypt_free(&YX);
 	return 0;
 }
+
+/* simple cpu test (util.c) */
+void scryptjanehash(void *output, const void *input, uint32_t Nfactor)
+{
+	scrypt_aligned_alloc YX, V;
+	uint8_t *X, *Y;
+	uint32_t chunk_bytes;
+	uint32_t N = (1 << (Nfactor + 1));
+	const uint32_t r = SCRYPT_R;
+	const uint32_t p = SCRYPT_P;
+
+	memset(output, 0, 32);
+
+	chunk_bytes = SCRYPT_BLOCK_BYTES * r * 2;
+	if (!scrypt_alloc((uint64_t)N * chunk_bytes, &V)) return;
+	if (!scrypt_alloc((p + 1) * chunk_bytes, &YX)) {
+		scrypt_free(&V);
+		return;
+	}
+
+	Y = YX.ptr;
+	X = Y + chunk_bytes;
+
+	scrypt_N_1_1((unsigned char*)input, 80, (unsigned char*)input, 80,
+		N, (unsigned char*)output, 32, X, Y, V.ptr);
+
+	scrypt_free(&V);
+	scrypt_free(&YX);
+}

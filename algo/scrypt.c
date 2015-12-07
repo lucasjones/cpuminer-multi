@@ -753,3 +753,21 @@ extern int scanhash_scrypt(int thr_id, uint32_t *pdata,
 	pdata[19] = n;
 	return 0;
 }
+
+/* simple cpu test (util.c) */
+void scrypthash(void *output, const void *input, uint32_t N)
+{
+	uint32_t midstate[8];
+	char *scratchbuf = scrypt_buffer_alloc(N);
+
+	memset(output, 0, 32);
+	if (!scratchbuf)
+		return;
+
+	sha256_init(midstate);
+	sha256_transform(midstate, input, 0);
+
+	scrypt_1024_1_1_256((uint32_t*)input, (uint32_t*)output, midstate, scratchbuf, N);
+
+	free(scratchbuf);
+}

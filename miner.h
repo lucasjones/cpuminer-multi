@@ -556,6 +556,8 @@ void nist5hash(void *output, const void *input);
 void pluck_hash(uint32_t *hash, const uint32_t *data, uchar *hashbuffer, const int N);
 void pentablakehash(void *output, const void *input);
 void qubithash(void *output, const void *input);
+void scrypthash(void *output, const void *input, uint32_t N);
+void scryptjanehash(void *output, const void *input, uint32_t Nfactor);
 void sibhash(void *output, const void *input);
 void skeinhash(void *state, const void *input);
 void skein2hash(void *state, const void *input);
@@ -565,6 +567,7 @@ void x13hash(void *output, const void *input);
 void x14hash(void *output, const void *input);
 void x15hash(void *output, const void *input);
 void zr5hash(void *output, const void *input);
+void yescrypthash(void *output, const void *input);
 void zr5hash_pok(void *output, uint32_t *pdata);
 
 
