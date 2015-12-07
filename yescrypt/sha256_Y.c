@@ -32,6 +32,7 @@
 #include "sysendian.h"
 
 #include "sha256_Y.h"
+#include "compat.h"
 
 /*
  * Encode a length len/4 vector of (uint32_t) into a length len vector of
@@ -91,8 +92,7 @@ be32dec_vect(uint32_t *dst, const unsigned char *src, size_t len)
 static void
 SHA256_Transform(uint32_t * state, const unsigned char block[64])
 {
-	uint32_t W[64];
-	uint32_t S[8];
+	uint32_t _ALIGN(128) W[64], S[8];
 	uint32_t t0, t1;
 	int i;
 
@@ -173,11 +173,12 @@ SHA256_Transform(uint32_t * state, const unsigned char block[64])
 	/* 4. Mix local working variables into global state */
 	for (i = 0; i < 8; i++)
 		state[i] += S[i];
-
+#if 0
 	/* Clean the stack. */
 	memset(W, 0, 256);
 	memset(S, 0, 32);
 	t0 = t1 = 0;
+#endif
 }
 
 static unsigned char PAD[64] = {
@@ -322,7 +323,7 @@ HMAC_SHA256_Init_Y(HMAC_SHA256_CTX_Y * ctx, const void * _K, size_t Klen)
 	SHA256_Update_Y(&ctx->octx, pad, 64);
 
 	/* Clean the stack. */
-	memset(khash, 0, 32);
+	//memset(khash, 0, 32);
 }
 
 /* Add bytes to the HMAC-SHA256 operation. */
@@ -350,7 +351,7 @@ HMAC_SHA256_Final_Y(unsigned char digest[32], HMAC_SHA256_CTX_Y * ctx)
 	SHA256_Final_Y(digest, &ctx->octx);
 
 	/* Clean the stack. */
-	memset(ihash, 0, 32);
+	//memset(ihash, 0, 32);
 }
 
 /**
@@ -363,13 +364,12 @@ PBKDF2_SHA256(const uint8_t * passwd, size_t passwdlen, const uint8_t * salt,
     size_t saltlen, uint64_t c, uint8_t * buf, size_t dkLen)
 {
 	HMAC_SHA256_CTX_Y PShctx, hctx;
-	size_t i;
+	uint8_t _ALIGN(128) T[32];
+	uint8_t _ALIGN(128) U[32];
 	uint8_t ivec[4];
-	uint8_t U[32];
-	uint8_t T[32];
+	size_t i, clen;
 	uint64_t j;
 	int k;
-	size_t clen;
 
 	/* Compute HMAC state after processing P and S. */
 	HMAC_SHA256_Init_Y(&PShctx, passwd, passwdlen);
@@ -407,5 +407,5 @@ PBKDF2_SHA256(const uint8_t * passwd, size_t passwdlen, const uint8_t * salt,
 	}
 
 	/* Clean PShctx, since we never called _Final on it. */
-	memset(&PShctx, 0, sizeof(HMAC_SHA256_CTX_Y));
+	//memset(&PShctx, 0, sizeof(HMAC_SHA256_CTX_Y));
 }

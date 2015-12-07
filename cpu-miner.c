@@ -1899,6 +1899,7 @@ static void *miner_thread(void *userdata)
 				break;
 			case ALGO_DROP:
 			case ALGO_PLUCK:
+			case ALGO_YESCRYPT:
 				max64 = 0x1ff;
 				break;
 			case ALGO_LYRA2:

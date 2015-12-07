@@ -51,8 +51,9 @@
 #include "sysendian.h"
 
 #include "yescrypt.h"
-
 #include "yescrypt-platform.h"
+
+#include "compat.h"
 
 #if __STDC_VERSION__ >= 199901L
 /* have restrict */
@@ -309,7 +310,7 @@ blockmix_salsa8(const salsa20_blk_t *restrict Bin,
 	X2 = _mm_xor_si128(X2, (in)[2]); \
 	X3 = _mm_xor_si128(X3, (in)[3]);
 
-#define OUT(out) \
+#define XOUT(out) \
 	(out)[0] = X0; \
 	(out)[1] = X1; \
 	(out)[2] = X2; \
@@ -359,7 +360,7 @@ blockmix(const salsa20_blk_t *restrict Bin, salsa20_blk_t *restrict Bout,
 		XOR4(Bin[i].q)
 		PWXFORM
 		/* B'_i <-- X */
-		OUT(Bout[i].q)
+		XOUT(Bout[i].q)
 	}
 
 	/* Last iteration of the loop above */
@@ -497,7 +498,7 @@ blockmix_xor(const salsa20_blk_t *restrict Bin1,
 		XOR4(Bin2[i].q)
 		PWXFORM
 		/* B'_i <-- X */
-		OUT(Bout[i].q)
+		XOUT(Bout[i].q)
 	}
 
 	/* Last iteration of the loop above */
@@ -621,7 +622,7 @@ blockmix_xor_save(const salsa20_blk_t *restrict Bin1,
 		XOR4_Y
 		PWXFORM
 		/* B'_i <-- X */
-		OUT(Bout[i].q)
+		XOUT(Bout[i].q)
 	}
 
 	/* Last iteration of the loop above */
@@ -1151,12 +1152,12 @@ yescrypt_kdf(const yescrypt_shared_t * shared, yescrypt_local_t * local,
     uint64_t N, uint32_t r, uint32_t p, uint32_t t, yescrypt_flags_t flags,
     uint8_t * buf, size_t buflen)
 {
+	uint8_t _ALIGN(128) sha256[32];
 	yescrypt_region_t tmp;
 	uint64_t NROM;
 	size_t B_size, V_size, XY_size, need;
 	uint8_t * B, * S;
 	salsa20_blk_t * V, * XY;
-	uint8_t sha256[32];
 
 	/*
 	 * YESCRYPT_PARALLEL_SMIX is a no-op at p = 1 for its intended purpose,
