@@ -118,7 +118,7 @@ cpuminer_CFLAGS   = -Wno-pointer-sign -Wno-pointer-to-int-cast $(disable_flags)
 
 if HAVE_WINDOWS
 cpuminer_CFLAGS += -Wl,--stack,10485760
-cpuminer_LDADD += -lcrypt32 -lgdi32
+cpuminer_LDADD += -lcrypt32 -lgdi32 -lgcc -lgcc_eh
 endif
 
 if HAVE_WINDOWS

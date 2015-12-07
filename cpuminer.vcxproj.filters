@@ -31,9 +31,6 @@
     <ClCompile Include="sha3\sph_hamsi_helper.c">
       <Filter>sph</Filter>
     </ClCompile>
-    <ClCompile Include="sha3\sph_haval.c">
-      <Filter>sph</Filter>
-    </ClCompile>
     <ClCompile Include="sha3\sph_hefty1.c">
       <Filter>sph</Filter>
     </ClCompile>

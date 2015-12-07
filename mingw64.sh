@@ -9,8 +9,10 @@ extracflags="-O3 -Wall -D_REENTRANT -fmerge-all-constants" # -funroll-loops -fva
 # gcc 4.8+
 # extracflags="$extracflags -Ofast -fuse-linker-plugin -ftree-loop-if-convert-stores" # -flto "
 
+# extracflags="$extracflags -march=native"
+
 # extracflags="-pg -static -fno-inline-small-functions"
-CFLAGS="-DCURL_STATICLIB -DOPENSSL_NO_ASM -DUSE_ASM $extracflags"
+CFLAGS="-DCURL_STATICLIB -DOPENSSL_NO_ASM -DUSE_ASM -static-libgcc $extracflags"
 # CPPFLAGS=""
 
 # icon
