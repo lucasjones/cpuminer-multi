@@ -22,8 +22,10 @@ Algorithms
 #### Currently supported
  * ✓ __scrypt__ (Litecoin, Dogecoin, Feathercoin, ...)
  * ✓ __scrypt:N__
+ * ✓ __scrypt-jane:N__
  * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, ...)
  * ✓ __axiom__ (Axiom Shabal-256 based MemoHash)
+ * ✓ __bastion__ (Joincoin [J])
  * ✓ __blake__ (Saffron [SFR] Blake-256)
  * ✓ __bmw__ (Midnight [MDT] BMW-256)
  * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
@@ -47,6 +49,7 @@ Algorithms
  * ✓ __x13__ (Sherlockcoin, [ACE], [B2B], [GRC], [XHC], ...)
  * ✓ __x14__ (X14, Webcoin [WEB])
  * ✓ __x15__ (RadianceCoin [RCE])
+ * ✓ __yescrypt__ (GlobalBoostY [BSTY], Unitus [UIS])
  * ✓ __zr5__ (Ziftrcoin [ZRC])
 
 #### Implemented, but untested
@@ -85,6 +88,9 @@ _OR_
  * ./configure CFLAGS="*-march=native*" --with-crypto --with-curl
    * # Use -march=native if building for a single machine
  * make
+
+#### Note for Debian/Ubuntu users:
+ * apt-get install autoconf pkg-config libcurl4-openssl-dev libjansson-dev libssl-dev libgmp-dev
 
 #### Notes for AIX users:
  * To build a 64-bit binary, export OBJECT_MODE=64
