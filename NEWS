@@ -8,6 +8,7 @@ Version 1.2 (Tanguy Pruvot)
 - Add Bastion algo
 - Add Yescrypt and scrypt-jane algos
 - Compute and show network diff in pools too
+- Compute Shares diff and count solved blocks
 - Checkup on arm, tested ok on Tegra K1 (CyanogenMod 12.1)
 
 version 1.1 (Tanguy Pruvot)
@@ -46,7 +47,7 @@ Version 1.0.8 (Tanguy Pruvot)
 
 Version 1.0.7 (Tanguy Pruvot)
 - Add NIST5 and QUBIT algos
-- Show current stratum bloc height
+- Show current stratum block height
 - Fix wallet solo mining
 
 Version 1.0.6 (Tanguy Pruvot)

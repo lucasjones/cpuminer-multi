@@ -8,7 +8,7 @@
  * Software Foundation; either version 2 of the License, or (at your option)
  * any later version.  See COPYING for more details.
  */
-#define APIVERSION "1.0"
+#define APIVERSION "1.1"
 
 #ifdef WIN32
 # define  _WINSOCK_DEPRECATED_NO_WARNINGS
@@ -96,6 +96,7 @@ extern char *opt_api_allow;
 extern int opt_api_listen; /* port */
 extern int opt_api_remote;
 extern uint64_t global_hashrate;
+extern uint32_t solved_count;
 extern uint32_t accepted_count;
 extern uint32_t rejected_count;
 
@@ -148,12 +149,12 @@ static char *getsummary(char *params)
 
 	*buffer = '\0';
 	sprintf(buffer, "NAME=%s;VER=%s;API=%s;"
-		"ALGO=%s;CPUS=%d;KHS=%.2f;ACC=%d;REJ=%d;"
+		"ALGO=%s;CPUS=%d;KHS=%.2f;SOLV=%d;ACC=%d;REJ=%d;"
 		"ACCMN=%.3f;DIFF=%.6f;TEMP=%.1f;FAN=%d;FREQ=%d;"
 		"UPTIME=%.0f;TS=%u|",
 		PACKAGE_NAME, PACKAGE_VERSION, APIVERSION,
 		algo, opt_n_threads, (double)global_hashrate / 1000.0,
-		accepted_count, rejected_count, accps, net_diff > 0. ? net_diff : stratum_diff,
+		solved_count, accepted_count, rejected_count, accps, net_diff > 0. ? net_diff : stratum_diff,
 		cpu.cpu_temp, cpu.cpu_fan, cpu.cpu_clock,
 		uptime, (uint32_t) ts);
 	return buffer;

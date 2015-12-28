@@ -222,6 +222,7 @@ pthread_mutex_t applog_lock;
 pthread_mutex_t stats_lock;
 uint32_t zr5_pok = 0;
 
+uint32_t solved_count = 0L;
 uint32_t accepted_count = 0L;
 uint32_t rejected_count = 0L;
 double *thr_hashrates;
@@ -324,7 +325,8 @@ Options:\n\
   -q, --quiet           disable per-thread hashmeter output\n\
       --no-color        disable colored output\n\
   -D, --debug           enable debug output\n\
-  -P, --protocol-dump   verbose dump of protocol-level activities\n"
+  -P, --protocol-dump   verbose dump of protocol-level activities\n\
+      --show-diff       display submitted block and net difficulty\n"
 #ifdef HAVE_SYSLOG_H
 "\
   -S, --syslog          use system log for output messages\n"
@@ -921,11 +923,17 @@ out:
 	return rc;
 }
 
+#define YES "yes!"
+#define YAY "yay!!!"
+#define BOO "booooo"
+
 static int share_result(int result, struct work *work, const char *reason)
 {
+	const char *flag;
+	char suppl[32] = { 0 };
 	char s[345];
-	const char *sres;
 	double hashrate;
+	double sharediff = work ? work->sharediff : stratum.sharediff;
 	int i;
 
 	hashrate = 0.;
@@ -937,10 +945,21 @@ static int share_result(int result, struct work *work, const char *reason)
 
 	global_hashrate = (uint64_t) hashrate;
 
-	if (use_colors)
-		sres = (result ? CL_GRN "yes!" : CL_RED "nooooo");
-	else
-		sres = (result ? "(yes!!!)" : "(nooooo)");
+	if (!net_diff || sharediff < net_diff) {
+		flag = use_colors ?
+			(result ? CL_GRN YES : CL_RED BOO)
+		:	(result ? "(" YES ")" : "(" BOO ")");
+	} else {
+		solved_count++;
+		flag = use_colors ?
+			(result ? CL_GRN YAY : CL_RED BOO)
+		:	(result ? "(" YAY ")" : "(" BOO ")");
+	}
+
+	if (opt_showdiff)
+		sprintf(suppl, "diff %.3f", sharediff);
+	else // accepted percent
+		sprintf(suppl, "%.2f%%", 100. * accepted_count / (accepted_count + rejected_count));
 
 	switch (opt_algo) {
 	case ALGO_AXIOM:
@@ -949,15 +968,15 @@ static int share_result(int result, struct work *work, const char *reason)
 	case ALGO_PLUCK:
 	case ALGO_SCRYPTJANE:
 		sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate);
-		applog(LOG_NOTICE, "accepted: %lu/%lu (%.2f%%), %s H/s %s",
+		applog(LOG_NOTICE, "accepted: %lu/%lu (%s), %s H/s %s",
 			accepted_count, accepted_count + rejected_count,
-			100. * accepted_count / (accepted_count + rejected_count), s, sres);
+			suppl, s, flag);
 		break;
 	default:
 		sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", hashrate / 1000.0);
-		applog(LOG_NOTICE, "accepted: %lu/%lu (%.2f%%), %s kH/s %s",
+		applog(LOG_NOTICE, "accepted: %lu/%lu (%s), %s kH/s %s",
 			accepted_count, accepted_count + rejected_count,
-			100. * accepted_count / (accepted_count + rejected_count), s, sres);
+			suppl, s, flag);
 		break;
 	}
 
@@ -1038,6 +1057,9 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 					rpc_user, work->job_id, xnonce2str, ntimestr, noncestr);
 			free(xnonce2str);
 		}
+
+		// store to keep/display solved blocs (work struct not linked on accept notification)
+		stratum.sharediff = work->sharediff;
 
 		if (unlikely(!stratum_send_line(&stratum, s))) {
 			applog(LOG_ERR, "submit_upstream_work stratum_send_line failed");
