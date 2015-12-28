@@ -83,27 +83,30 @@ void x11hash(void *output, const void *input)
 	memcpy(output, hashA, 32);
 }
 
-int scanhash_x11(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-	uint32_t max_nonce,	uint64_t *hashes_done)
+int scanhash_x11(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done)
 {
+	uint32_t _ALIGN(128) hash[8];
+	uint32_t _ALIGN(128) endiandata[20];
+	uint32_t *pdata = work->data;
+	uint32_t *ptarget = work->target;
+
+	const uint32_t Htarg = ptarget[7];
 	const uint32_t first_nonce = pdata[19];
-	uint32_t _ALIGN(64) endiandata[20];
 	uint32_t nonce = first_nonce;
 	volatile uint8_t *restart = &(work_restart[thr_id].restart);
 
 	if (opt_benchmark)
-		((uint32_t*)ptarget)[7] = 0x0cff;
+		ptarget[7] = 0x0cff;
 
 	for (int k=0; k < 19; k++)
 		be32enc(&endiandata[k], pdata[k]);
 
-	const uint32_t Htarg = ptarget[7];
 	do {
-		uint32_t hash[8];
 		be32enc(&endiandata[19], nonce);
 		x11hash(hash, endiandata);
 
 		if (hash[7] <= Htarg && fulltest(hash, ptarget)) {
+			work_set_target_ratio(work, hash);
 			pdata[19] = nonce;
 			*hashes_done = pdata[19] - first_nonce;
 			return 1;

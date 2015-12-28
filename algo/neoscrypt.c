@@ -1032,10 +1032,14 @@ static bool fulltest_le(const uint *hash, const uint *target)
     return(rc);
 }
 
-int scanhash_neoscrypt(int thr_id, uint32_t *pdata, const uint32_t *ptarget, uint32_t max_nonce,
-                       uint64_t *hashes_done, uint32_t profile)
+int scanhash_neoscrypt(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done,
+    uint32_t profile)
 {
-    uint32_t _ALIGN(64) hash[8];
+    uint32_t _ALIGN(128) hash[8];
+    uint32_t _ALIGN(128) endiandata[20];
+    uint32_t *pdata = work->data;
+    uint32_t *ptarget = work->target;
+
     const uint32_t Htarg = ptarget[7];
     const uint32_t first_nonce = pdata[19];
 
@@ -1045,6 +1049,7 @@ int scanhash_neoscrypt(int thr_id, uint32_t *pdata, const uint32_t *ptarget, uin
 
         /* Quick hash check */
         if (hash[7] <= Htarg && fulltest_le(hash, ptarget)) {
+            work_set_target_ratio(work, hash);
             *hashes_done = pdata[19] - first_nonce + 1;
             return 1;
         }

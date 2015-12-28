@@ -130,11 +130,10 @@ int scanhash_zr5(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *ha
 
 		if (hash[7] <= ptarget[7] && fulltest(hash, ptarget))
 		{
+			work_set_target_ratio(work, hash);
 			pdata[0] = tmpdata[0];
 			pdata[19] = nonce;
 			*hashes_done = pdata[19] - first_nonce + 1;
-			if (opt_debug)
-				applog(LOG_INFO, "found nonce %x", nonce);
 			return 1;
 		}
 		nonce++;

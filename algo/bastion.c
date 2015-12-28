@@ -101,9 +101,9 @@ void bastionhash(void *output, const void *input)
 	memcpy(output, hash, 32);
 }
 
-int scanhash_bastion(int thr_id, struct work *work, uint64_t max_nonce, uint64_t *hashes_done)
+int scanhash_bastion(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done)
 {
-	uint32_t _ALIGN(64) hash64[8];
+	uint32_t _ALIGN(64) hash32[8];
 	uint32_t _ALIGN(64) endiandata[20];
 	uint32_t *pdata = work->data;
 	uint32_t *ptarget = work->target;
@@ -119,9 +119,9 @@ int scanhash_bastion(int thr_id, struct work *work, uint64_t max_nonce, uint64_t
 
 	do {
 		be32enc(&endiandata[19], n);
-		bastionhash(hash64, endiandata);
-		if (hash64[7] < Htarg && fulltest(hash64, ptarget)) {
-			work_set_target_ratio(work, hash64);
+		bastionhash(hash32, endiandata);
+		if (hash32[7] < Htarg && fulltest(hash32, ptarget)) {
+			work_set_target_ratio(work, hash32);
 			*hashes_done = n - first_nonce + 1;
 			pdata[19] = n;
 			return true;

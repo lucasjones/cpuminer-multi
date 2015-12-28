@@ -44,20 +44,17 @@ extern void freshhash(void* output, const void* input, uint32_t len)
 	memcpy(output, hash, 32);
 }
 
-int scanhash_fresh(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-					uint32_t max_nonce, uint64_t *hashes_done)
+int scanhash_fresh(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done)
 {
-	uint32_t len = 80;
+	uint32_t _ALIGN(128) hash32[8];
+	uint32_t _ALIGN(128) endiandata[20];
+	uint32_t *pdata = work->data;
+	uint32_t *ptarget = work->target;
 
-	uint32_t n = pdata[19] - 1;
 	const uint32_t first_nonce = pdata[19];
 	const uint32_t Htarg = ptarget[7];
-#ifdef _MSC_VER
-	uint32_t __declspec(align(32)) hash64[8];
-#else
-	uint32_t hash64[8] __attribute__((aligned(32)));
-#endif
-	uint32_t endiandata[32];
+	const uint32_t len = 80;
+	uint32_t n = pdata[19] - 1;
 
 	uint64_t htmax[] = {
 		0,
@@ -90,19 +87,21 @@ int scanhash_fresh(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 			do {
 				pdata[19] = ++n;
 				be32enc(&endiandata[19], n);
-				freshhash(hash64, endiandata, len);
+				freshhash(hash32, endiandata, len);
 #ifndef DEBUG_ALGO
-				if ((!(hash64[7] & mask)) && fulltest(hash64, ptarget)) {
+				if ((!(hash32[7] & mask)) && fulltest(hash32, ptarget)) {
+					work_set_target_ratio(work, hash32);
 					*hashes_done = n - first_nonce + 1;
-					return true;
+					return 1;
 				}
 #else
 				if (!(n % 0x1000) && !thr_id) printf(".");
-				if (!(hash64[7] & mask)) {
+				if (!(hash32[7] & mask)) {
 					printf("[%d]",thr_id);
-					if (fulltest(hash64, ptarget)) {
+					if (fulltest(hash32, ptarget)) {
+						work_set_target_ratio(work, hash32);
 						*hashes_done = n - first_nonce + 1;
-						return true;
+						return 1;
 					}
 				}
 #endif

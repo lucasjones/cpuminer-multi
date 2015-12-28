@@ -36,15 +36,16 @@ extern void pentablakehash(void *output, const void *input)
 	memcpy(output, hash, 32);
 }
 
-int scanhash_pentablake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-                    uint32_t max_nonce, uint64_t *hashes_done)
+int scanhash_pentablake(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done)
 {
+	uint32_t _ALIGN(128) hash32[8];
+	uint32_t _ALIGN(128) endiandata[20];
+	uint32_t *pdata = work->data;
+	uint32_t *ptarget = work->target;
+
 	uint32_t n = pdata[19] - 1;
 	const uint32_t first_nonce = pdata[19];
 	const uint32_t Htarg = ptarget[7];
-
-	uint32_t _ALIGN(32) hash64[8];
-	uint32_t _ALIGN(32) endiandata[32];
 
 	uint64_t htmax[] = {
 		0,
@@ -64,9 +65,10 @@ int scanhash_pentablake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	};
 
 	// we need bigendian data...
-	for (int kk=0; kk < 32; kk++) {
-		be32enc(&endiandata[kk], ((uint32_t*)pdata)[kk]);
-	};
+	for (int i=0; i < 19; i++) {
+		be32enc(&endiandata[i], pdata[i]);
+	}
+
 #ifdef DEBUG_ALGO
 	if (Htarg != 0)
 		printf("[%d] Htarg=%X\n", thr_id, Htarg);
@@ -77,19 +79,21 @@ int scanhash_pentablake(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 			do {
 				pdata[19] = ++n;
 				be32enc(&endiandata[19], n);
-				pentablakehash(hash64, endiandata);
+				pentablakehash(hash32, endiandata);
 #ifndef DEBUG_ALGO
-				if ((!(hash64[7] & mask)) && fulltest(hash64, ptarget)) {
+				if ((!(hash32[7] & mask)) && fulltest(hash32, ptarget)) {
+					work_set_target_ratio(work, hash32);
 					*hashes_done = n - first_nonce + 1;
-					return true;
+					return 1;
 				}
 #else
 				if (!(n % 0x1000) && !thr_id) printf(".");
-				if (!(hash64[7] & mask)) {
+				if (!(hash32[7] & mask)) {
 					printf("[%d]",thr_id);
-					if (fulltest(hash64, ptarget)) {
+					if (fulltest(hash32, ptarget)) {
+						work_set_target_ratio(work, hash32);
 						*hashes_done = n - first_nonce + 1;
-						return true;
+						return 1;
 					}
 				}
 #endif

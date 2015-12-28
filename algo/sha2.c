@@ -467,13 +467,15 @@ static inline void sha256d_ms(uint32_t *hash, uint32_t *W,
 void sha256d_ms_4way(uint32_t *hash,  uint32_t *data,
 	const uint32_t *midstate, const uint32_t *prehash);
 
-static inline int scanhash_sha256d_4way(int thr_id, uint32_t *pdata,
-	const uint32_t *ptarget, uint32_t max_nonce, uint64_t *hashes_done)
+static inline int scanhash_sha256d_4way(int thr_id, struct work *work,
+	uint32_t max_nonce, uint64_t *hashes_done)
 {
 	uint32_t _ALIGN(128) data[4 * 64];
 	uint32_t _ALIGN(32) hash[4 * 8];
 	uint32_t _ALIGN(32) midstate[4 * 8];
 	uint32_t _ALIGN(32) prehash[4 * 8];
+	uint32_t *pdata = work->data;
+	uint32_t *ptarget = work->target;
 	uint32_t n = pdata[19] - 1;
 	const uint32_t first_nonce = pdata[19];
 	const uint32_t Htarg = ptarget[7];
@@ -507,6 +509,7 @@ static inline int scanhash_sha256d_4way(int thr_id, uint32_t *pdata,
 				pdata[19] = data[4 * 3 + i];
 				sha256d_80_swap(hash, pdata);
 				if (fulltest(hash, ptarget)) {
+					work_set_target_ratio(work, hash);
 					*hashes_done = n - first_nonce + 1;
 					return 1;
 				}
@@ -526,13 +529,15 @@ static inline int scanhash_sha256d_4way(int thr_id, uint32_t *pdata,
 void sha256d_ms_8way(uint32_t *hash,  uint32_t *data,
 	const uint32_t *midstate, const uint32_t *prehash);
 
-static inline int scanhash_sha256d_8way(int thr_id, uint32_t *pdata,
-	const uint32_t *ptarget, uint32_t max_nonce, uint64_t *hashes_done)
+static inline int scanhash_sha256d_8way(int thr_id, struct work *work,
+	uint32_t max_nonce, uint64_t *hashes_done)
 {
 	uint32_t _ALIGN(128) data[8 * 64];
 	uint32_t _ALIGN(32)  hash[8 * 8];
 	uint32_t _ALIGN(32)  midstate[8 * 8];
 	uint32_t _ALIGN(32)  prehash[8 * 8];
+	uint32_t *pdata = work->data;
+	uint32_t *ptarget = work->target;
 	uint32_t n = pdata[19] - 1;
 	const uint32_t first_nonce = pdata[19];
 	const uint32_t Htarg = ptarget[7];
@@ -566,6 +571,7 @@ static inline int scanhash_sha256d_8way(int thr_id, uint32_t *pdata,
 				pdata[19] = data[8 * 3 + i];
 				sha256d_80_swap(hash, pdata);
 				if (fulltest(hash, ptarget)) {
+					work_set_target_ratio(work, hash);
 					*hashes_done = n - first_nonce + 1;
 					return 1;
 				}
@@ -580,26 +586,25 @@ static inline int scanhash_sha256d_8way(int thr_id, uint32_t *pdata,
 
 #endif /* HAVE_SHA256_8WAY */
 
-int scanhash_sha256d(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-	uint32_t max_nonce, uint64_t *hashes_done)
+int scanhash_sha256d(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done)
 {
 	uint32_t _ALIGN(128) data[64];
 	uint32_t _ALIGN(32) hash[8];
 	uint32_t _ALIGN(32) midstate[8];
 	uint32_t _ALIGN(32) prehash[8];
-	uint32_t n = pdata[19] - 1;
+	uint32_t *pdata = work->data;
+	uint32_t *ptarget = work->target;
 	const uint32_t first_nonce = pdata[19];
 	const uint32_t Htarg = ptarget[7];
-	
+	uint32_t n = pdata[19] - 1;
+
 #ifdef HAVE_SHA256_8WAY
 	if (sha256_use_8way())
-		return scanhash_sha256d_8way(thr_id, pdata, ptarget,
-			max_nonce, hashes_done);
+		return scanhash_sha256d_8way(thr_id, work, max_nonce, hashes_done);
 #endif
 #ifdef HAVE_SHA256_4WAY
 	if (sha256_use_4way())
-		return scanhash_sha256d_4way(thr_id, pdata, ptarget,
-			max_nonce, hashes_done);
+		return scanhash_sha256d_4way(thr_id, work, max_nonce, hashes_done);
 #endif
 	
 	memcpy(data, pdata + 16, 64);
@@ -617,6 +622,7 @@ int scanhash_sha256d(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 			pdata[19] = data[3];
 			sha256d_80_swap(hash, pdata);
 			if (fulltest(hash, ptarget)) {
+				work_set_target_ratio(work, hash);
 				*hashes_done = n - first_nonce + 1;
 				return 1;
 			}

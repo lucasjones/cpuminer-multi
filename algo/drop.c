@@ -175,7 +175,7 @@ static void droplp_hash_pok(void *output, uint32_t *pdata, const uint32_t versio
 
 int scanhash_drop(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done)
 {
-	uint32_t _ALIGN(64) hash[16];
+	uint32_t _ALIGN(128) hash[16];
 	uint32_t *pdata = work->data;
 	uint32_t *ptarget = work->target;
 	const uint32_t version = pdata[0] & (~POK_DATA_MASK);
@@ -193,11 +193,10 @@ int scanhash_drop(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *h
 		droplp_hash_pok(hash, tmpdata, version);
 
 		if (hash[7] <= htarg && fulltest(hash, ptarget)) {
+			work_set_target_ratio(work, hash);
 			pdata[0] = tmpdata[0];
 			pdata[19] = nonce;
 			*hashes_done = pdata[19] - first_nonce + 1;
-			if (opt_debug)
-				applog(LOG_INFO, "found nonce %x", nonce);
 			return 1;
 		}
 		nonce++;

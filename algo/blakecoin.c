@@ -43,15 +43,15 @@ void blakecoinhash(void *state, const void *input)
 	memcpy(state, hash, 32);
 }
 
-int scanhash_blakecoin(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-					uint32_t max_nonce, uint64_t *hashes_done)
+int scanhash_blakecoin(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done)
 {
+	uint32_t _ALIGN(128) hash32[8];
+	uint32_t _ALIGN(128) endiandata[20];
+	uint32_t *pdata = work->data;
+	uint32_t *ptarget = work->target;
+
 	const uint32_t first_nonce = pdata[19];
 	uint32_t HTarget = ptarget[7];
-
-	uint32_t _ALIGN(32) hash64[8];
-	uint32_t _ALIGN(32) endiandata[20];
-
 	uint32_t n = first_nonce;
 
 	ctx_midstate_done = false;
@@ -70,19 +70,21 @@ int scanhash_blakecoin(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 
 	do {
 		be32enc(&endiandata[19], n);
-		blakecoinhash(hash64, endiandata);
+		blakecoinhash(hash32, endiandata);
 #ifndef DEBUG_ALGO
-		if (hash64[7] <= HTarget && fulltest(hash64, ptarget)) {
+		if (hash32[7] <= HTarget && fulltest(hash32, ptarget)) {
+			work_set_target_ratio(work, hash32);
 			*hashes_done = n - first_nonce + 1;
-			return true;
+			return 1;
 		}
 #else
 		if (!(n % 0x1000) && !thr_id) printf(".");
-		if (hash64[7] == 0) {
+		if (hash32[7] == 0) {
 			printf("[%d]",thr_id);
-			if (fulltest(hash64, ptarget)) {
+			if (fulltest(hash32, ptarget)) {
+				work_set_target_ratio(work, hash32);
 				*hashes_done = n - first_nonce + 1;
-				return true;
+				return 1;
 			}
 		}
 #endif

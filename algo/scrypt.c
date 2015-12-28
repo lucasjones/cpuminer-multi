@@ -692,10 +692,11 @@ static void scrypt_1024_1_1_256_24way(const uint32_t *input,
 }
 #endif /* HAVE_SCRYPT_6WAY */
 
-extern int scanhash_scrypt(int thr_id, uint32_t *pdata,
-	unsigned char *scratchbuf, const uint32_t *ptarget,
-	uint32_t max_nonce, uint64_t *hashes_done, uint32_t N)
+extern int scanhash_scrypt(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done,
+	unsigned char *scratchbuf, uint32_t N)
 {
+	uint32_t *pdata = work->data;
+	uint32_t *ptarget = work->target;
 	uint32_t data[SCRYPT_MAX_WAYS * 20], hash[SCRYPT_MAX_WAYS * 8];
 	uint32_t midstate[8];
 	uint32_t n = pdata[19] - 1;
@@ -742,6 +743,7 @@ extern int scanhash_scrypt(int thr_id, uint32_t *pdata,
 		
 		for (i = 0; i < throughput; i++) {
 			if (unlikely(hash[i * 8 + 7] <= Htarg && fulltest(hash + i * 8, ptarget))) {
+				work_set_target_ratio(work, hash + i * 8);
 				*hashes_done = n - pdata[19] + 1;
 				pdata[19] = data[i * 20 + 19];
 				return 1;

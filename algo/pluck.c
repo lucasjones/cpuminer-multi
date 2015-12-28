@@ -442,18 +442,19 @@ void pluck_hash(uint32_t *hash, const uint32_t *data, uchar *hashbuffer, const i
 	memcpy(hash, hashbuffer, 32);
 }
 
-int scanhash_pluck(int thr_id, uint32_t *pdata,
-	unsigned char *scratchbuf, const uint32_t *ptarget,
-	uint32_t max_nonce, uint64_t *hashes_done, int N)
+int scanhash_pluck(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done,
+	unsigned char *scratchbuf, int N)
 {
-	uint32_t _ALIGN(64) endiandata[20];
-	uint32_t _ALIGN(64) hash[8];
+	uint32_t _ALIGN(128) hash[8];
+	uint32_t _ALIGN(128) endiandata[20];
+	uint32_t *pdata = work->data;
+	uint32_t *ptarget = work->target;
 	const uint32_t first_nonce = pdata[19];
 	volatile uint8_t *restart = &(work_restart[thr_id].restart);
 	uint32_t n = first_nonce;
 
 	if (opt_benchmark)
-		((uint32_t*)ptarget)[7] = 0x0ffff;
+		ptarget[7] = 0xffff;
 
 	for (int k = 0; k < 19; k++)
 		be32enc(&endiandata[k], pdata[k]);
@@ -466,6 +467,7 @@ int scanhash_pluck(int thr_id, uint32_t *pdata,
 
 		if (hash[7] <= Htarg && fulltest(hash, ptarget))
 		{
+			work_set_target_ratio(work, hash);
 			*hashes_done = n - first_nonce + 1;
 			pdata[19] = htobe32(endiandata[19]);
 			return 1;

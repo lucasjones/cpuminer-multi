@@ -310,14 +310,15 @@ static void cryptolight_hash_ctx_aes_ni(void* output, const void* input, int len
 	oaes_free((OAES_CTX **) &ctx->aes_ctx);
 }
 
-int scanhash_cryptolight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-		uint32_t max_nonce, uint64_t *hashes_done)
+int scanhash_cryptolight(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done)
 {
+	uint32_t _ALIGN(128) hash[HASH_SIZE / 4];
+	uint32_t *pdata = work->data;
+	uint32_t *ptarget = work->target;
+
 	uint32_t *nonceptr = (uint32_t*) (((char*)pdata) + 39);
 	uint32_t n = *nonceptr - 1;
 	const uint32_t first_nonce = n + 1;
-	//const uint32_t Htarg = ptarget[7];
-	uint32_t _ALIGN(32) hash[HASH_SIZE / 4];
 
 	struct cryptonight_ctx *ctx = (struct cryptonight_ctx*)malloc(sizeof(struct cryptonight_ctx));
 
@@ -326,9 +327,10 @@ int scanhash_cryptolight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 			*nonceptr = ++n;
 			cryptolight_hash_ctx_aes_ni(hash, pdata, 76, ctx);
 			if (unlikely(hash[7] < ptarget[7])) {
+				work_set_target_ratio(work, hash);
 				*hashes_done = n - first_nonce + 1;
 				free(ctx);
-				return true;
+				return 1;
 			}
 		} while (likely((n <= max_nonce && !work_restart[thr_id].restart)));
 	} else {
@@ -336,9 +338,10 @@ int scanhash_cryptolight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 			*nonceptr = ++n;
 			cryptolight_hash_ctx(hash, pdata, 76, ctx);
 			if (unlikely(hash[7] < ptarget[7])) {
+				work_set_target_ratio(work, hash);
 				*hashes_done = n - first_nonce + 1;
 				free(ctx);
-				return true;
+				return 1;
 			}
 		} while (likely((n <= max_nonce && !work_restart[thr_id].restart)));
 	}

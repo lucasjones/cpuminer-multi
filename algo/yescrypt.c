@@ -8,7 +8,7 @@
 
 #include "yescrypt/yescrypt.h"
 
-int scanhash_yescrypt(int thr_id, struct work *work, uint64_t max_nonce, uint64_t *hashes_done)
+int scanhash_yescrypt(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done)
 {
 	uint32_t _ALIGN(64) vhash[8];
 	uint32_t _ALIGN(64) endiandata[20];

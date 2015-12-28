@@ -128,8 +128,7 @@ unsigned char GetNfactor(unsigned int nTimestamp, unsigned int ntime) {
 }
 
 
-int scanhash_scryptjane(int Nfactor, int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-	uint32_t max_nonce, uint64_t *hashes_done)
+int scanhash_scryptjane(int Nfactor, int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done)
 {
 	scrypt_aligned_alloc YX, V;
 	uint8_t *X, *Y;
@@ -137,15 +136,17 @@ int scanhash_scryptjane(int Nfactor, int thr_id, uint32_t *pdata, const uint32_t
 	const uint32_t r = SCRYPT_R;
 	const uint32_t p = SCRYPT_P;
 
+	uint32_t *pdata = work->data;
+	uint32_t *ptarget = work->target;
 	uint32_t _ALIGN(64) endiandata[20];
 	const uint32_t first_nonce = pdata[19];
 	uint32_t nonce = first_nonce;
 
 	if (opt_benchmark)
-		((uint32_t*)ptarget)[7] = 0x0000ff;
+		ptarget[7] = 0x00ff;
 
 	for (int k = 0; k < 20; k++)
-		be32enc(&endiandata[k], ((uint32_t*)pdata)[k]);
+		be32enc(&endiandata[k], pdata[k]);
 
 	//Nfactor = GetNfactor(data[17], ntime);
 	//if (Nfactor > scrypt_maxN) {

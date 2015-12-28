@@ -30,7 +30,7 @@ static void combine_hashes(uint32_t *out, uint32_t *hash1, uint32_t *hash2, uint
 
 extern void heavyhash(unsigned char* output, const unsigned char* input, int len)
 {
-	unsigned char hash1[32];
+	unsigned char _ALIGN(128) hash1[32];
 	HEFTY1(input, len, hash1);
 
 	/* HEFTY1 is new, so take an extra security measure to eliminate
@@ -78,24 +78,29 @@ extern void heavyhash(unsigned char* output, const unsigned char* input, int len
 	combine_hashes(final, (uint32_t *)hash2, hash3, hash4, hash5);
 }
 
-int scanhash_heavy(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-					uint32_t max_nonce, uint64_t *hashes_done)
+int scanhash_heavy(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done)
 {
-	uint32_t hash[8];
-	uint32_t start_nonce = pdata[19];
+	uint32_t _ALIGN(128) hash[8];
+	uint32_t *pdata = work->data;
+	uint32_t *ptarget = work->target;
+	uint32_t first_nonce = pdata[19];
+	uint32_t nonce = first_nonce;
 
+	const uint32_t Htarg = ptarget[7];
 	do {
+		pdata[19] = nonce;
 		heavyhash((unsigned char *)hash, (unsigned char *)pdata, 80);
 
-		if (hash[7] <= ptarget[7]) {
-			if (fulltest(hash, ptarget)) {
-				*hashes_done = pdata[19] - start_nonce;
-				return 1;
-				break;
-			}
+		if (hash[7] <= Htarg && fulltest(hash, ptarget)) {
+			work_set_target_ratio(work, hash);
+			pdata[19] = nonce;
+			*hashes_done = pdata[19] - first_nonce;
+			return 1;
 		}
-		pdata[19]++;
-	} while (pdata[19] < max_nonce && !work_restart[thr_id].restart);
-	*hashes_done = pdata[19] - start_nonce;
+		nonce++;
+
+	} while (nonce < max_nonce && !work_restart[thr_id].restart);
+
+	*hashes_done = pdata[19] - first_nonce;
 	return 0;
 }
