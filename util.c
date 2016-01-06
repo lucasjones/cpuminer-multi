@@ -1775,11 +1775,6 @@ static bool stratum_set_difficulty(struct stratum_ctx *sctx, json_t *params)
 	sctx->next_diff = diff;
 	pthread_mutex_unlock(&sctx->work_lock);
 
-	/* store for api stats */
-	stratum_diff = diff;
-
-	applog(LOG_WARNING, "Stratum difficulty set to %g", diff);
-
 	return true;
 }
 
@@ -2051,6 +2046,13 @@ void applog_hash(void *hash)
 {
 	char s[128] = {'\0'};
 	applog(LOG_DEBUG, "%s", format_hash(s, (uchar*) hash));
+}
+
+void applog_data(void *pdata)
+{
+	char* hex = abin2hex((uchar*)pdata, 80);
+	applog(LOG_DEBUG, "%s", hex);
+	free(hex);
 }
 
 #define printpfx(n,h) \
