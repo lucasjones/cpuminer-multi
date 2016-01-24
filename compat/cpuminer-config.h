@@ -103,7 +103,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.2-dev"
+#define PACKAGE_VERSION "1.2"
 
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
@@ -132,7 +132,7 @@
 #define USE_XOP 1
 
 /* Version number of package */
-#define VERSION "1.2-dev"
+#define VERSION "1.2"
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 /* #undef size_t */
