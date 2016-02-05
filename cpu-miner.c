@@ -85,6 +85,7 @@ enum algos {
 	ALGO_C11,         /* C11 Chaincoin/Flaxcoin X11 variant */
 	ALGO_CRYPTOLIGHT, /* cryptonight-light (Aeon) */
 	ALGO_CRYPTONIGHT, /* CryptoNight */
+	ALGO_DECRED,      /* Decred */
 	ALGO_DMD_GR,      /* Diamond */
 	ALGO_DROP,        /* Dropcoin */
 	ALGO_FRESH,       /* Fresh */
@@ -129,6 +130,7 @@ static const char *algo_names[] = {
 	"c11",
 	"cryptolight",
 	"cryptonight",
+	"decred",
 	"dmd-gr",
 	"drop",
 	"fresh",
@@ -260,13 +262,14 @@ Usage: " PACKAGE_NAME " [OPTIONS]\n\
 Options:\n\
   -a, --algo=ALGO       specify the algorithm to use\n\
                           axiom        Shabal-256 MemoHash\n\
-                          blake        Blake-256 (SFR)\n\
-                          blakecoin    Blakecoin\n\
+                          blake        Blake-256 14-rounds (SFR)\n\
+                          blakecoin    Blake-256 single sha256 merkle\n\
                           blake2s      Blake-2 S\n\
                           bmw          BMW 256\n\
                           c11/flax     C11\n\
                           cryptolight  Cryptonight-light\n\
                           cryptonight  Monero\n\
+                          decred       Blake-256 14-rounds 180 bytes\n\
                           dmd-gr       Diamond-Groestl\n\
                           drop         Dropcoin\n\
                           fresh        Fresh\n\
@@ -292,7 +295,7 @@ Options:\n\
                           skein        Skein+Sha (Skeincoin)\n\
                           skein2       Double Skein (Woodcoin)\n\
                           s3           S3\n\
-                          vanilla      Vanilla (Blake 256 8-rounds - double sha256)\n\
+                          vanilla      Blake-256 8-rounds\n\
                           x11          X11\n\
                           x13          X13\n\
                           x14          X14\n\
@@ -517,6 +520,7 @@ static void calc_network_diff(struct work *work)
 	// sample for diff 43.281 : 1c05ea29
 	// todo: endian reversed on longpoll could be zr5 specific...
 	uint32_t nbits = have_longpoll ? work->data[18] : swab32(work->data[18]);
+	if (opt_algo == ALGO_DECRED) nbits = work->data[29];
 	uint32_t bits = (nbits & 0xffffff);
 	int16_t shift = (swab32(nbits) & 0xff); // 0x1c = 28
 
@@ -533,13 +537,17 @@ static void calc_network_diff(struct work *work)
 static bool work_decode(const json_t *val, struct work *work)
 {
 	int i;
-	int data_size = sizeof(work->data), target_size = sizeof(work->target);
-	int adata_sz = ARRAY_SIZE(work->data), atarget_sz = ARRAY_SIZE(work->target);
+	int data_size = 128, target_size = sizeof(work->target);
+	int adata_sz = 32, atarget_sz = ARRAY_SIZE(work->target);
 
 	if (opt_algo == ALGO_DROP || opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
 		data_size = 80; target_size = 32;
-		adata_sz = data_size /  sizeof(uint32_t);
+		adata_sz = 20;
 		atarget_sz = target_size /  sizeof(uint32_t);
+	} else if (opt_algo == ALGO_DECRED) {
+		allow_mininginfo = false;
+		data_size = 192;
+		adata_sz = 180/4;
 	}
 
 	if (jsonrpc_2) {
@@ -575,6 +583,23 @@ static bool work_decode(const json_t *val, struct work *work)
 			applog(LOG_BLUE, "POK received: %08xx", work->data[0]);
 			zr5_pok = work->data[0] & POK_DATA_MASK;
 		}
+	} else if (opt_algo == ALGO_DECRED) {
+		// some random extradata to make the work unique
+		work->data[36] = (rand()*4);
+		work->height = work->data[32];
+		// required for the getwork pools (multicoin.co)
+		if (!have_longpoll && work->height > net_blocks + 1) {
+			char netinfo[64] = { 0 };
+			if (opt_showdiff && net_diff > 0.) {
+				if (net_diff != work->targetdiff)
+					sprintf(netinfo, ", diff %.3f, target %.1f", net_diff, work->targetdiff);
+				else
+					sprintf(netinfo, ", diff %.3f", net_diff);
+			}
+			applog(LOG_BLUE, "%s block %d%s",
+				algo_names[opt_algo], work->height, netinfo);
+			net_blocks = work->height - 1;
+		}
 	}
 
 	return true;
@@ -589,7 +614,7 @@ static const char *info_req =
 
 static bool get_mininginfo(CURL *curl, struct work *work)
 {
-	if (have_stratum || !allow_mininginfo)
+	if (have_stratum || have_longpoll || !allow_mininginfo)
 		return false;
 
 	int curl_err = 0;
@@ -886,6 +911,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 	work->data[17] = swab32(curtime);
 	work->data[18] = le32dec(&bits);
 	memset(work->data + 19, 0x00, 52);
+
 	work->data[20] = 0x80000000;
 	work->data[31] = 0x00000280;
 
@@ -1069,7 +1095,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			goto out;
 		}
 
-	} else if (work->txs) {
+	} else if (work->txs) { /* gbt */
 
 		char data_str[2 * sizeof(work->data) + 1];
 		char *req;
@@ -1180,8 +1206,12 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 		} else if (opt_algo == ALGO_DROP || opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
 			/* different data size */
 			data_size = 80;
+		} else if (opt_algo == ALGO_DECRED) {
+			/* bigger data size : 180 + terminal hash ending */
+			data_size = 192;
 		}
 		adata_sz = data_size / sizeof(uint32_t);
+		if (opt_algo == ALGO_DECRED) adata_sz = 180 / 4; // dont touch the end tag
 
 		/* build hex string */
 		for (i = 0; i < adata_sz; i++)
@@ -1193,6 +1223,8 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			applog(LOG_ERR, "submit_upstream_work OOM");
 			return false;
 		}
+
+		//applog(LOG_WARNING, gw_str);
 
 		/* build JSON-RPC request */
 		snprintf(s, JSON_BUF_LEN,
@@ -1497,8 +1529,12 @@ static bool get_work(struct thr_info *thr, struct work *work)
 		//memset(work->data, 0x55, 76);
 		work->data[17] = swab32(ts);
 		memset(work->data + 19, 0x00, 52);
-		work->data[20] = 0x80000000;
-		work->data[31] = 0x00000280;
+		if (opt_algo == ALGO_DECRED) {
+			memset(&work->data[35], 0x00, 52);
+		} else {
+			work->data[20] = 0x80000000;
+			work->data[31] = 0x00000280;
+		}
 		memset(work->target, 0x00, sizeof(work->target));
 		return true;
 	}
@@ -1620,8 +1656,11 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 				work->data[i] = swab32(work->data[i]);
 		}
 
-		work->data[20] = 0x80000000;
-		work->data[31] = 0x00000280;
+		if (opt_algo != ALGO_DECRED) {
+			// required ?
+			work->data[20] = 0x80000000;
+			work->data[31] = 0x00000280;
+		}
 
 		pthread_mutex_unlock(&sctx->work_lock);
 
@@ -1810,6 +1849,8 @@ static void *miner_thread(void *userdata)
 			// Duplicates: ignore pok in data[0]
 			wkcmp_sz -= sizeof(uint32_t);
 			wkcmp_offset = 1;
+		} else if (opt_algo == ALGO_DECRED) {
+			wkcmp_sz = nonce_oft = 140; // 35 * 4
 		}
 
 		if (jsonrpc_2) {
@@ -1870,6 +1911,11 @@ static void *miner_thread(void *userdata)
 			++(*nonceptr);
 		pthread_mutex_unlock(&g_work_lock);
 		work_restart[thr_id].restart = 0;
+
+		if (opt_algo == ALGO_DECRED) {
+			// extradata: prevent duplicates
+			nonceptr[2] = thr_id;
+		}
 
 		/* prevent scans before a job is received */
 		if (have_stratum && !work.data[0] && !opt_benchmark) {
@@ -1959,13 +2005,16 @@ static void *miner_thread(void *userdata)
 			case ALGO_PENTABLAKE:
 				max64 = 0x3ffff;
 				break;
+			case ALGO_SKEIN:
+			case ALGO_SKEIN2:
+				max64 = 0x7ffffLL;
+				break;
 			case ALGO_BLAKE:
 			case ALGO_BLAKECOIN:
 			case ALGO_BLAKE2S:
-			case ALGO_SKEIN:
-			case ALGO_SKEIN2:
+			case ALGO_DECRED:
 			case ALGO_VANILLA:
-				max64 = 0x7ffffLL;
+				max64 = 0x3fffffLL;
 				break;
 			default:
 				max64 = 0x1fffffLL;
@@ -2012,6 +2061,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_CRYPTONIGHT:
 			rc = scanhash_cryptonight(thr_id, &work, max_nonce, &hashes_done);
+			break;
+		case ALGO_DECRED:
+			rc = scanhash_decred(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_DROP:
 			rc = scanhash_drop(thr_id, &work, max_nonce, &hashes_done);
@@ -3097,6 +3149,11 @@ int main(int argc, char *argv[]) {
 			applog(LOG_INFO, "Using JSON-RPC 2.0");
 			applog(LOG_INFO, "CPU Supports AES-NI: %s", aes_ni_supported ? "YES" : "NO");
 		}
+	} else if(opt_algo == ALGO_DECRED) {
+		// longpoll only...
+		have_gbt = false;
+		want_stratum = false;
+		want_longpoll = true;
 	}
 
 	if (!opt_benchmark && !rpc_url) {

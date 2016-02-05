@@ -2042,6 +2042,21 @@ static char* format_hash(char* buf, uint8_t *hash)
 	return buf;
 }
 
+void applog_compare_hash(void *hash, void *hash_ref)
+{
+	char s[256] = "";
+	int len = 0;
+	uchar* hash1 = (uchar*)hash;
+	uchar* hash2 = (uchar*)hash_ref;
+	for (int i=0; i < 32; i += 4) {
+		const char *color = memcmp(hash1+i, hash2+i, 4) ? CL_WHT : CL_GRY;
+		len += sprintf(s+len, "%s%02x%02x%02x%02x " CL_GRY, color,
+			hash1[i], hash1[i+1], hash1[i+2], hash1[i+3]);
+		s[len] = '\0';
+	}
+	applog(LOG_DEBUG, "%s", s);
+}
+
 void applog_hash(void *hash)
 {
 	char s[128] = {'\0'};
@@ -2055,6 +2070,14 @@ void applog_data(void *pdata)
 	free(hex);
 }
 
+void applog_hash64(void *hash)
+{
+	char s[128] = {'\0'};
+	char t[128] = {'\0'};
+	applog(LOG_DEBUG, "%s %s", format_hash(s, (uchar*)hash), format_hash(t, &((uchar*)hash)[32]));
+}
+
+
 #define printpfx(n,h) \
 	printf("%s%11s%s: %s\n", CL_CYN, n, CL_N, format_hash(s, (uint8_t*) h))
 
@@ -2062,7 +2085,7 @@ void print_hash_tests(void)
 {
 	uchar *scratchbuf = NULL;
 	char hash[128], s[80];
-	char buf[128] = { 0 };
+	char buf[192] = { 0 };
 
 	scratchbuf = (uchar*) calloc(128, 1024);
 
@@ -2096,6 +2119,9 @@ void print_hash_tests(void)
 
 	cryptonight_hash(&hash[0], &buf[0], 76);
 	printpfx("cryptonight", hash);
+
+	decred_hash(&hash[0], &buf[0]);
+	printpfx("decred", hash);
 
 	droplp_hash(&hash[0], &buf[0]);
 	printpfx("drop", hash);

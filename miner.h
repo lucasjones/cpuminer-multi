@@ -199,6 +199,7 @@ int scanhash_bmw(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *ha
 int scanhash_cryptolight(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_cryptonight(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_c11(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
+int scanhash_decred(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_drop(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_fresh(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_groestl(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
@@ -360,7 +361,7 @@ void bestcpu_feature(char *outbuf, int maxsz);
 float cpu_temp(int core);
 
 struct work {
-	uint32_t data[32];
+	uint32_t data[48];
 	uint32_t target[8];
 
 	double targetdiff;
@@ -454,8 +455,10 @@ void parse_arg(int key, char *arg);
 void parse_config(json_t *config, char *ref);
 void proper_exit(int reason);
 
+void applog_compare_hash(void *hash, void *hash_ref);
 void applog_data(void *pdata);
 void applog_hash(void *hash);
+void applog_hash64(void *hash);
 void format_hashrate(double hashrate, char *output);
 void print_hash_tests(void);
 
@@ -469,6 +472,7 @@ void bmwhash(void *output, const void *input);
 void c11hash(void *output, const void *input);
 void cryptolight_hash(void* output, const void* input, int len);
 void cryptonight_hash(void* output, const void* input, int len);
+void decred_hash(void *output, const void *input);
 void droplp_hash(void *output, const void *input);
 void groestlhash(void *output, const void *input);
 void heavyhash(unsigned char* output, const unsigned char* input, int len);

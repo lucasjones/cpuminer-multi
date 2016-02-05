@@ -210,6 +210,7 @@
     <ClCompile Include="algo\c11.c" />
     <ClCompile Include="algo\cryptolight.c" />
     <ClCompile Include="algo\cryptonight.c" />
+    <ClCompile Include="algo\decred.c" />
     <ClCompile Include="algo\drop.c" />
     <ClCompile Include="algo\fresh.c" />
     <ClCompile Include="algo\groestl.c" />
