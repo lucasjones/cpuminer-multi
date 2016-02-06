@@ -11,16 +11,8 @@ void blakecoin_close(void *cc, void *dst);
 #include <stdint.h>
 #include <memory.h>
 
-/* Move init out of loop, so init once externally,
- * and then use one single memcpy */
-static sph_blake256_context blake_mid;
-static bool ctx_midstate_done = false;
-
-static void init_blake_hash(void)
-{
-	blakecoin_init(&blake_mid);
-	ctx_midstate_done = true;
-}
+static __thread sph_blake256_context blake_mid;
+static __thread bool ctx_midstate_done = false;
 
 void blakecoinhash(void *state, const void *input)
 {
@@ -32,15 +24,14 @@ void blakecoinhash(void *state, const void *input)
 
 	// do one memcopy to get a fresh context
 	if (!ctx_midstate_done) {
-		init_blake_hash();
+		blakecoin_init(&blake_mid);
 		blakecoin(&blake_mid, input, 64);
+		ctx_midstate_done = true;
 	}
 	memcpy(&ctx, &blake_mid, sizeof(blake_mid));
 
 	blakecoin(&ctx, ending, 16);
-	blakecoin_close(&ctx, hash);
-
-	memcpy(state, hash, 32);
+	blakecoin_close(&ctx, state);
 }
 
 int scanhash_blakecoin(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done)
@@ -51,18 +42,15 @@ int scanhash_blakecoin(int thr_id, struct work *work, uint32_t max_nonce, uint64
 	uint32_t *ptarget = work->target;
 
 	const uint32_t first_nonce = pdata[19];
-	uint32_t HTarget = ptarget[7];
+	const uint32_t HTarget = opt_benchmark ? 0x7f : ptarget[7];
 	uint32_t n = first_nonce;
 
 	ctx_midstate_done = false;
 
-	if (opt_benchmark)
-		HTarget = 0x7f;
-
 	// we need big endian data...
 	for (int kk=0; kk < 19; kk++) {
-		be32enc(&endiandata[kk], ((uint32_t*)pdata)[kk]);
-	};
+		be32enc(&endiandata[kk], pdata[kk]);
+	}
 
 #ifdef DEBUG_ALGO
 	applog(LOG_DEBUG,"[%d] Target=%08x %08x", thr_id, ptarget[6], ptarget[7]);
@@ -71,23 +59,13 @@ int scanhash_blakecoin(int thr_id, struct work *work, uint32_t max_nonce, uint64
 	do {
 		be32enc(&endiandata[19], n);
 		blakecoinhash(hash32, endiandata);
-#ifndef DEBUG_ALGO
+
 		if (hash32[7] <= HTarget && fulltest(hash32, ptarget)) {
 			work_set_target_ratio(work, hash32);
 			*hashes_done = n - first_nonce + 1;
 			return 1;
 		}
-#else
-		if (!(n % 0x1000) && !thr_id) printf(".");
-		if (hash32[7] == 0) {
-			printf("[%d]",thr_id);
-			if (fulltest(hash32, ptarget)) {
-				work_set_target_ratio(work, hash32);
-				*hashes_done = n - first_nonce + 1;
-				return 1;
-			}
-		}
-#endif
+
 		n++; pdata[19] = n;
 
 	} while (n < max_nonce && !work_restart[thr_id].restart);
