@@ -1914,6 +1914,7 @@ static void *miner_thread(void *userdata)
 
 		if (opt_algo == ALGO_DECRED) {
 			// extradata: prevent duplicates
+			nonceptr[1] += rand() & 0xFF;
 			nonceptr[2] = thr_id;
 		}
 
