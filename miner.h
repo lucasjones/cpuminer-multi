@@ -456,7 +456,7 @@ void parse_config(json_t *config, char *ref);
 void proper_exit(int reason);
 
 void applog_compare_hash(void *hash, void *hash_ref);
-void applog_data(void *pdata);
+void applog_hex(void *data, int len);
 void applog_hash(void *hash);
 void applog_hash64(void *hash);
 void format_hashrate(double hashrate, char *output);

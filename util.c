@@ -1437,9 +1437,6 @@ bool stratum_authorize(struct stratum_ctx *sctx, const char *user, const char *p
 				if (!stratum_handle_method(sctx, sret))
 					applog(LOG_WARNING, "Stratum answer id is not correct!");
 			}
-			res_val = json_object_get(extra, "result");
-			if (opt_debug && (!res_val || json_is_false(res_val)))
-				applog(LOG_DEBUG, "extranonce subscribe not supported");
 			json_decref(extra);
 		}
 		free(sret);
@@ -2063,9 +2060,9 @@ void applog_hash(void *hash)
 	applog(LOG_DEBUG, "%s", format_hash(s, (uchar*) hash));
 }
 
-void applog_data(void *pdata)
+void applog_hex(void *data, int len)
 {
-	char* hex = abin2hex((uchar*)pdata, 80);
+	char* hex = abin2hex((uchar*)data, len);
 	applog(LOG_DEBUG, "%s", hex);
 	free(hex);
 }
