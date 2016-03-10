@@ -58,8 +58,10 @@ BOOL WINAPI ConsoleHandler(DWORD);
 
 #define LP_SCANTIME		60
 
+#ifndef min
 #define min(a,b) (a>b ? b : a)
 #define max(a,b) (a<b ? b : a)
+#endif
 
 enum workio_commands {
 	WC_GET_WORK,
@@ -267,7 +269,7 @@ Options:\n\
                           axiom        Shabal-256 MemoHash\n\
                           blake        Blake-256 14-rounds (SFR)\n\
                           blakecoin    Blake-256 single sha256 merkle\n\
-                          blake2s      Blake-2 S\n\
+                          blake2s      Blake2-S (256)\n\
                           bmw          BMW 256\n\
                           c11/flax     C11\n\
                           cryptolight  Cryptonight-light\n\
@@ -2059,7 +2061,6 @@ static void *miner_thread(void *userdata)
 				break;
 			case ALGO_BLAKE:
 			case ALGO_BLAKECOIN:
-			case ALGO_BLAKE2S:
 			case ALGO_DECRED:
 			case ALGO_VANILLA:
 				max64 = 0x3fffffLL;

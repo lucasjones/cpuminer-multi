@@ -27,6 +27,7 @@ Algorithms
  * ✓ __axiom__ (Axiom Shabal-256 based MemoHash)
  * ✓ __bastion__ (Joincoin [J])
  * ✓ __blake__ (Saffron [SFR] Blake-256)
+ * ✓ __blake2s__ (NevaCoin Blake2-S 256)
  * ✓ __bmw__ (Midnight [MDT] BMW-256)
  * ✓ __cryptonight__ (Bytecoin [BCN], Monero)
  * ✓ __cryptonight-light__ (Aeon)
@@ -54,7 +55,6 @@ Algorithms
  * ✓ __zr5__ (Ziftrcoin [ZRC])
 
 #### Implemented, but untested
- * ? blake2s
  * ? hefty1 (Heavycoin)
  * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
  * ? luffa (Joincoin, Doomcoin)
