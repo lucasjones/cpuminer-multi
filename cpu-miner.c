@@ -179,6 +179,7 @@ bool have_gbt = true;
 bool allow_getwork = true;
 bool want_stratum = true;
 bool have_stratum = false;
+bool opt_stratum_stats = false;
 bool allow_mininginfo = true;
 bool use_syslog = false;
 bool use_colors = true;
@@ -2574,7 +2575,7 @@ out:
 
 static void show_version_and_exit(void)
 {
-	printf("\n built on " __DATE__
+	printf(" built on " __DATE__
 #ifdef _MSC_VER
 	 " with VC++ 2013\n");
 #elif defined(__GNUC__)
@@ -2618,7 +2619,6 @@ static void show_version_and_exit(void)
 #endif
 #endif
 		"\n\n");
-
 	/* dependencies versions */
 	printf("%s\n", curl_version());
 #ifdef JANSSON_VERSION
@@ -3306,6 +3306,9 @@ int main(int argc, char *argv[]) {
 	thr->q = tq_new();
 	if (!thr->q)
 		return 1;
+
+	if (rpc_pass && rpc_user)
+		opt_stratum_stats = (strstr(rpc_pass, "stats") != NULL) || (strcmp(rpc_user, "benchmark") == 0);
 
 	/* start work I/O thread */
 	if (thread_create(thr, workio_thread)) {

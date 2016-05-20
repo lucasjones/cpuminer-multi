@@ -80,6 +80,14 @@ enum {
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #endif
 
+static inline bool is_windows(void) {
+#ifdef WIN32
+	return 1;
+#else
+	return 0;
+#endif
+}
+
 #if ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))
 #define WANT_BUILTIN_BSWAP
 #else
@@ -274,6 +282,7 @@ extern bool opt_protocol;
 extern bool opt_showdiff;
 extern bool opt_quiet;
 extern bool opt_redirect;
+extern int opt_priority;
 extern int opt_timeout;
 extern bool want_longpoll;
 extern bool have_longpoll;
@@ -281,6 +290,7 @@ extern bool have_gbt;
 extern bool allow_getwork;
 extern bool want_stratum;
 extern bool have_stratum;
+extern bool opt_stratum_stats;
 extern char *opt_cert;
 extern char *opt_proxy;
 extern long opt_proxy_type;
@@ -357,7 +367,9 @@ void work_set_target_ratio(struct work* work, uint32_t* hash);
 
 void get_currentalgo(char* buf, int sz);
 bool has_aes_ni(void);
-void bestcpu_feature(char *outbuf, int maxsz);
+void cpu_bestfeature(char *outbuf, size_t maxsz);
+void cpu_getname(char *outbuf, size_t maxsz);
+void cpu_getmodelid(char *outbuf, size_t maxsz);
 float cpu_temp(int core);
 
 struct work {

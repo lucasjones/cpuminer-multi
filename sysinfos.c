@@ -70,6 +70,7 @@ static uint32_t linux_cpufreq(int core)
 	if (!fscanf(fd, "%d", &freq))
 		return freq;
 
+	fclose(fd);
 	return freq;
 }
 
@@ -108,6 +109,81 @@ uint32_t cpu_clock(int core)
 int cpu_fanpercent()
 {
 	return 0;
+}
+
+void cpu_getname(char *outbuf, size_t maxsz)
+{
+	memset(outbuf, 0, maxsz);
+#ifdef WIN32
+	// For the i7-5775C will output this :
+	// Intel64 Family 6 Model 71 Stepping 1, GenuineIntel
+	snprintf(outbuf, maxsz, "%s", getenv("PROCESSOR_IDENTIFIER"));
+#else
+	// Intel(R) Xeon(R) CPU E3-1245 V2 @ 3.40GHz
+	FILE *fd = fopen("/proc/cpuinfo", "rb");
+	char *buf = NULL, *p, *eol;
+	size_t size = 0;
+	if (!fd) return;
+	while(getdelim(&buf, &size, 0, fd) != -1) {
+		if (buf && (p = strstr(buf, "model name\t")) && strstr(p, ":")) {
+			p = strstr(p, ":");
+			if (p) {
+				p += 2;
+				eol = strstr(p, "\n"); if (eol) *eol = '\0';
+				snprintf(outbuf, maxsz, "%s", p);
+			}
+			break;
+		}
+	}
+	free(buf);
+	fclose(fd);
+#endif
+}
+
+void cpu_getmodelid(char *outbuf, size_t maxsz)
+{
+	memset(outbuf, 0, maxsz);
+#ifdef WIN32
+	// For the i7-5775C will output 6 r4701
+	snprintf(outbuf, maxsz, "%s:%s",
+		getenv("PROCESSOR_LEVEL"), getenv("PROCESSOR_REVISION")); // hexa
+#else
+	FILE *fd = fopen("/proc/cpuinfo", "rb");
+	char *buf = NULL, *p, *eol;
+	int level = 0, cpufam = 0, model = 0, stepping = 0;
+	size_t size = 0;
+	if (!fd) return;
+	while(getdelim(&buf, &size, 0, fd) != -1) {
+		if (buf && (p = strstr(buf, "cpu family\t")) && strstr(p, ":")) {
+			p = strstr(p, ":");
+			if (p) {
+				p += 2;
+				cpufam = atoi(p);
+			}
+		}
+		if (buf && (p = strstr(buf, "model\t")) && strstr(p, ":")) {
+			p = strstr(p, ":");
+			if (p) {
+				p += 2;
+				model = atoi(p);
+			}
+		}
+		if (buf && (p = strstr(buf, "stepping\t")) && strstr(p, ":")) {
+			p = strstr(p, ":");
+			if (p) {
+				p += 2;
+				stepping = atoi(p);
+			}
+		}
+		if (level && cpufam) {
+			snprintf(outbuf, maxsz, "%x:%02x%02x", cpufam, model, stepping);
+			outbuf[maxsz-1] = '\0';
+			break;
+		}
+	}
+	free(buf);
+	fclose(fd);
+#endif
 }
 
 #ifndef __arm__
@@ -163,7 +239,7 @@ bool has_aes_ni()
 #endif
 }
 
-void bestcpu_feature(char *outbuf, int maxsz)
+void cpu_bestfeature(char *outbuf, size_t maxsz)
 {
 #ifdef __arm__
 	sprintf(outbuf, "ARM");
@@ -175,7 +251,7 @@ void bestcpu_feature(char *outbuf, int maxsz)
 	if ((cpu_info[2] & AVX1_Flag) && (cpu_info_adv[1] & AVX2_Flag))
 		sprintf(outbuf, "AVX2");
 	else if (cpu_info[2] & AVX1_Flag)
-		sprintf(outbuf, "AVX1");
+		sprintf(outbuf, "AVX");
 	else if (cpu_info[2] & FMA3_Flag)
 		sprintf(outbuf, "FMA3");
 	else if (cpu_info[2] & XOP_Flag)
