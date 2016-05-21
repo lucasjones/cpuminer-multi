@@ -4,11 +4,11 @@
 
 	"api-bind" : "127.0.0.1:4048",
 
-	"url" : "stratum+tcp://mine.xpool.ca:1131",
-	"user" : "XeVrkPrWB7pDbdFLfKhF1Z3xpqhsx6wkH3",
-	"pass" : "cpuminer",
+	"url" : "stratum+tcp://yiimp.ccminer.org:4252",
+	"user" : "benchmark",
+	"pass" : "d=0.024",
 
-	"algo" : "x11",
+	"algo" : "decred",
 	"threads" : 0,
 	"cpu-priority" : 0,
 	"cpu-affinity" : -1,
@@ -16,5 +16,6 @@
 	"benchmark" : false,
 	"debug" : false,
 	"protocol": false,
+	"show-diff": true,
 	"quiet" : false
 }
