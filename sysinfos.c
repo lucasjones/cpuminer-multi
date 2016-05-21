@@ -144,13 +144,13 @@ void cpu_getmodelid(char *outbuf, size_t maxsz)
 {
 	memset(outbuf, 0, maxsz);
 #ifdef WIN32
-	// For the i7-5775C will output 6 r4701
-	snprintf(outbuf, maxsz, "%s:%s",
-		getenv("PROCESSOR_LEVEL"), getenv("PROCESSOR_REVISION")); // hexa
+	// For the i7-5775C will output 6:4701:8
+	snprintf(outbuf, maxsz, "%s:%s:%s", getenv("PROCESSOR_LEVEL"), // hexa ?
+		getenv("PROCESSOR_REVISION"), getenv("NUMBER_OF_PROCESSORS"));
 #else
 	FILE *fd = fopen("/proc/cpuinfo", "rb");
 	char *buf = NULL, *p, *eol;
-	int level = 0, cpufam = 0, model = 0, stepping = 0;
+	int cpufam = 0, model = 0, stepping = 0;
 	size_t size = 0;
 	if (!fd) return;
 	while(getdelim(&buf, &size, 0, fd) != -1) {
@@ -175,8 +175,8 @@ void cpu_getmodelid(char *outbuf, size_t maxsz)
 				stepping = atoi(p);
 			}
 		}
-		if (level && cpufam) {
-			snprintf(outbuf, maxsz, "%x:%02x%02x", cpufam, model, stepping);
+		if (cpufam && model && stepping) {
+			snprintf(outbuf, maxsz, "%x:%02x%02x:%d", cpufam, model, stepping, num_cpus);
 			outbuf[maxsz-1] = '\0';
 			break;
 		}

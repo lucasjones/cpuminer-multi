@@ -302,6 +302,7 @@ extern int longpoll_thr_id;
 extern int stratum_thr_id;
 extern int api_thr_id;
 extern int opt_n_threads;
+extern int num_cpus;
 extern struct work_restart *work_restart;
 extern uint32_t opt_work_size;
 extern double *thr_hashrates;
