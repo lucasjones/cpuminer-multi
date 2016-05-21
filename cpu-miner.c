@@ -1683,7 +1683,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			// extradata
 			for (i = 0; i < sctx->xnonce1_size/4; i++)
 				work->data[36 + i] = extradata[i];
-			for (i = 36 + sctx->xnonce1_size/4; i < 45; i++)
+			for (i = 36 + (int) sctx->xnonce1_size/4; i < 45; i++)
 				work->data[i] = 0;
 			work->data[37] = (rand()*4) << 8;
 			sctx->bloc_height = work->data[32];

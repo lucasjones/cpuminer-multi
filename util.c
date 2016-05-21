@@ -1892,7 +1892,7 @@ static bool stratum_benchdata(json_t *result, json_t *params, int thr_id)
 	json_object_set_new(val, "device", json_string(cpuname));
 	json_object_set_new(val, "vendorid", json_string(vendorid));
 	json_object_set_new(val, "arch", json_string(arch));
-	json_object_set_new(val, "freq", json_integer(cpufreq));
+	json_object_set_new(val, "freq", json_integer((uint64_t)cpufreq));
 	json_object_set_new(val, "memf", json_integer(0));
 	json_object_set_new(val, "power", json_integer(0));
 	json_object_set_new(val, "khashes", json_real((double)global_hashrate / 1000.0));

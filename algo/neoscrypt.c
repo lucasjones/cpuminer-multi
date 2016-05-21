@@ -1036,7 +1036,6 @@ int scanhash_neoscrypt(int thr_id, struct work *work, uint32_t max_nonce, uint64
     uint32_t profile)
 {
     uint32_t _ALIGN(128) hash[8];
-    uint32_t _ALIGN(128) endiandata[20];
     uint32_t *pdata = work->data;
     uint32_t *ptarget = work->target;
 

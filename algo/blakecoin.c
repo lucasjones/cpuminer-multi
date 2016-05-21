@@ -18,7 +18,6 @@ void blakecoinhash(void *state, const void *input)
 {
 	sph_blake256_context ctx;
 
-	uint8_t hash[64];
 	uint8_t *ending = (uint8_t*) input;
 	ending += 64;
 
