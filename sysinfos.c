@@ -111,13 +111,57 @@ int cpu_fanpercent()
 	return 0;
 }
 
+#ifndef __arm__
+static inline void cpuid(int functionnumber, int output[4]) {
+#if defined (_MSC_VER) || defined (__INTEL_COMPILER)
+	// Microsoft or Intel compiler, intrin.h included
+	__cpuidex(output, functionnumber, 0);
+#elif defined(__GNUC__) || defined(__clang__)
+	// use inline assembly, Gnu/AT&T syntax
+	int a, b, c, d;
+	asm volatile("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "a"(functionnumber), "c"(0));
+	output[0] = a;
+	output[1] = b;
+	output[2] = c;
+	output[3] = d;
+#else
+	// unknown platform. try inline assembly with masm/intel syntax
+	__asm {
+		mov eax, functionnumber
+		xor ecx, ecx
+		cpuid;
+		mov esi, output
+		mov[esi], eax
+		mov[esi + 4], ebx
+		mov[esi + 8], ecx
+		mov[esi + 12], edx
+	}
+#endif
+}
+#else /* !__arm__ */
+#define cpuid(fn, out) out[0] = 0;
+#endif
+
+// For the i7-5775C will output : Intel(R) Core(TM) i7-5775C CPU @ 3.30GHz
 void cpu_getname(char *outbuf, size_t maxsz)
 {
 	memset(outbuf, 0, maxsz);
 #ifdef WIN32
-	// For the i7-5775C will output this :
-	// Intel64 Family 6 Model 71 Stepping 1, GenuineIntel
-	snprintf(outbuf, maxsz, "%s", getenv("PROCESSOR_IDENTIFIER"));
+	char brand[0xC0] = { 0 };
+	int output[4] = { 0 }, ext;
+	cpuid(0x80000000, output);
+	ext = output[0];
+	if (ext >= 0x80000004) {
+		for (int i = 2; i <= (ext & 0xF); i++) {
+			cpuid(0x80000000+i, output);
+			memcpy(&brand[(i-2) * 4*sizeof(int)], output, 4*sizeof(int));
+		}
+		snprintf(outbuf, maxsz, "%s", brand);
+	} else {
+		// Fallback, for the i7-5775C will output
+		// Intel64 Family 6 Model 71 Stepping 1, GenuineIntel
+		snprintf(outbuf, maxsz, "%s", getenv("PROCESSOR_IDENTIFIER"));
+	}
 #else
 	// Intel(R) Xeon(R) CPU E3-1245 V2 @ 3.40GHz
 	FILE *fd = fopen("/proc/cpuinfo", "rb");
@@ -185,35 +229,6 @@ void cpu_getmodelid(char *outbuf, size_t maxsz)
 	fclose(fd);
 #endif
 }
-
-#ifndef __arm__
-static inline void cpuid(int functionnumber, int output[4]) {
-#if defined (_MSC_VER) || defined (__INTEL_COMPILER)
-	// Microsoft or Intel compiler, intrin.h included
-	__cpuidex(output, functionnumber, 0);
-#elif defined(__GNUC__) || defined(__clang__)
-	// use inline assembly, Gnu/AT&T syntax
-	int a, b, c, d;
-	asm volatile("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "a"(functionnumber), "c"(0));
-	output[0] = a;
-	output[1] = b;
-	output[2] = c;
-	output[3] = d;
-#else
-	// unknown platform. try inline assembly with masm/intel syntax
-	__asm {
-		mov eax, functionnumber
-		xor ecx, ecx
-		cpuid;
-		mov esi, output
-		mov[esi], eax
-		mov[esi + 4], ebx
-		mov[esi + 8], ecx
-		mov[esi + 12], edx
-	}
-#endif
-}
-#endif /* !__arm__ */
 
 // http://en.wikipedia.org/wiki/CPUID
 #define OSXSAVE_Flag  (1 << 27)
