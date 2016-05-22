@@ -52,6 +52,17 @@ static __inline int setpriority(int which, int who, int prio)
 #define _ALIGN(x) __declspec(align(x))
 typedef int ssize_t;
 
+__inline int msver(void) {
+	switch (_MSC_VER) {
+	case 1500: return 2008;
+	case 1600: return 2010;
+	case 1700: return 2012;
+	case 1800: return 2013;
+	case 1900: return 2015;
+	default: return (_MSC_VER/100);
+	}
+}
+
 #include <stdlib.h>
 // This static var is made to be compatible with linux/mingw (no free on string result)
 // This is not thread safe but we only use that once on process start

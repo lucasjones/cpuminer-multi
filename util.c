@@ -1841,7 +1841,7 @@ static bool stratum_benchdata(json_t *result, json_t *params, int thr_id)
 #endif
 
 #ifdef _MSC_VER
-	sprintf(compiler, "VC++ %d\n", _MSC_VER / 100);
+	sprintf(compiler, "MSVC %d\n", msver());
 #elif defined(__clang__)
 	sprintf(compiler, "clang %s\n", __clang_version__);
 #elif defined(__GNUC__)

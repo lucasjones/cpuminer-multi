@@ -2575,15 +2575,38 @@ out:
 
 static void show_version_and_exit(void)
 {
-	printf(" built on " __DATE__
+	printf(" built "
 #ifdef _MSC_VER
-	 " with VC++ 2013\n");
+	 "with VC++ %d", msver());
 #elif defined(__GNUC__)
-	 " with GCC");
-	printf(" %d.%d.%d\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+	 "with GCC ");
+	printf("%d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 #endif
+	printf(" the " __DATE__ "\n");
 
-	printf(" features:"
+	// Note: if compiled with cpu opts (instruction sets),
+	// the binary is no more compatible with older ones!
+	printf(" compiled for"
+#if defined(__ARM_NEON__)
+		" ARM NEON"
+#elif defined(__AVX2__)
+		" AVX2"
+#elif defined(__AVX__)
+		" AVX"
+#elif defined(__XOP__)
+		" XOP"
+#elif defined(__SSE4_1__)
+		" SSE4"
+#elif defined(_M_X64) || defined(__x86_64__)
+		" x64"
+#elif defined(_M_IX86) || defined(__x86__)
+		" x86"
+#else
+		" general use"
+#endif
+		"\n");
+
+	printf(" config features:"
 #if defined(USE_ASM) && defined(__i386__)
 		" i386"
 #endif
@@ -2593,14 +2616,14 @@ static void show_version_and_exit(void)
 #if defined(USE_ASM) && (defined(__i386__) || defined(__x86_64__))
 		" SSE2"
 #endif
+#if defined(__x86_64__) && defined(USE_XOP)
+		" XOP"
+#endif
 #if defined(__x86_64__) && defined(USE_AVX)
 		" AVX"
 #endif
 #if defined(__x86_64__) && defined(USE_AVX2)
 		" AVX2"
-#endif
-#if defined(__x86_64__) && defined(USE_XOP)
-		" XOP"
 #endif
 #if defined(USE_ASM) && defined(__arm__) && defined(__APCS_32__)
 		" ARM"
@@ -3133,8 +3156,8 @@ static int thread_create(struct thr_info *thr, void* func)
 
 static void show_credits()
 {
-	printf("** " PACKAGE_NAME " " PACKAGE_VERSION " by Tanguy Pruvot (tpruvot@github) **\n");
-	printf("BTC donation address: 1FhDPLPpw18X4srecguG3MxJYe4a1JsZnd\n\n");
+	printf("** " PACKAGE_NAME " " PACKAGE_VERSION " by tpruvot@github **\n");
+	printf("BTC donation address: 1FhDPLPpw18X4srecguG3MxJYe4a1JsZnd (tpruvot)\n\n");
 }
 
 void get_defconfig_path(char *out, size_t bufsize, char *argv0);
