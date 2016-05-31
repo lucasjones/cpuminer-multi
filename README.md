@@ -47,6 +47,7 @@ Algorithms
  * ✓ __skein2__ (Woodcoin)
  * ✓ __s3__ (OneCoin)
  * ✓ __vanilla__ (Blake-256 8-rounds - double sha256 [VNL])
+ * ✓ __x11evo__ (Revolver [XRE])
  * ✓ __x11__ (Darkcoin [DRK], Hirocoin, Limecoin, ...)
  * ✓ __x13__ (Sherlockcoin, [ACE], [B2B], [GRC], [XHC], ...)
  * ✓ __x14__ (X14, Webcoin [WEB])
@@ -91,7 +92,7 @@ _OR_
  * make
 
 #### Note for Debian/Ubuntu users:
- * apt-get install autoconf pkg-config libcurl4-openssl-dev libjansson-dev libssl-dev libgmp-dev
+ * apt-get install automake autoconf pkg-config libcurl4-openssl-dev libjansson-dev libssl-dev libgmp-dev
 
 #### Notes for AIX users:
  * To build a 64-bit binary, export OBJECT_MODE=64

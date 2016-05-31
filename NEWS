@@ -1,6 +1,8 @@
 Version 1.3 (Tanguy Pruvot)
 - Add decred algo
+- Add x11evo algo
 - Enhance Blake2-S
+- Stratum benchmarks support
 
 Version 1.2 (Tanguy Pruvot)
 - Add cryptonight-light (Aeon)

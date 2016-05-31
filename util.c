@@ -2404,6 +2404,9 @@ void print_hash_tests(void)
 	s3hash(&hash[0], &buf[0]);
 	printpfx("s3", hash);
 
+	x11evo_hash(&hash[0], &buf[0]);
+	printpfx("x11evo", hash);
+
 	x11hash(&hash[0], &buf[0]);
 	printpfx("x11", hash);
 
