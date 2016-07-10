@@ -1361,6 +1361,7 @@ bool stratum_authorize(struct stratum_ctx *sctx, const char *user, const char *p
 	char *s, *sret;
 	json_error_t err;
 	bool ret = false;
+	int req_id = 0;
 
 	if (jsonrpc_2) {
 		s = (char*) malloc(300 + strlen(user) + strlen(pass));
@@ -1394,9 +1395,10 @@ bool stratum_authorize(struct stratum_ctx *sctx, const char *user, const char *p
 
 	res_val = json_object_get(val, "result");
 	err_val = json_object_get(val, "error");
+	req_id = (int) json_integer_value(json_object_get(val, "id"));
 
-	if (!res_val || json_is_false(res_val) ||
-	    (err_val && !json_is_null(err_val)))  {
+	if (req_id == 2
+		&& (!res_val || json_is_false(res_val) || (err_val && !json_is_null(err_val)))) {
 		applog(LOG_ERR, "Stratum authentication failed");
 		goto out;
 	}
@@ -1680,24 +1682,33 @@ static uint32_t getblocheight(struct stratum_ctx *sctx)
 static bool stratum_notify(struct stratum_ctx *sctx, json_t *params)
 {
 	const char *job_id, *prevhash, *coinb1, *coinb2, *version, *nbits, *ntime;
+	const char *claim = NULL;
 	size_t coinb1_size, coinb2_size;
 	bool clean, ret = false;
-	int merkle_count, i;
+	int merkle_count, i, p=0;
+	bool has_claim = json_array_size(params) == 10; // todo: use opt_algo
 	json_t *merkle_arr;
 	uchar **merkle;
 
-	job_id = json_string_value(json_array_get(params, 0));
-	prevhash = json_string_value(json_array_get(params, 1));
-	coinb1 = json_string_value(json_array_get(params, 2));
-	coinb2 = json_string_value(json_array_get(params, 3));
-	merkle_arr = json_array_get(params, 4);
+	job_id = json_string_value(json_array_get(params, p++));
+	prevhash = json_string_value(json_array_get(params, p++));
+	if (has_claim) {
+		claim = json_string_value(json_array_get(params, p++));
+		if (!claim || strlen(claim) != 64) {
+			applog(LOG_ERR, "Stratum notify: invalid claim parameter");
+			goto out;
+		}
+	}
+	coinb1 = json_string_value(json_array_get(params, p++));
+	coinb2 = json_string_value(json_array_get(params, p++));
+	merkle_arr = json_array_get(params, p++);
 	if (!merkle_arr || !json_is_array(merkle_arr))
 		goto out;
 	merkle_count = (int) json_array_size(merkle_arr);
-	version = json_string_value(json_array_get(params, 5));
-	nbits = json_string_value(json_array_get(params, 6));
-	ntime = json_string_value(json_array_get(params, 7));
-	clean = json_is_true(json_array_get(params, 8));
+	version = json_string_value(json_array_get(params, p++));
+	nbits = json_string_value(json_array_get(params, p++));
+	ntime = json_string_value(json_array_get(params, p++));
+	clean = json_is_true(json_array_get(params, p));
 
 	if (!job_id || !prevhash || !coinb1 || !coinb2 || !version || !nbits || !ntime ||
 	    strlen(prevhash) != 64 || strlen(version) != 8 ||
@@ -1736,6 +1747,8 @@ static bool stratum_notify(struct stratum_ctx *sctx, json_t *params)
 	free(sctx->job.job_id);
 	sctx->job.job_id = strdup(job_id);
 	hex2bin(sctx->job.prevhash, prevhash, 32);
+
+	if (has_claim) hex2bin(sctx->job.claim, claim, 32);
 
 	sctx->bloc_height = getblocheight(sctx);
 
@@ -1875,7 +1888,6 @@ static bool stratum_benchdata(json_t *result, json_t *params, int thr_id)
 	cpu_getname(cpuname, 80);
 	p = strstr(cpuname, " @ ");
 	if (p) {
-		// linux only
 		char freq[32] = { 0 };
 		*p = '\0'; p += 3;
 		snprintf(freq, 32, "%s", p);
@@ -2344,6 +2356,9 @@ void print_hash_tests(void)
 
 	keccakhash(&hash[0], &buf[0]);
 	printpfx("keccak", hash);
+
+	lbry_hash(&hash[0], &buf[0]);
+	printpfx("lbry", hash);
 
 	luffahash(&hash[0], &buf[0]);
 	printpfx("luffa", hash);

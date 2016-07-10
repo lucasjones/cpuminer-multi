@@ -95,6 +95,7 @@ enum algos {
 	ALGO_DROP,        /* Dropcoin */
 	ALGO_FRESH,       /* Fresh */
 	ALGO_GROESTL,     /* Groestl */
+	ALGO_LBRY,        /* Lbry Sha Ripemd */
 	ALGO_LUFFA,       /* Luffa (Joincoin, Doom) */
 	ALGO_LYRA2,       /* Lyra2RE */
 	ALGO_LYRA2REV2,   /* Lyra2REv2 (Vertcoin) */
@@ -141,6 +142,7 @@ static const char *algo_names[] = {
 	"drop",
 	"fresh",
 	"groestl",
+	"lbry",
 	"luffa",
 	"lyra2re",
 	"lyra2rev2",
@@ -529,18 +531,17 @@ static void calc_network_diff(struct work *work)
 	// sample for diff 43.281 : 1c05ea29
 	// todo: endian reversed on longpoll could be zr5 specific...
 	uint32_t nbits = have_longpoll ? work->data[18] : swab32(work->data[18]);
+	if (opt_algo == ALGO_LBRY) nbits = 0; // not found
 	if (opt_algo == ALGO_DECRED) nbits = work->data[29];
 	uint32_t bits = (nbits & 0xffffff);
 	int16_t shift = (swab32(nbits) & 0xff); // 0x1c = 28
 
 	double d = (double)0x0000ffff / (double)bits;
-
 	for (int m=shift; m < 29; m++) d *= 256.0;
 	for (int m=29; m < shift; m++) d /= 256.0;
 	if (opt_algo == ALGO_DECRED && shift == 28) d *= 256.0; // testnet
 	if (opt_debug_diff)
 		applog(LOG_DEBUG, "net diff: %f -> shift %u, bits %08x", d, shift, bits);
-
 	net_diff = d;
 }
 
@@ -1083,6 +1084,10 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			case ALGO_DECRED:
 				be32enc(&ntime, work->data[34]);
 				be32enc(&nonce, work->data[35]);
+				break;
+			case ALGO_LBRY:
+				le32enc(&ntime, work->data[25]);
+				le32enc(&nonce, work->data[27]);
 				break;
 			case ALGO_DROP:
 			case ALGO_NEOSCRYPT:
@@ -1692,6 +1697,13 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			sctx->bloc_height = work->data[32];
 			//applog_hex(work->data, 180);
 			//applog_hex(&work->data[36], 36);
+		} else if (opt_algo == ALGO_LBRY) {
+			for (i = 0; i < 8; i++)
+				work->data[17 + i] = ((uint32_t*)sctx->job.claim)[i];
+			work->data[25] = le32dec(sctx->job.ntime);
+			work->data[26] = le32dec(sctx->job.nbits);
+			// required ?
+			work->data[28] = 0x80000000;
 		} else {
 			work->data[17] = le32dec(sctx->job.ntime);
 			work->data[18] = le32dec(sctx->job.nbits);
@@ -1730,6 +1742,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_FRESH:
 			case ALGO_DMD_GR:
 			case ALGO_GROESTL:
+			case ALGO_LBRY:
 			case ALGO_LYRA2REV2:
 				work_set_target(work, sctx->job.diff / (256.0 * opt_diff_factor));
 				break;
@@ -1900,6 +1913,9 @@ static void *miner_thread(void *userdata)
 		} else if (opt_algo == ALGO_DECRED) {
 			wkcmp_sz = nonce_oft = 140; // 35 * 4
 			regen_work = true; // ntime not changed ?
+		} else if (opt_algo == ALGO_LBRY) {
+			wkcmp_sz = nonce_oft = 108; // 27
+			//regen_work = true;
 		}
 
 		if (jsonrpc_2) {
@@ -2052,6 +2068,7 @@ static void *miner_thread(void *userdata)
 			case ALGO_X14:
 				max64 = 0x3ffff;
 				break;
+			case ALGO_LBRY:
 			case ALGO_X15:
 			case ALGO_ZR5:
 				max64 = 0x1ffff;
@@ -2134,6 +2151,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_HEAVY:
 			rc = scanhash_heavy(thr_id, &work, max_nonce, &hashes_done);
+			break;
+		case ALGO_LBRY:
+			rc = scanhash_lbry(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_LUFFA:
 			rc = scanhash_luffa(thr_id, &work, max_nonce, &hashes_done);

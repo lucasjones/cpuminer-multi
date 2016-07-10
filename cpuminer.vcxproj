@@ -217,6 +217,7 @@
     <ClCompile Include="algo\heavy.c" />
     <ClCompile Include="algo\keccak.c" />
     <ClCompile Include="algo\ink.c" />
+    <ClCompile Include="algo\lbry.c" />
     <ClCompile Include="algo\luffa.c" />
     <ClCompile Include="algo\lyra2re.c" />
     <ClCompile Include="algo\lyra2rev2.c" />
@@ -259,6 +260,7 @@
     <ClCompile Include="sha3\sph_jh.c" />
     <ClCompile Include="sha3\sph_keccak.c" />
     <ClCompile Include="sha3\sph_luffa.c" />
+    <ClCompile Include="sha3\sph_ripemd.c" />
     <ClCompile Include="sha3\sph_sha2.c" />
     <ClCompile Include="sha3\sph_sha2big.c" />
     <ClCompile Include="sha3\sph_shabal.c" />

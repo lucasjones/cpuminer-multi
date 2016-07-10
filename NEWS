@@ -1,5 +1,6 @@
 Version 1.3 (Tanguy Pruvot)
 - Add decred algo
+- Add lbry algo
 - Add x11evo algo
 - Enhance Blake2-S
 - Stratum benchmarks support

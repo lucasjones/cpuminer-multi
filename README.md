@@ -34,6 +34,7 @@ Algorithms
  * ✓ __dmd-gr__ (Diamond-Groestl)
  * ✓ __fresh__ (FreshCoin)
  * ✓ __groestl__ (Groestlcoin)
+ * ✓ __lbry__ (LBRY Credits [LBC])
  * ✓ __lyra2RE__ (Lyrabar, Cryptocoin)
  * ✓ __lyra2REv2__ (VertCoin [VTC])
  * ✓ __myr-gr__ (Myriad-Groestl)

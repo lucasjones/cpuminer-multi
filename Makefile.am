@@ -35,6 +35,7 @@ cpuminer_SOURCES = \
   sha3/sph_hamsi.c \
   sha3/sph_fugue.c \
   sha3/sph_gost.c \
+  sha3/sph_ripemd.c \
   sha3/sph_sha2.c \
   sha3/sph_sha2big.c \
   sha3/sph_shabal.c \
@@ -66,6 +67,7 @@ cpuminer_SOURCES = \
   algo/groestl.c \
   algo/heavy.c \
   algo/ink.c \
+  algo/lbry.c \
   algo/luffa.c \
   algo/lyra2re.c \
   algo/lyra2rev2.c \

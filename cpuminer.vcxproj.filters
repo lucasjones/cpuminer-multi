@@ -46,6 +46,9 @@
     <ClCompile Include="sha3\sph_luffa.c">
       <Filter>sph</Filter>
     </ClCompile>
+    <ClCompile Include="sha3\sph_ripemd.c">
+      <Filter>sph</Filter>
+    </ClCompile>
     <ClCompile Include="sha3\sph_sha2.c">
       <Filter>sph</Filter>
     </ClCompile>
@@ -202,6 +205,9 @@
       <Filter>algo</Filter>
     </ClCompile>
     <ClCompile Include="algo\keccak.c">
+      <Filter>algo</Filter>
+    </ClCompile>
+    <ClCompile Include="algo\lbry.c">
       <Filter>algo</Filter>
     </ClCompile>
     <ClCompile Include="algo\luffa.c">
