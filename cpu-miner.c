@@ -108,6 +108,7 @@ enum algos {
 	ALGO_SCRYPTJANE,  /* Chacha */
 	ALGO_SHAVITE3,    /* Shavite3 */
 	ALGO_SHA256D,     /* SHA-256d */
+	ALGO_SIA,         /* Blake2-B */
 	ALGO_SIB,         /* X11 + gost (Sibcoin) */
 	ALGO_SKEIN,       /* Skein */
 	ALGO_SKEIN2,      /* Double skein (Woodcoin) */
@@ -155,6 +156,7 @@ static const char *algo_names[] = {
 	"scrypt-jane",
 	"shavite3",
 	"sha256d",
+	"sia",
 	"sib",
 	"skein",
 	"skein2",
@@ -301,6 +303,7 @@ Options:\n\
                           scrypt-jane:N (with N factor from 4 to 30)\n\
                           shavite3     Shavite3\n\
                           sha256d      SHA-256d\n\
+                          sia          Blake2-B\n\
                           sib          X11 + gost (SibCoin)\n\
                           skein        Skein+Sha (Skeincoin)\n\
                           skein2       Double Skein (Woodcoin)\n\
@@ -531,8 +534,9 @@ static void calc_network_diff(struct work *work)
 	// sample for diff 43.281 : 1c05ea29
 	// todo: endian reversed on longpoll could be zr5 specific...
 	uint32_t nbits = have_longpoll ? work->data[18] : swab32(work->data[18]);
-	if (opt_algo == ALGO_LBRY) nbits = 0; // not found
+	if (opt_algo == ALGO_LBRY) nbits = swab32(work->data[26]);
 	if (opt_algo == ALGO_DECRED) nbits = work->data[29];
+	if (opt_algo == ALGO_SIA) nbits = work->data[11]; // unsure if correct
 	uint32_t bits = (nbits & 0xffffff);
 	int16_t shift = (swab32(nbits) & 0xff); // 0x1c = 28
 
@@ -1022,7 +1026,7 @@ static int share_result(int result, struct work *work, const char *reason)
 
 	if (reason) {
 		applog(LOG_WARNING, "reject reason: %s", reason);
-		if (strncmp(reason, "low difficulty share", 20) == 0) {
+		if (0 && strncmp(reason, "low difficulty share", 20) == 0) {
 			opt_diff_factor = (opt_diff_factor * 2.0) / 3.0;
 			applog(LOG_WARNING, "factor reduced to : %0.2f", opt_diff_factor);
 			return 0;
@@ -1039,7 +1043,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 	bool rc = false;
 
 	/* pass if the previous hash is not the current previous hash */
-	if (!submit_old && memcmp(&work->data[1], &g_work.data[1], 32)) {
+	if (opt_algo != ALGO_SIA && !submit_old && memcmp(&work->data[1], &g_work.data[1], 32)) {
 		if (opt_debug)
 			applog(LOG_DEBUG, "DEBUG: stale work detected, discarding");
 		return true;
@@ -1082,6 +1086,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 
 			switch (opt_algo) {
 			case ALGO_DECRED:
+				/* reversed */
 				be32enc(&ntime, work->data[34]);
 				be32enc(&nonce, work->data[35]);
 				break;
@@ -1096,6 +1101,11 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 				be32enc(&ntime, work->data[17]);
 				be32enc(&nonce, work->data[19]);
 				break;
+			case ALGO_SIA:
+				/* reversed */
+				be32enc(&ntime, work->data[10]);
+				be32enc(&nonce, work->data[8]);
+				break;
 			default:
 				le32enc(&ntime, work->data[17]);
 				le32enc(&nonce, work->data[19]);
@@ -1105,6 +1115,9 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			bin2hex(noncestr, (const unsigned char *)(&nonce), 4);
 			if (opt_algo == ALGO_DECRED) {
 				xnonce2str = abin2hex((unsigned char*)(&work->data[36]), stratum.xnonce1_size);
+			} else if (opt_algo == ALGO_SIA) {
+				uint16_t high_nonce = swab32(work->data[9]) >> 16;
+				xnonce2str = abin2hex((unsigned char*)(&high_nonce), 2);
 			} else {
 				xnonce2str = abin2hex(work->xnonce2, work->xnonce2_len);
 			}
@@ -1655,6 +1668,12 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_BLAKECOIN:
 				SHA256(sctx->job.coinbase, (int) sctx->job.coinbase_size, merkle_root);
 				break;
+			case ALGO_SIA:
+				// getwork over stratum, getwork merkle + header passed in coinb1
+				memcpy(merkle_root, sctx->job.coinbase, 32);
+				headersize = min((int)sctx->job.coinbase_size - 32, sizeof(extraheader));
+				memcpy(extraheader, &sctx->job.coinbase[32], headersize);
+				break;
 			default:
 				sha256d(merkle_root, sctx->job.coinbase, (int) sctx->job.coinbase_size);
 		}
@@ -1702,8 +1721,18 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 				work->data[17 + i] = ((uint32_t*)sctx->job.claim)[i];
 			work->data[25] = le32dec(sctx->job.ntime);
 			work->data[26] = le32dec(sctx->job.nbits);
-			// required ?
 			work->data[28] = 0x80000000;
+		} else if (opt_algo == ALGO_SIA) {
+			for (i = 0; i < 8; i++) // prevhash
+				work->data[i] = ((uint32_t*)sctx->job.prevhash)[7-i];
+			work->data[8] = 0; // nonce
+			work->data[9] = swab32(extraheader[0]);
+			work->data[9] |= rand() & 0xF0;
+			work->data[10] = be32dec(sctx->job.ntime);
+			work->data[11] = be32dec(sctx->job.nbits);
+			for (i = 0; i < 8; i++) // prevhash
+				work->data[12+i] = ((uint32_t*)merkle_root)[i];
+			//applog_hex(&work->data[0], 80);
 		} else {
 			work->data[17] = le32dec(sctx->job.ntime);
 			work->data[18] = le32dec(sctx->job.nbits);
@@ -1723,7 +1752,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 
 		pthread_mutex_unlock(&sctx->work_lock);
 
-		if (opt_debug && opt_algo != ALGO_DECRED) {
+		if (opt_debug && opt_algo != ALGO_DECRED && opt_algo != ALGO_SIA) {
 			char *xnonce2str = abin2hex(work->xnonce2, work->xnonce2_len);
 			applog(LOG_DEBUG, "DEBUG: job_id='%s' extranonce2=%s ntime=%08x",
 					work->job_id, xnonce2str, swab32(work->data[17]));
@@ -1916,6 +1945,10 @@ static void *miner_thread(void *userdata)
 		} else if (opt_algo == ALGO_LBRY) {
 			wkcmp_sz = nonce_oft = 108; // 27
 			//regen_work = true;
+		} else if (opt_algo == ALGO_SIA) {
+			nonce_oft = 32;
+			wkcmp_offset = 32 + 16;
+			wkcmp_sz = 32; // 35 * 4
 		}
 
 		if (jsonrpc_2) {
@@ -1984,11 +2017,19 @@ static void *miner_thread(void *userdata)
 			// extradata: prevent duplicates
 			nonceptr[1] += 1;
 			nonceptr[2] |= thr_id;
+		} else if (opt_algo == ALGO_SIA) {
+			if (have_stratum && strcmp(stratum.job.job_id, work.job_id))
+				continue; // need to regen g_work..
+			// extradata: prevent duplicates
+			nonceptr[1] += 0x10;
+			nonceptr[1] |= thr_id;
+			//applog_hex(nonceptr, 8);
 		}
 
 		// prevent scans before a job is received
 		// beware, some testnet (decred) are using version 0
-		if (have_stratum && !work.data[0] && !opt_benchmark) {
+		// no version in sia draft protocol
+		if (opt_algo != ALGO_SIA && have_stratum && !work.data[0] && !opt_benchmark) {
 			sleep(1);
 			continue;
 		}
@@ -2087,6 +2128,7 @@ static void *miner_thread(void *userdata)
 			case ALGO_VANILLA:
 				max64 = 0x3fffffLL;
 				break;
+			case ALGO_SIA:
 			default:
 				max64 = 0x1fffffLL;
 				break;
@@ -2197,6 +2239,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_SHA256D:
 			rc = scanhash_sha256d(thr_id, &work, max_nonce,	&hashes_done);
+			break;
+		case ALGO_SIA:
+			rc = scanhash_sia(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_SIB:
 			rc = scanhash_sib(thr_id, &work, max_nonce, &hashes_done);
@@ -3248,7 +3293,7 @@ int main(int argc, char *argv[]) {
 			applog(LOG_INFO, "Using JSON-RPC 2.0");
 			applog(LOG_INFO, "CPU Supports AES-NI: %s", aes_ni_supported ? "YES" : "NO");
 		}
-	} else if(opt_algo == ALGO_DECRED) {
+	} else if(opt_algo == ALGO_DECRED || opt_algo == ALGO_SIA) {
 		have_gbt = false;
 	}
 
