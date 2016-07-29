@@ -485,6 +485,7 @@ void bastionhash(void *output, const void *input);
 void blakehash(void *state, const void *input);
 void blakecoinhash(void *state, const void *input);
 void blake2s_hash(void *output, const void *input);
+void blake2b_hash(void *output, const void *input);
 void bmwhash(void *output, const void *input);
 void c11hash(void *output, const void *input);
 void cryptolight_hash(void* output, const void* input, int len);

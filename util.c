@@ -2327,6 +2327,9 @@ void print_hash_tests(void)
 	blake2s_hash(&hash[0], &buf[0]);
 	printpfx("blake2s", hash);
 
+	blake2b_hash(&hash[0], &buf[0]);
+	printpfx("blake2b", hash);
+
 	bmwhash(&hash[0], &buf[0]);
 	printpfx("bmw", hash);
 

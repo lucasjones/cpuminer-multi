@@ -41,6 +41,7 @@ cpuminer_SOURCES = \
   sha3/sph_shabal.c \
   sha3/sph_whirlpool.c \
   crypto/blake2s.c \
+  crypto/blake2b.c \
   crypto/oaes_lib.c \
   crypto/c_keccak.c \
   crypto/c_groestl.c \
@@ -82,6 +83,7 @@ cpuminer_SOURCES = \
   algo/scrypt.c \
   algo/scrypt-jane.c \
   algo/sha2.c \
+  algo/sia.c \
   algo/sibcoin.c \
   algo/skein.c \
   algo/skein2.c \
