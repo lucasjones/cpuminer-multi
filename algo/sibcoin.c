@@ -12,7 +12,7 @@
 #include "sha3/sph_keccak.h"
 #include "sha3/sph_skein.h"
 #include "sha3/sph_luffa.h"
-#include "sha3/sph_gost.h"
+#include "sha3/gost_streebog.h"
 #include "sha3/sph_cubehash.h"
 #include "sha3/sph_shavite.h"
 #include "sha3/sph_simd.h"

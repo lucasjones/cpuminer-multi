@@ -114,6 +114,7 @@ enum algos {
 	ALGO_SKEIN2,      /* Double skein (Woodcoin) */
 	ALGO_S3,          /* S3 */
 	ALGO_VANILLA,     /* Vanilla (Blake256 8-rounds - double sha256) */
+	ALGO_VELTOR,      /* Skein Shavite Shabal Streebog */
 	ALGO_X11EVO,      /* Permuted X11 */
 	ALGO_X11,         /* X11 */
 	ALGO_X13,         /* X13 */
@@ -162,6 +163,7 @@ static const char *algo_names[] = {
 	"skein2",
 	"s3",
 	"vanilla",
+	"veltor",
 	"x11evo",
 	"x11",
 	"x13",
@@ -2103,6 +2105,7 @@ static void *miner_thread(void *userdata)
 			case ALGO_GROESTL:
 			case ALGO_MYR_GR:
 			case ALGO_SIB:
+			case ALGO_VELTOR:
 			case ALGO_X11EVO:
 			case ALGO_X11:
 			case ALGO_X13:
@@ -2257,6 +2260,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_VANILLA:
 			rc = scanhash_blakecoin(thr_id, &work, max_nonce, &hashes_done);
+			break;
+		case ALGO_VELTOR:
+			rc = scanhash_veltor(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_X11EVO:
 			rc = scanhash_x11evo(thr_id, &work, max_nonce, &hashes_done);

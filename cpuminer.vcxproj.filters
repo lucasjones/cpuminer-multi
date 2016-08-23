@@ -76,7 +76,7 @@
     <ClCompile Include="sha3\aes_helper.c">
       <Filter>sph</Filter>
     </ClCompile>
-    <ClCompile Include="sha3\sph_gost.c">
+    <ClCompile Include="sha3\gost_streebog.c">
       <Filter>sph</Filter>
     </ClCompile>
     <ClCompile Include="compat\winansi.c">
@@ -252,6 +252,9 @@
     <ClCompile Include="algo\skein.c">
       <Filter>algo</Filter>
     </ClCompile>
+    <ClCompile Include="algo\veltor.c">
+      <Filter>algo</Filter>
+    </ClCompile>
     <ClCompile Include="algo\x11evo.c">
       <Filter>algo</Filter>
     </ClCompile>
@@ -365,7 +368,7 @@
     <ClInclude Include="sha3\sph_whirlpool.h">
       <Filter>sph</Filter>
     </ClInclude>
-    <ClInclude Include="sha3\sph_gost.h">
+    <ClInclude Include="sha3\gost_streebog.h">
       <Filter>sph</Filter>
     </ClInclude>
     <ClInclude Include="compat.h">

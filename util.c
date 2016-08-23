@@ -2327,9 +2327,6 @@ void print_hash_tests(void)
 	blake2s_hash(&hash[0], &buf[0]);
 	printpfx("blake2s", hash);
 
-	blake2b_hash(&hash[0], &buf[0]);
-	printpfx("blake2b", hash);
-
 	bmwhash(&hash[0], &buf[0]);
 	printpfx("bmw", hash);
 
@@ -2410,6 +2407,9 @@ void print_hash_tests(void)
 	sha256d((uint8_t*) &hash[0], (uint8_t*)&buf[0], 64);
 	printpfx("sha256d", hash);
 
+	blake2b_hash(&hash[0], &buf[0]);
+	printpfx("sia", hash);
+
 	sibhash(&hash[0], &buf[0]);
 	printpfx("sib", hash);
 
@@ -2421,6 +2421,9 @@ void print_hash_tests(void)
 
 	s3hash(&hash[0], &buf[0]);
 	printpfx("s3", hash);
+
+	veltor_hash(&hash[0], &buf[0]);
+	printpfx("veltor", hash);
 
 	x11evo_hash(&hash[0], &buf[0]);
 	printpfx("x11evo", hash);

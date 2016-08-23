@@ -34,12 +34,12 @@ cpuminer_SOURCES = \
   sha3/sph_echo.c \
   sha3/sph_hamsi.c \
   sha3/sph_fugue.c \
-  sha3/sph_gost.c \
   sha3/sph_ripemd.c \
   sha3/sph_sha2.c \
   sha3/sph_sha2big.c \
   sha3/sph_shabal.c \
   sha3/sph_whirlpool.c \
+  sha3/gost_streebog.c \
   crypto/blake2s.c \
   crypto/blake2b.c \
   crypto/oaes_lib.c \
@@ -88,6 +88,7 @@ cpuminer_SOURCES = \
   algo/skein.c \
   algo/skein2.c \
   algo/s3.c \
+  algo/veltor.c \
   algo/x11evo.c \
   algo/x11.c \
   algo/x13.c \
