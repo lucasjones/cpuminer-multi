@@ -119,7 +119,8 @@ enum algos {
 	ALGO_X11,         /* X11 */
 	ALGO_X13,         /* X13 */
 	ALGO_X14,         /* X14 */
-	ALGO_X15,         /* X15 Whirlpool */
+	ALGO_X15,         /* X15 */
+	ALGO_X17,         /* X17 */
 	ALGO_YESCRYPT,
 	ALGO_ZR5,
 	ALGO_COUNT
@@ -169,6 +170,7 @@ static const char *algo_names[] = {
 	"x13",
 	"x14",
 	"x15",
+	"x17",
 	"yescrypt",
 	"zr5",
 	"\0"
@@ -316,6 +318,7 @@ Options:\n\
                           x13          X13\n\
                           x14          X14\n\
                           x15          X15\n\
+                          x17          X17\n\
                           yescrypt     Yescrypt\n\
                           zr5          ZR5\n\
   -o, --url=URL         URL of mining server\n\
@@ -2114,6 +2117,7 @@ static void *miner_thread(void *userdata)
 				break;
 			case ALGO_LBRY:
 			case ALGO_X15:
+			case ALGO_X17:
 			case ALGO_ZR5:
 				max64 = 0x1ffff;
 				break;
@@ -2278,6 +2282,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_X15:
 			rc = scanhash_x15(thr_id, &work, max_nonce, &hashes_done);
+			break;
+		case ALGO_X17:
+			rc = scanhash_x17(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_YESCRYPT:
 			rc = scanhash_yescrypt(thr_id, &work, max_nonce, &hashes_done);

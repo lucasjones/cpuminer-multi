@@ -31,6 +31,7 @@ Algorithms
  * ✓ __bmw__ (Midnight [MDT] BMW-256)
  * ✓ __cryptonight__ (Bytecoin [BCN], Monero [XMR])
  * ✓ __cryptonight-light__ (Aeon)
+ * ✓ __decred__ (Blake256-14 [DCR])
  * ✓ __dmd-gr__ (Diamond-Groestl)
  * ✓ __fresh__ (FreshCoin)
  * ✓ __groestl__ (Groestlcoin)
@@ -55,6 +56,7 @@ Algorithms
  * ✓ __x13__ (Sherlockcoin, [ACE], [B2B], [GRC], [XHC], ...)
  * ✓ __x14__ (X14, Webcoin [WEB])
  * ✓ __x15__ (RadianceCoin [RCE])
+ * ✓ __x17__ (Verge [XVG])
  * ✓ __yescrypt__ (GlobalBoostY [BSTY], Unitus [UIS], MyriadCoin [MYR])
  * ✓ __zr5__ (Ziftrcoin [ZRC])
 

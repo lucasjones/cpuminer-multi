@@ -33,6 +33,7 @@ cpuminer_SOURCES = \
   sha3/sph_simd.c \
   sha3/sph_echo.c \
   sha3/sph_hamsi.c \
+  sha3/sph_haval.c \
   sha3/sph_fugue.c \
   sha3/sph_ripemd.c \
   sha3/sph_sha2.c \
@@ -94,6 +95,7 @@ cpuminer_SOURCES = \
   algo/x13.c \
   algo/x14.c \
   algo/x15.c \
+  algo/x17.c \
   algo/yescrypt.c \
   algo/zr5.c
 
