@@ -121,6 +121,7 @@ enum algos {
 	ALGO_X14,         /* X14 */
 	ALGO_X15,         /* X15 */
 	ALGO_X17,         /* X17 */
+	ALGO_XEVAN,
 	ALGO_YESCRYPT,
 	ALGO_ZR5,
 	ALGO_COUNT
@@ -171,6 +172,7 @@ static const char *algo_names[] = {
 	"x14",
 	"x15",
 	"x17",
+	"xevan",
 	"yescrypt",
 	"zr5",
 	"\0"
@@ -319,6 +321,7 @@ Options:\n\
                           x14          X14\n\
                           x15          X15\n\
                           x17          X17\n\
+                          xevan        Xevan (BitSend)\n\
                           yescrypt     Yescrypt\n\
                           zr5          ZR5\n\
   -o, --url=URL         URL of mining server\n\
@@ -1778,6 +1781,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_GROESTL:
 			case ALGO_LBRY:
 			case ALGO_LYRA2REV2:
+			case ALGO_XEVAN:
 				work_set_target(work, sctx->job.diff / (256.0 * opt_diff_factor));
 				break;
 			case ALGO_KECCAK:
@@ -2100,6 +2104,7 @@ static void *miner_thread(void *userdata)
 				break;
 			case ALGO_LYRA2:
 			case ALGO_LYRA2REV2:
+			case ALGO_XEVAN:
 				max64 = 0xffff;
 				break;
 			case ALGO_C11:
@@ -2285,6 +2290,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_X17:
 			rc = scanhash_x17(thr_id, &work, max_nonce, &hashes_done);
+			break;
+		case ALGO_XEVAN:
+			rc = scanhash_xevan(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_YESCRYPT:
 			rc = scanhash_yescrypt(thr_id, &work, max_nonce, &hashes_done);

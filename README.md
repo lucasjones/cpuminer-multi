@@ -65,6 +65,7 @@ Algorithms
  * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
  * ? luffa (Joincoin, Doomcoin)
  * ? shavite3 (INKcoin)
+ * ? xevan (BitSend [BSD])
 
 #### Planned support for
  * *scrypt-jane* (YaCoin, CopperBars, Pennies, Tickets, etc..)

@@ -2425,6 +2425,9 @@ void print_hash_tests(void)
 	veltor_hash(&hash[0], &buf[0]);
 	printpfx("veltor", hash);
 
+	xevan_hash(&hash[0], &buf[0]);
+	printpfx("xevan", hash);
+
 	x11evo_hash(&hash[0], &buf[0]);
 	printpfx("x11evo", hash);
 

@@ -244,6 +244,7 @@ int scanhash_x13(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *ha
 int scanhash_x14(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_x15(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_x17(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
+int scanhash_xevan(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_yescrypt(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_zr5(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 
@@ -518,6 +519,7 @@ void skeinhash(void *state, const void *input);
 void skein2hash(void *state, const void *input);
 void s3hash(void *output, const void *input);
 void veltor_hash(void *output, const void *input);
+void xevan_hash(void *output, const void *input);
 void x11evo_hash(void *output, const void *input);
 void x11hash(void *output, const void *input);
 void x13hash(void *output, const void *input);
