@@ -109,6 +109,9 @@
     <ClCompile Include="crypto\blake2s.c">
       <Filter>crypto</Filter>
     </ClCompile>
+    <ClCompile Include="crypto\blake2b.c">
+      <Filter>crypto</Filter>
+    </ClCompile>
     <ClCompile Include="crypto\c_skein.c">
       <Filter>crypto</Filter>
     </ClCompile>
@@ -298,6 +301,9 @@
       <Filter>algo</Filter>
     </ClCompile>
     <ClCompile Include="algo\scrypt-jane.c">
+      <Filter>algo</Filter>
+    </ClCompile>
+    <ClCompile Include="algo\sia.c">
       <Filter>algo</Filter>
     </ClCompile>
     <ClCompile Include="algo\sibcoin.c">

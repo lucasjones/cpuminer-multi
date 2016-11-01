@@ -195,6 +195,7 @@
     <ClCompile Include="crypto\oaes_lib.c" />
     <ClCompile Include="lyra2\Lyra2.c" />
     <ClCompile Include="lyra2\Sponge.c" />
+    <ClCompile Include="crypto\blake2b.c" />
     <ClCompile Include="crypto\blake2s.c" />
     <ClCompile Include="sha3\sph_hefty1.c" />
     <ClCompile Include="uint256.cpp" />
@@ -230,6 +231,7 @@
     <ClCompile Include="algo\qubit.c" />
     <ClCompile Include="algo\s3.c" />
     <ClCompile Include="algo\sha2.c" />
+    <ClCompile Include="algo\sia.c" />
     <ClCompile Include="algo\scrypt.c">
       <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
     </ClCompile>
