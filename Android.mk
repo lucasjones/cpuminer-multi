@@ -41,7 +41,7 @@ LOCAL_C_INCLUDES := $(cpuminer-src)/compat/bionic \
 
 LOCAL_CFLAGS := -std=c99 -Wno-pointer-sign -Wno-missing-field-initializers \
   -Wno-unused-parameter #-DNOASM
-LOCAL_CFLAGS += -DVERSION=\"1.2\"
+LOCAL_CFLAGS += -DVERSION=\"1.3\"
 
 sph_files:=$(call all-c-files-under,sha3)
 

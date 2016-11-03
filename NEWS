@@ -1,11 +1,13 @@
 Version 1.3 (Tanguy Pruvot)
 - Add decred algo
 - Add lbry algo
+- Add sia algo
 - Add x11evo algo
 - Add x17 and xevan algos
 - Add veltor algo
 - Enhance Blake2-S
 - Stratum benchmarks support
+- Show diff and solved blocks by default
 
 Version 1.2 (Tanguy Pruvot)
 - Add cryptonight-light (Aeon)

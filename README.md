@@ -48,6 +48,7 @@ Algorithms
  * ✓ __skein__ (Skeincoin, Myriadcoin, Xedoscoin, ...)
  * ✓ __skein2__ (Woodcoin)
  * ✓ __s3__ (OneCoin)
+ * ✓ __sia__ (Reversed Blake2B for SIA [SC])
  * ✓ __sib__ X11 + gost streebog (SibCoin)
  * ✓ __vanilla__ (Blake-256 8-rounds - double sha256 [VNL])
  * ✓ __veltor__ (Veltor [VLT])
