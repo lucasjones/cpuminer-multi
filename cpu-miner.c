@@ -183,7 +183,7 @@ bool opt_debug_diff = false;
 bool opt_protocol = false;
 bool opt_benchmark = false;
 bool opt_redirect = true;
-bool opt_showdiff = false;
+bool opt_showdiff = true;
 bool opt_extranonce = true;
 bool want_longpoll = true;
 bool have_longpoll = false;
@@ -354,7 +354,7 @@ Options:\n\
       --no-color        disable colored output\n\
   -D, --debug           enable debug output\n\
   -P, --protocol-dump   verbose dump of protocol-level activities\n\
-      --show-diff       display submitted block and net difficulty\n"
+      --hide-diff       display submitted block and net difficulty\n"
 #ifdef HAVE_SYSLOG_H
 "\
   -S, --syslog          use system log for output messages\n"
@@ -421,6 +421,7 @@ static struct option const options[] = {
 	{ "randomize", 0, NULL, 1024 },
 	{ "scantime", 1, NULL, 's' },
 	{ "show-diff", 0, NULL, 1013 },
+	{ "hide-diff", 0, NULL, 1014 },
 #ifdef HAVE_SYSLOG_H
 	{ "syslog", 0, NULL, 'S' },
 #endif
@@ -3064,6 +3065,9 @@ void parse_arg(int key, char *arg)
 		break;
 	case 1013:
 		opt_showdiff = true;
+		break;
+	case 1014:
+		opt_showdiff = false;
 		break;
 	case 1016:			/* --coinbase-addr */
 		pk_script_size = address_to_script(pk_script, sizeof(pk_script), arg);
