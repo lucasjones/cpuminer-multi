@@ -2423,6 +2423,9 @@ void print_hash_tests(void)
 	s3hash(&hash[0], &buf[0]);
 	printpfx("s3", hash);
 
+	timetravel_hash(&hash[0], &buf[0]);
+	printpfx("timetravel", hash);
+
 	veltor_hash(&hash[0], &buf[0]);
 	printpfx("veltor", hash);
 

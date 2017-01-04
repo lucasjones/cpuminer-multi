@@ -239,6 +239,7 @@
     <ClCompile Include="algo\sibcoin.c" />
     <ClCompile Include="algo\skein.c" />
     <ClCompile Include="algo\skein2.c" />
+    <ClCompile Include="algo\timetravel.c" />
     <ClCompile Include="algo\veltor.c" />
     <ClCompile Include="algo\x11evo.c" />
     <ClCompile Include="algo\x11.c" />

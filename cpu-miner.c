@@ -113,6 +113,7 @@ enum algos {
 	ALGO_SKEIN,       /* Skein */
 	ALGO_SKEIN2,      /* Double skein (Woodcoin) */
 	ALGO_S3,          /* S3 */
+	ALGO_TIMETRAVEL,  /* Timetravel (Machinecoin) */
 	ALGO_VANILLA,     /* Vanilla (Blake256 8-rounds - double sha256) */
 	ALGO_VELTOR,      /* Skein Shavite Shabal Streebog */
 	ALGO_X11EVO,      /* Permuted X11 */
@@ -164,6 +165,7 @@ static const char *algo_names[] = {
 	"skein",
 	"skein2",
 	"s3",
+	"timetravel",
 	"vanilla",
 	"veltor",
 	"x11evo",
@@ -314,6 +316,7 @@ Options:\n\
                           skein        Skein+Sha (Skeincoin)\n\
                           skein2       Double Skein (Woodcoin)\n\
                           s3           S3\n\
+                          timetravel   Timetravel (Machinecoin)\n\
                           vanilla      Blake-256 8-rounds\n\
                           x11evo       Permuted x11\n\
                           x11          X11\n\
@@ -1782,6 +1785,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_GROESTL:
 			case ALGO_LBRY:
 			case ALGO_LYRA2REV2:
+			case ALGO_TIMETRAVEL:
 			case ALGO_XEVAN:
 				work_set_target(work, sctx->job.diff / (256.0 * opt_diff_factor));
 				break;
@@ -2105,6 +2109,7 @@ static void *miner_thread(void *userdata)
 				break;
 			case ALGO_LYRA2:
 			case ALGO_LYRA2REV2:
+			case ALGO_TIMETRAVEL:
 			case ALGO_XEVAN:
 				max64 = 0xffff;
 				break;
@@ -2267,6 +2272,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_S3:
 			rc = scanhash_s3(thr_id, &work, max_nonce, &hashes_done);
+			break;
+		case ALGO_TIMETRAVEL:
+			rc = scanhash_timetravel(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_VANILLA:
 			rc = scanhash_blakecoin(thr_id, &work, max_nonce, &hashes_done);
