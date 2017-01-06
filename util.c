@@ -2310,6 +2310,7 @@ void print_hash_tests(void)
 
 	printf(CL_WHT "CPU HASH ON EMPTY BUFFER RESULTS:" CL_N "\n\n");
 
+	memset(buf, sizeof(buf), 0);
 	//buf[0] = 1; buf[64] = 2; // for endian tests
 
 	axiomhash(&hash[0], &buf[0]);
@@ -2450,7 +2451,7 @@ void print_hash_tests(void)
 	printpfx("yescrypt", hash);
 
 	//zr5hash(&hash[0], &buf[0]);
-	zr5hash_pok(&hash[0], (uint32_t*) &buf[0]);
+	zr5hash(&hash[0], (uint32_t*) &buf[0]);
 	memset(buf, 0, sizeof(buf));
 	printpfx("zr5", hash);
 
