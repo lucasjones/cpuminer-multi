@@ -132,7 +132,7 @@
 #define USE_XOP 1
 
 /* Version number of package */
-#define VERSION "1.3"
+#define VERSION "1.3.1"
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 /* #undef size_t */
