@@ -199,6 +199,7 @@ bool use_syslog = false;
 bool use_colors = true;
 static bool opt_background = false;
 bool opt_quiet = false;
+int opt_maxlograte = 5;
 bool opt_randomize = false;
 static int opt_retries = -1;
 static int opt_fail_pause = 10;
@@ -347,6 +348,7 @@ Options:\n\
   -n, --nfactor         neoscrypt N-Factor\n\
       --coinbase-addr=ADDR  payout address for solo mining\n\
       --coinbase-sig=TEXT  data to insert in the coinbase when possible\n\
+      --max-log-rate    limit per-core hashrate logs (default: 5s)\n\
       --no-longpoll     disable long polling support\n\
       --no-getwork      disable getwork support\n\
       --no-gbt          disable getblocktemplate support\n\
@@ -357,7 +359,7 @@ Options:\n\
       --no-color        disable colored output\n\
   -D, --debug           enable debug output\n\
   -P, --protocol-dump   verbose dump of protocol-level activities\n\
-      --hide-diff       display submitted block and net difficulty\n"
+      --hide-diff       Hide submitted block and net difficulty\n"
 #ifdef HAVE_SYSLOG_H
 "\
   -S, --syslog          use system log for output messages\n"
@@ -425,6 +427,7 @@ static struct option const options[] = {
 	{ "scantime", 1, NULL, 's' },
 	{ "show-diff", 0, NULL, 1013 },
 	{ "hide-diff", 0, NULL, 1014 },
+	{ "max-log-rate", 1, NULL, 1019 },
 #ifdef HAVE_SYSLOG_H
 	{ "syslog", 0, NULL, 'S' },
 #endif
@@ -1862,6 +1865,7 @@ static void *miner_thread(void *userdata)
 	struct work work;
 	uint32_t max_nonce;
 	uint32_t end_nonce = 0xffffffffU / opt_n_threads * (thr_id + 1) - 0x20;
+	time_t tm_rate_log = 0;
 	time_t firstwork_time = 0;
 	unsigned char *scratchbuf = NULL;
 	char s[16];
@@ -2323,7 +2327,7 @@ static void *miner_thread(void *userdata)
 				hashes_done / (diff.tv_sec + diff.tv_usec * 1e-6);
 			pthread_mutex_unlock(&stats_lock);
 		}
-		if (!opt_quiet) {
+		if (!opt_quiet && (time(NULL) - tm_rate_log) > opt_maxlograte) {
 			switch(opt_algo) {
 			case ALGO_AXIOM:
 			case ALGO_CRYPTOLIGHT:
@@ -2338,6 +2342,7 @@ static void *miner_thread(void *userdata)
 				applog(LOG_INFO, "CPU #%d: %s kH/s", thr_id, s);
 				break;
 			}
+			tm_rate_log = time(NULL);
 		}
 		if (opt_benchmark && thr_id == opt_n_threads - 1) {
 			double hashrate = 0.;
@@ -3106,6 +3111,9 @@ void parse_arg(int key, char *arg)
 	case 'S':
 		use_syslog = true;
 		use_colors = false;
+		break;
+	case 1019: // max-log-rate
+		opt_maxlograte = atoi(arg);
 		break;
 	case 1020:
 		p = strstr(arg, "0x");
