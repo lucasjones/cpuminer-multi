@@ -50,6 +50,7 @@ Algorithms
  * ✓ __s3__ (OneCoin)
  * ✓ __sia__ (Reversed Blake2B for SIA [SC])
  * ✓ __sib__ X11 + gost streebog (SibCoin)
+ * ✓ __timetravel__ Permuted serie of 8 algos (MachineCoin [MAC])
  * ✓ __vanilla__ (Blake-256 8-rounds - double sha256 [VNL])
  * ✓ __veltor__ (Veltor [VLT])
  * ✓ __x11evo__ (Revolver [XRE])

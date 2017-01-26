@@ -13,27 +13,29 @@
 #include <sha3/sph_skein.h>
 #include <sha3/sph_luffa.h>
 #include <sha3/sph_cubehash.h>
-#include <sha3/sph_shavite.h>
-#include <sha3/sph_simd.h>
-#include <sha3/sph_echo.h>
 
-#define HASH_FUNC_BASE_TIMESTAMP 1389040865 // Machinecoin: Genesis Timestamp
-#define HASH_FUNC_COUNT 8                   // Machinecoin: HASH_FUNC_COUNT of 11
-#define HASH_FUNC_COUNT_PERMUTATIONS 40320  // Machinecoin: HASH_FUNC_COUNT!
+// Machinecoin Genesis Timestamp
+#define HASH_FUNC_BASE_TIMESTAMP 1389040865
+
+#define HASH_FUNC_COUNT 8
+#define HASH_FUNC_COUNT_PERMUTATIONS 40320
+
+static __thread uint32_t s_ntime = UINT32_MAX;
+static __thread int permutation[HASH_FUNC_COUNT] = { 0 };
 
 // helpers
-void swap(int *a, int *b) {
+inline void swap(int *a, int *b) {
 	int c = *a;
 	*a = *b;
 	*b = c;
 }
 
-void reverse(int *pbegin, int *pend) {
+inline void reverse(int *pbegin, int *pend) {
 	while ( (pbegin != pend) && (pbegin != --pend) )
 		swap(pbegin++, pend);
 }
 
-void next_permutation(int *pbegin, int *pend) {
+static void next_permutation(int *pbegin, int *pend) {
 	if (pbegin == pend)
 		return;
 
@@ -66,7 +68,6 @@ void next_permutation(int *pbegin, int *pend) {
 		}
 	}
 }
-// helpers
 
 void timetravel_hash(void *output, const void *input)
 {
@@ -76,7 +77,6 @@ void timetravel_hash(void *output, const void *input)
 	uint32_t *work_data = (uint32_t *)input;
 	const uint32_t timestamp = work_data[17];
 
-
 	sph_blake512_context     ctx_blake;
 	sph_bmw512_context       ctx_bmw;
 	sph_groestl512_context   ctx_groestl;
@@ -85,25 +85,22 @@ void timetravel_hash(void *output, const void *input)
 	sph_keccak512_context    ctx_keccak;
 	sph_luffa512_context     ctx_luffa;
 	sph_cubehash512_context  ctx_cubehash;
-	sph_shavite512_context   ctx_shavite;
-	sph_simd512_context      ctx_simd;
-	sph_echo512_context      ctx_echo;
 
 	// We want to permute algorithms. To get started we
 	// initialize an array with a sorted sequence of unique
 	// integers where every integer represents its own algorithm.
-	uint32_t permutation[HASH_FUNC_COUNT];
-	for (uint32_t i = 0; i < HASH_FUNC_COUNT; i++) {
-			permutation[i]=i;
+	if (timestamp != s_ntime) {
+		int steps = (int) (timestamp - HASH_FUNC_BASE_TIMESTAMP) % HASH_FUNC_COUNT_PERMUTATIONS;
+		for (int i = 0; i < HASH_FUNC_COUNT; i++) {
+			permutation[i] = i;
+		}
+		for (int i = 0; i < steps; i++) {
+			next_permutation(permutation, permutation + HASH_FUNC_COUNT);
+		}
+		s_ntime = timestamp;
 	}
 
-	// Compute the next permuation
-	uint32_t steps = (timestamp - HASH_FUNC_BASE_TIMESTAMP)%HASH_FUNC_COUNT_PERMUTATIONS;
-	for (uint32_t i = 0; i < steps; i++) {
-		next_permutation(permutation, permutation + HASH_FUNC_COUNT);
-	}
-
-	for (uint32_t i = 0; i < HASH_FUNC_COUNT; i++) {
+	for (int i = 0; i < HASH_FUNC_COUNT; i++) {
 		if (i == 0) {
 			dataLen = 80;
 			hashA = work_data;
@@ -153,21 +150,6 @@ void timetravel_hash(void *output, const void *input)
 				sph_cubehash512_init(&ctx_cubehash);
 				sph_cubehash512 (&ctx_cubehash, hashA, dataLen);
 				sph_cubehash512_close(&ctx_cubehash, hashB);
-				break;
-			case 8:
-				sph_shavite512_init(&ctx_shavite);
-				sph_shavite512(&ctx_shavite, hashA, dataLen);
-				sph_shavite512_close(&ctx_shavite, hashB);
-				break;
-			case 9:
-				sph_simd512_init(&ctx_simd);
-				sph_simd512 (&ctx_simd, hashA, dataLen);
-				sph_simd512_close(&ctx_simd, hashB);
-				break;
-			case 10:
-				sph_echo512_init(&ctx_echo);
-				sph_echo512 (&ctx_echo, hashA, dataLen);
-				sph_echo512_close(&ctx_echo, hashB);
 				break;
 			default:
 				break;
