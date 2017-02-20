@@ -1,6 +1,8 @@
 CPUMiner-Multi
 ==============
 
+###NOTE: Wolf's cpuminer-multi is no longer maintained - please use https://github.com/genesismining/sgminer-gm.
+
 This is a multi-threaded CPU miner, fork of [LucasJones](//github.com/lucasjones)' cpuminer-multi.
 
 #### Table of contents
