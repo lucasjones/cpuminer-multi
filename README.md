@@ -36,7 +36,10 @@ Build
 #### Basic *nix build instructions:
  * ./autogen.sh	# only needed if building from git repo
  * Optimal GCC flags are built in - you only need to use -march=native if you want it
+ * With AES-NI:
  * CFLAGS="*-march=native*" ./configure
+ * Without AES-NI:
+ * CFLAGS="*-march=native*" ./configure --disable-aes-ni
    * # Use -march=native if building for a single machine
  * make
 
@@ -47,6 +50,10 @@ Build
 Usage instructions
 ==================
 Run "minerd --help" to see options.
+
+Example command line
+==================
+./minerd -a cryptonight -o stratum+tcp://mine.moneropool.com:3333 -p cpux -u 42QWoLF7pdwMcTXDviJvNkWEHJ4TXnMBh2Cx6HNkVAW57E48Zfw6wLwDUYFDYJAqY7PLJUTz9cHWB5C4wUA7UJPu5wPf4sZ -t `nproc`
 
 ### Connecting through a proxy
 
