@@ -36,11 +36,12 @@ Build
 #### Basic *nix build instructions:
  * ./autogen.sh	# only needed if building from git repo
  * Optimal GCC flags are built in - you only need to use -march=native if you want it
+  * # Use -march=native if building for a single machine
  * With AES-NI:
  * CFLAGS="*-march=native*" ./configure
  * Without AES-NI:
  * CFLAGS="*-march=native*" ./configure --disable-aes-ni
-   * # Use -march=native if building for a single machine
+ 
  * make
 
 #### Architecture-specific notes:
