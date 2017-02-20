@@ -53,7 +53,7 @@ Run "minerd --help" to see options.
 
 Example command line
 ==================
-./minerd -a cryptonight -o stratum+tcp://mine.moneropool.com:3333 -p cpux -u 42QWoLF7pdwMcTXDviJvNkWEHJ4TXnMBh2Cx6HNkVAW57E48Zfw6wLwDUYFDYJAqY7PLJUTz9cHWB5C4wUA7UJPu5wPf4sZ -t `nproc`
+./minerd -a cryptonight -o stratum+tcp://mine.moneropool.com:3333 -p x -u 42QWoLF7pdwMcTXDviJvNkWEHJ4TXnMBh2Cx6HNkVAW57E48Zfw6wLwDUYFDYJAqY7PLJUTz9cHWB5C4wUA7UJPu5wPf4sZ -t `nproc`
 
 ### Connecting through a proxy
 
