@@ -2310,7 +2310,7 @@ void print_hash_tests(void)
 
 	printf(CL_WHT "CPU HASH ON EMPTY BUFFER RESULTS:" CL_N "\n\n");
 
-	memset(buf, sizeof(buf), 0);
+	memset(buf, 0, sizeof(buf));
 	//buf[0] = 1; buf[64] = 2; // for endian tests
 
 	axiomhash(&hash[0], &buf[0]);
