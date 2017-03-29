@@ -24,13 +24,13 @@ static __thread uint32_t s_ntime = UINT32_MAX;
 static __thread int permutation[HASH_FUNC_COUNT] = { 0 };
 
 // helpers
-inline void swap(int *a, int *b) {
+static void swap(int *a, int *b) {
 	int c = *a;
 	*a = *b;
 	*b = c;
 }
 
-inline void reverse(int *pbegin, int *pend) {
+static void reverse(int *pbegin, int *pend) {
 	while ( (pbegin != pend) && (pbegin != --pend) )
 		swap(pbegin++, pend);
 }
