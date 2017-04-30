@@ -113,7 +113,8 @@ enum algos {
 	ALGO_SKEIN,       /* Skein */
 	ALGO_SKEIN2,      /* Double skein (Woodcoin) */
 	ALGO_S3,          /* S3 */
-	ALGO_TIMETRAVEL,  /* Timetravel (Machinecoin) */
+	ALGO_TIMETRAVEL,  /* Timetravel-8 (Machinecoin) */
+	ALGO_BITCORE,     /* Timetravel-10 (Bitcore) */
 	ALGO_VANILLA,     /* Vanilla (Blake256 8-rounds - double sha256) */
 	ALGO_VELTOR,      /* Skein Shavite Shabal Streebog */
 	ALGO_X11EVO,      /* Permuted X11 */
@@ -166,6 +167,7 @@ static const char *algo_names[] = {
 	"skein2",
 	"s3",
 	"timetravel",
+	"bitcore",
 	"vanilla",
 	"veltor",
 	"x11evo",
@@ -283,6 +285,7 @@ Usage: " PACKAGE_NAME " [OPTIONS]\n\
 Options:\n\
   -a, --algo=ALGO       specify the algorithm to use\n\
                           axiom        Shabal-256 MemoHash\n\
+                          bitcore      Timetravel with 10 algos\n\
                           blake        Blake-256 14-rounds (SFR)\n\
                           blakecoin    Blake-256 single sha256 merkle\n\
                           blake2s      Blake2-S (256)\n\
@@ -1789,6 +1792,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_LBRY:
 			case ALGO_LYRA2REV2:
 			case ALGO_TIMETRAVEL:
+			case ALGO_BITCORE:
 			case ALGO_XEVAN:
 				work_set_target(work, sctx->job.diff / (256.0 * opt_diff_factor));
 				break;
@@ -2114,6 +2118,7 @@ static void *miner_thread(void *userdata)
 			case ALGO_LYRA2:
 			case ALGO_LYRA2REV2:
 			case ALGO_TIMETRAVEL:
+			case ALGO_BITCORE:
 			case ALGO_XEVAN:
 				max64 = 0xffff;
 				break;
@@ -2279,6 +2284,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_TIMETRAVEL:
 			rc = scanhash_timetravel(thr_id, &work, max_nonce, &hashes_done);
+			break;
+		case ALGO_BITCORE:
+			rc = scanhash_bitcore(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_VANILLA:
 			rc = scanhash_blakecoin(thr_id, &work, max_nonce, &hashes_done);
@@ -2832,6 +2840,8 @@ void parse_arg(int key, char *arg)
 				i = opt_algo = ALGO_SCRYPTJANE;
 			else if (!strcasecmp("sibcoin", arg))
 				i = opt_algo = ALGO_SIB;
+			else if (!strcasecmp("timetravel10", arg))
+				i = opt_algo = ALGO_BITCORE;
 			else if (!strcasecmp("ziftr", arg))
 				i = opt_algo = ALGO_ZR5;
 			else

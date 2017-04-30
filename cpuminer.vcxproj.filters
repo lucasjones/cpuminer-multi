@@ -177,6 +177,9 @@
     <ClCompile Include="algo\bastion.c">
       <Filter>algo</Filter>
     </ClCompile>
+    <ClCompile Include="algo\bitcore.c">
+      <Filter>algo</Filter>
+    </ClCompile>
     <ClCompile Include="algo\blake.c">
       <Filter>algo</Filter>
     </ClCompile>

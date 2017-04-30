@@ -89,6 +89,7 @@ cpuminer_SOURCES = \
   algo/skein.c \
   algo/skein2.c \
   algo/s3.c \
+  algo/bitcore.c \
   algo/timetravel.c \
   algo/veltor.c \
   algo/x11evo.c \
