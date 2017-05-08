@@ -214,6 +214,7 @@ int scanhash_groestl(int thr_id, struct work *work, uint32_t max_nonce, uint64_t
 int scanhash_heavy(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_ink(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_keccak(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
+int scanhash_jha(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_lbry(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_luffa(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_lyra2(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
@@ -504,6 +505,7 @@ void quarkhash(void *state, const void *input);
 void freshhash(void* output, const void* input, uint32_t len);
 void keccakhash(void *state, const void *input);
 void inkhash(void *state, const void *input); /* shavite */
+void jha_hash(void *output, const void *input);
 void lbry_hash(void *output, const void *input);
 void luffahash(void *output, const void *input);
 void lyra2_hash(void *state, const void *input);

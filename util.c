@@ -2358,6 +2358,9 @@ void print_hash_tests(void)
 	keccakhash(&hash[0], &buf[0]);
 	printpfx("keccak", hash);
 
+	jha_hash(&hash[0], &buf[0]);
+	printpfx("jha", hash);
+
 	lbry_hash(&hash[0], &buf[0]);
 	printpfx("lbry", hash);
 

@@ -95,6 +95,7 @@ enum algos {
 	ALGO_DROP,        /* Dropcoin */
 	ALGO_FRESH,       /* Fresh */
 	ALGO_GROESTL,     /* Groestl */
+	ALGO_JHA,
 	ALGO_LBRY,        /* Lbry Sha Ripemd */
 	ALGO_LUFFA,       /* Luffa (Joincoin, Doom) */
 	ALGO_LYRA2,       /* Lyra2RE */
@@ -148,6 +149,7 @@ static const char *algo_names[] = {
 	"drop",
 	"fresh",
 	"groestl",
+	"jha",
 	"lbry",
 	"luffa",
 	"lyra2re",
@@ -299,6 +301,7 @@ Options:\n\
                           fresh        Fresh\n\
                           groestl      GroestlCoin\n\
                           heavy        Heavy\n\
+                          jha          JHA\n\
                           keccak       Keccak\n\
                           luffa        Luffa\n\
                           lyra2re      Lyra2RE\n\
@@ -1779,6 +1782,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 
 		switch (opt_algo) {
 			case ALGO_DROP:
+			case ALGO_JHA:
 			case ALGO_SCRYPT:
 			case ALGO_SCRYPTJANE:
 			case ALGO_NEOSCRYPT:
@@ -2220,6 +2224,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_HEAVY:
 			rc = scanhash_heavy(thr_id, &work, max_nonce, &hashes_done);
+			break;
+		case ALGO_JHA:
+			rc = scanhash_jha(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_LBRY:
 			rc = scanhash_lbry(thr_id, &work, max_nonce, &hashes_done);
@@ -2832,6 +2839,8 @@ void parse_arg(int key, char *arg)
 				i = opt_algo = ALGO_DMD_GR;
 			else if (!strcasecmp("droplp", arg))
 				i = opt_algo = ALGO_DROP;
+			else if (!strcasecmp("jackpot", arg))
+				i = opt_algo = ALGO_JHA;
 			else if (!strcasecmp("lyra2", arg))
 				i = opt_algo = ALGO_LYRA2;
 			else if (!strcasecmp("lyra2v2", arg))

@@ -219,6 +219,7 @@
     <ClCompile Include="algo\heavy.c" />
     <ClCompile Include="algo\keccak.c" />
     <ClCompile Include="algo\ink.c" />
+    <ClCompile Include="algo\jha.c" />
     <ClCompile Include="algo\lbry.c" />
     <ClCompile Include="algo\luffa.c" />
     <ClCompile Include="algo\lyra2re.c" />

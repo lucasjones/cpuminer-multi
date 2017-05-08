@@ -36,6 +36,7 @@ Algorithms
  * ✓ __dmd-gr__ (Diamond-Groestl)
  * ✓ __fresh__ (FreshCoin)
  * ✓ __groestl__ (Groestlcoin)
+ * ✓ __jha__ (JackpotCoin, SweepStake)
  * ✓ __lbry__ (LBRY Credits [LBC])
  * ✓ __lyra2RE__ (Cryptocoin)
  * ✓ __lyra2REv2__ (VertCoin [VTC])
