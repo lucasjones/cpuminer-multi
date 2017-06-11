@@ -268,7 +268,7 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 		do {
 			*nonceptr = ++n;
 			cryptonight_hash_ctx_aes_ni(hash, pdata, 76, ctx);
-			if (unlikely(hash[7] < ptarget[7])) {
+			if (unlikely(hash[7] < ptarget[7]) && fulltest(hash, ptarget)) {
 				*hashes_done = n - first_nonce + 1;
 				free(ctx);
 				return true;
@@ -278,7 +278,7 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 		do {
 			*nonceptr = ++n;
 			cryptonight_hash_ctx(hash, pdata, 76, ctx);
-			if (unlikely(hash[7] < ptarget[7])) {
+			if (unlikely(hash[7] < ptarget[7]) && fulltest(hash, ptarget)) {
 				*hashes_done = n - first_nonce + 1;
 				free(ctx);
 				return true;
