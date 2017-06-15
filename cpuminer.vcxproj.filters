@@ -264,6 +264,9 @@
     <ClCompile Include="algo\timetravel.c">
       <Filter>algo</Filter>
     </ClCompile>
+    <ClCompile Include="algo\tribus.c">
+      <Filter>algo</Filter>
+    </ClCompile>
     <ClCompile Include="algo\veltor.c">
       <Filter>algo</Filter>
     </ClCompile>

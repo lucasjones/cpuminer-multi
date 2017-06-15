@@ -116,6 +116,7 @@ enum algos {
 	ALGO_S3,          /* S3 */
 	ALGO_TIMETRAVEL,  /* Timetravel-8 (Machinecoin) */
 	ALGO_BITCORE,     /* Timetravel-10 (Bitcore) */
+	ALGO_TRIBUS,      /* Denarius jh/keccak/echo */
 	ALGO_VANILLA,     /* Vanilla (Blake256 8-rounds - double sha256) */
 	ALGO_VELTOR,      /* Skein Shavite Shabal Streebog */
 	ALGO_X11EVO,      /* Permuted X11 */
@@ -170,6 +171,7 @@ static const char *algo_names[] = {
 	"s3",
 	"timetravel",
 	"bitcore",
+	"tribus",
 	"vanilla",
 	"veltor",
 	"x11evo",
@@ -2140,6 +2142,7 @@ static void *miner_thread(void *userdata)
 				max64 = 0x3ffff;
 				break;
 			case ALGO_LBRY:
+			case ALGO_TRIBUS:
 			case ALGO_X15:
 			case ALGO_X17:
 			case ALGO_ZR5:
@@ -2294,6 +2297,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_BITCORE:
 			rc = scanhash_bitcore(thr_id, &work, max_nonce, &hashes_done);
+			break;
+		case ALGO_TRIBUS:
+			rc = scanhash_tribus(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_VANILLA:
 			rc = scanhash_blakecoin(thr_id, &work, max_nonce, &hashes_done);

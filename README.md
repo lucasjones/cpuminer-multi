@@ -53,6 +53,7 @@ Algorithms
  * ✓ __sia__ (Reversed Blake2B for SIA [SC])
  * ✓ __sib__ X11 + gost streebog (SibCoin)
  * ✓ __timetravel__ Permuted serie of 8 algos (MachineCoin [MAC])
+ * ✓ __tribus__ 3 of the top NIST5 algos (Denarius [DNR])
  * ✓ __vanilla__ (Blake-256 8-rounds - double sha256 [VNL])
  * ✓ __veltor__ (Veltor [VLT])
  * ✓ __xevan__ x17 x 2 on bigger header (BitSend [BSD])

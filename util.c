@@ -2432,6 +2432,9 @@ void print_hash_tests(void)
 	bitcore_hash(&hash[0], &buf[0]);
 	printpfx("bitcore", hash);
 
+	tribus_hash(&hash[0], &buf[0]);
+	printpfx("tribus", hash);
+
 	veltor_hash(&hash[0], &buf[0]);
 	printpfx("veltor", hash);
 
