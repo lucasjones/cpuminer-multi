@@ -168,9 +168,9 @@ CFLAGS="$CFLAGS $LIBCURL_CFLAGS"
 CPPFLAGS="$CPPFLAGS $LIBCURL_CPPFLAGS"
 LDFLAGS="$LDFLAGS $LIBCURL_LDFLAGS"
 
-#AC_CHECK_LIB([z],[gzopen],[],[])
-#AC_CHECK_LIB([crypto],[OPENSSL_init], crypto=yes, [AC_MSG_ERROR([OpenSSL crypto library required])])
-#AC_CHECK_LIB([ssl],[SSL_new], ssl=yes, ssl=no)
+AC_CHECK_LIB([z],[gzopen],[],[])
+AC_CHECK_LIB([crypto],[EVP_DigestFinal_ex], crypto=yes, [AC_MSG_ERROR([OpenSSL crypto library required])])
+AC_CHECK_LIB([ssl],[SSL_free], ssl=yes, ssl=no)
 
 # AC_CHECK_LIB([curl], [curl_multi_timeout],
 #    have_libcurl=yes,
