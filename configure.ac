@@ -45,7 +45,7 @@ case $target in
   x86_64-*-*|amd64-*-*)
     have_x86_64=true
     ;;
-  arm*-*-*)
+  arm*-*-*|aarch64-*-*)
     have_arm=true
     ;;
 esac
