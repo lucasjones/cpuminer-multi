@@ -197,7 +197,7 @@ struct option {
 
 static char const usage[] =
         "\
-Usage: " PROGRAM_NAME " [OPTIONS]\n\
+Usage example: " PROGRAM_NAME " [OPTIONS]\n\
 Options:\n\
   -a, --algo=ALGO       specify the algorithm to use\n\
                           scrypt       scrypt(1024, 1, 1) (default)\n\
