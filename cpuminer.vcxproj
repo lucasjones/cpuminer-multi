@@ -249,6 +249,7 @@
     <ClCompile Include="algo\x13.c" />
     <ClCompile Include="algo\x14.c" />
     <ClCompile Include="algo\x15.c" />
+    <ClCompile Include="algo\x16r.c" />
     <ClCompile Include="algo\x17.c" />
     <ClCompile Include="algo\xevan.c" />
     <ClCompile Include="algo\yescrypt.c" />
