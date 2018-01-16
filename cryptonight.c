@@ -175,7 +175,7 @@ void cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cr
 
 	}
 
-	print("After ITER\n");
+	printf("After ITER\n");
 
 	memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
 	oaes_key_import_data(ctx->aes_ctx, &ctx->state.hs.b[32], AES_KEY_SIZE);
