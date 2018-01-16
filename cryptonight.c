@@ -4,6 +4,7 @@
 
 // Modified for CPUminer by Lucas Jones
 
+#include <stdio.h>
 #include "cpuminer-config.h"
 #include "miner.h"
 #include "crypto/oaes_lib.h"
@@ -135,7 +136,7 @@ void cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cr
 	xor_blocks_dst(&ctx->state.k[0], &ctx->state.k[32], ctx->a);
 	xor_blocks_dst(&ctx->state.k[16], &ctx->state.k[48], ctx->b);
 
-	print("Before ITER\n");
+	printf("Before ITER\n");
 
 	for (i = 0; likely(i < ITER / 8); ++i) {
 		/* Dependency chain: address -> read value ------+
