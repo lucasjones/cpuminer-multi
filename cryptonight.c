@@ -135,6 +135,8 @@ void cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cr
 	xor_blocks_dst(&ctx->state.k[0], &ctx->state.k[32], ctx->a);
 	xor_blocks_dst(&ctx->state.k[16], &ctx->state.k[48], ctx->b);
 
+	print("Before ITER\n");
+
 	for (i = 0; likely(i < ITER / 8); ++i) {
 		/* Dependency chain: address -> read value ------+
 		 * written value <-+ hard function (AES or MUL) <+
@@ -171,6 +173,8 @@ void cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cr
 		mul_sum_xor_dst(ctx->b, ctx->a, &ctx->long_state[e2i(ctx->b)]);
 
 	}
+
+	print("After ITER\n");
 
 	memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
 	oaes_key_import_data(ctx->aes_ctx, &ctx->state.hs.b[32], AES_KEY_SIZE);
