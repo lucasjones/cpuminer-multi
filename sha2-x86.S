@@ -135,189 +135,176 @@ _sha256_init_4way:
 	ret
 
 
-.macro sha256_sse2_extend_round i
-	movdqa	(\i-15)*16(%eax), %xmm0
-	movdqa	%xmm0, %xmm2
-	psrld	$3, %xmm0
-	movdqa	%xmm0, %xmm1
-	pslld	$14, %xmm2
-	psrld	$4, %xmm1
-	pxor	%xmm1, %xmm0
-	pxor	%xmm2, %xmm0
-	psrld	$11, %xmm1
-	pslld	$11, %xmm2
-	pxor	%xmm1, %xmm0
-	pxor	%xmm2, %xmm0
-	paddd	(\i-16)*16(%eax), %xmm0
-	paddd	(\i-7)*16(%eax), %xmm0
-
-	movdqa	%xmm3, %xmm2
-	psrld	$10, %xmm3
-	pslld	$13, %xmm2
-	movdqa	%xmm3, %xmm1
-	psrld	$7, %xmm1
-	pxor	%xmm1, %xmm3
-	pxor	%xmm2, %xmm3
-	psrld	$2, %xmm1
-	pslld	$2, %xmm2
-	pxor	%xmm1, %xmm3
-	pxor	%xmm2, %xmm3
-	paddd	%xmm0, %xmm3
-	movdqa	%xmm3, \i*16(%eax)
-.endm
-
-.macro sha256_sse2_extend_doubleround i
-	movdqa	(\i-15)*16(%eax), %xmm0
-	movdqa	(\i-14)*16(%eax), %xmm4
-	movdqa	%xmm0, %xmm2
-	movdqa	%xmm4, %xmm6
-	psrld	$3, %xmm0
-	psrld	$3, %xmm4
-	movdqa	%xmm0, %xmm1
-	movdqa	%xmm4, %xmm5
-	pslld	$14, %xmm2
-	pslld	$14, %xmm6
-	psrld	$4, %xmm1
-	psrld	$4, %xmm5
-	pxor	%xmm1, %xmm0
-	pxor	%xmm5, %xmm4
-	psrld	$11, %xmm1
-	psrld	$11, %xmm5
-	pxor	%xmm2, %xmm0
-	pxor	%xmm6, %xmm4
-	pslld	$11, %xmm2
-	pslld	$11, %xmm6
-	pxor	%xmm1, %xmm0
-	pxor	%xmm5, %xmm4
-	pxor	%xmm2, %xmm0
-	pxor	%xmm6, %xmm4
-
-	paddd	(\i-16)*16(%eax), %xmm0
-	paddd	(\i-15)*16(%eax), %xmm4
-
-	movdqa	%xmm3, %xmm2
-	movdqa	%xmm7, %xmm6
-	psrld	$10, %xmm3
-	psrld	$10, %xmm7
-	movdqa	%xmm3, %xmm1
-	movdqa	%xmm7, %xmm5
-	pslld	$13, %xmm2
-	pslld	$13, %xmm6
-	psrld	$7, %xmm1
-	psrld	$7, %xmm5
-
-	paddd	(\i-7)*16(%eax), %xmm0
-	paddd	(\i-6)*16(%eax), %xmm4
-
-	pxor	%xmm1, %xmm3
-	pxor	%xmm5, %xmm7
-	psrld	$2, %xmm1
-	psrld	$2, %xmm5
-	pxor	%xmm2, %xmm3
-	pxor	%xmm6, %xmm7
-	pslld	$2, %xmm2
-	pslld	$2, %xmm6
-	pxor	%xmm1, %xmm3
-	pxor	%xmm5, %xmm7
-	pxor	%xmm2, %xmm3
-	pxor	%xmm6, %xmm7
-
-	paddd	%xmm0, %xmm3
-	paddd	%xmm4, %xmm7
-	movdqa	%xmm3, \i*16(%eax)
-	movdqa	%xmm7, (\i+1)*16(%eax)
-.endm
-
-.macro sha256_sse2_main_round i
-	movdqa	16*(\i)(%eax), %xmm6
-
-	movdqa	%xmm0, %xmm1
-	movdqa	16(%esp), %xmm2
-	pandn	%xmm2, %xmm1
-	paddd	32(%esp), %xmm6
-
-	movdqa	%xmm2, 32(%esp)
-	movdqa	0(%esp), %xmm2
-	movdqa	%xmm2, 16(%esp)
-
-	pand	%xmm0, %xmm2
-	pxor	%xmm2, %xmm1
-	movdqa	%xmm0, 0(%esp)
-
-	paddd	%xmm1, %xmm6
-
-	movdqa	%xmm0, %xmm1
-	psrld	$6, %xmm0
-	paddd	16*(\i)+sha256_4k, %xmm6
-	movdqa	%xmm0, %xmm2
-	pslld	$7, %xmm1
-	psrld	$5, %xmm2
-	pxor	%xmm1, %xmm0
-	pxor	%xmm2, %xmm0
-	pslld	$14, %xmm1
-	psrld	$14, %xmm2
-	pxor	%xmm1, %xmm0
-	pslld	$5, %xmm1
-	pxor	%xmm2, %xmm0
-	pxor	%xmm1, %xmm0
-	movdqa	%xmm5, %xmm1
-	paddd	%xmm0, %xmm6
-
-	movdqa	%xmm3, %xmm0
-	movdqa	%xmm4, %xmm3
-	movdqa	%xmm4, %xmm2
-	paddd	%xmm6, %xmm0
-	pand	%xmm5, %xmm2
-	pand	%xmm7, %xmm1
-	pand	%xmm7, %xmm4
-	pxor	%xmm4, %xmm1
-	movdqa	%xmm5, %xmm4
-	movdqa	%xmm7, %xmm5
-	pxor	%xmm2, %xmm1
-	paddd	%xmm1, %xmm6
-
-	movdqa	%xmm7, %xmm2
-	psrld	$2, %xmm7
-	movdqa	%xmm7, %xmm1
-	pslld	$10, %xmm2
-	psrld	$11, %xmm1
-	pxor	%xmm2, %xmm7
-	pslld	$9, %xmm2
-	pxor	%xmm1, %xmm7
-	psrld	$9, %xmm1
-	pxor	%xmm2, %xmm7
-	pslld	$11, %xmm2
-	pxor	%xmm1, %xmm7
-	pxor	%xmm2, %xmm7
-	paddd	%xmm6, %xmm7
-.endm
-
-.macro sha256_sse2_main_quadround i
-	sha256_sse2_main_round \i+0
-	sha256_sse2_main_round \i+1
-	sha256_sse2_main_round \i+2
-	sha256_sse2_main_round \i+3
-.endm
+#define sha256_sse2_extend_round(i) \
+	movdqa	(i-15)*16(%eax), %xmm0; \
+	movdqa	%xmm0, %xmm2; \
+	psrld	$3, %xmm0; \
+	movdqa	%xmm0, %xmm1; \
+	pslld	$14, %xmm2; \
+	psrld	$4, %xmm1; \
+	pxor	%xmm1, %xmm0; \
+	pxor	%xmm2, %xmm0; \
+	psrld	$11, %xmm1; \
+	pslld	$11, %xmm2; \
+	pxor	%xmm1, %xmm0; \
+	pxor	%xmm2, %xmm0; \
+	paddd	(i-16)*16(%eax), %xmm0; \
+	paddd	(i-7)*16(%eax), %xmm0; \
+	movdqa	%xmm3, %xmm2; \
+	psrld	$10, %xmm3; \
+	pslld	$13, %xmm2; \
+	movdqa	%xmm3, %xmm1; \
+	psrld	$7, %xmm1; \
+	pxor	%xmm1, %xmm3; \
+	pxor	%xmm2, %xmm3; \
+	psrld	$2, %xmm1; \
+	pslld	$2, %xmm2; \
+	pxor	%xmm1, %xmm3; \
+	pxor	%xmm2, %xmm3; \
+	paddd	%xmm0, %xmm3; \
+	movdqa	%xmm3, i*16(%eax); \
 
 
-.macro p2bswap_esi_esp i
-	movdqu	\i*16(%esi), %xmm0
-	movdqu	(\i+1)*16(%esi), %xmm2
-	pshuflw	$0xb1, %xmm0, %xmm0
-	pshuflw	$0xb1, %xmm2, %xmm2
-	pshufhw	$0xb1, %xmm0, %xmm0
-	pshufhw	$0xb1, %xmm2, %xmm2
-	movdqa	%xmm0, %xmm1
-	movdqa	%xmm2, %xmm3
-	psrlw	$8, %xmm1
-	psrlw	$8, %xmm3
-	psllw	$8, %xmm0
-	psllw	$8, %xmm2
-	pxor	%xmm1, %xmm0
-	pxor	%xmm3, %xmm2
-	movdqa	%xmm0, (\i+3)*16(%esp)
-	movdqa	%xmm2, (\i+4)*16(%esp)
-.endm
+#define sha256_sse2_extend_doubleround(i) \
+	movdqa	(i-15)*16(%eax), %xmm0; \
+	movdqa	(i-14)*16(%eax), %xmm4; \
+	movdqa	%xmm0, %xmm2; \
+	movdqa	%xmm4, %xmm6; \
+	psrld	$3, %xmm0; \
+	psrld	$3, %xmm4; \
+	movdqa	%xmm0, %xmm1; \
+	movdqa	%xmm4, %xmm5; \
+	pslld	$14, %xmm2; \
+	pslld	$14, %xmm6; \
+	psrld	$4, %xmm1; \
+	psrld	$4, %xmm5; \
+	pxor	%xmm1, %xmm0; \
+	pxor	%xmm5, %xmm4; \
+	psrld	$11, %xmm1; \
+	psrld	$11, %xmm5; \
+	pxor	%xmm2, %xmm0; \
+	pxor	%xmm6, %xmm4; \
+	pslld	$11, %xmm2; \
+	pslld	$11, %xmm6; \
+	pxor	%xmm1, %xmm0; \
+	pxor	%xmm5, %xmm4; \
+	pxor	%xmm2, %xmm0; \
+	pxor	%xmm6, %xmm4; \
+	paddd	(i-16)*16(%eax), %xmm0; \
+	paddd	(i-15)*16(%eax), %xmm4; \
+	movdqa	%xmm3, %xmm2; \
+	movdqa	%xmm7, %xmm6; \
+	psrld	$10, %xmm3; \
+	psrld	$10, %xmm7; \
+	movdqa	%xmm3, %xmm1; \
+	movdqa	%xmm7, %xmm5; \
+	pslld	$13, %xmm2; \
+	pslld	$13, %xmm6; \
+	psrld	$7, %xmm1; \
+	psrld	$7, %xmm5; \
+	paddd	(i-7)*16(%eax), %xmm0; \
+	paddd	(i-6)*16(%eax), %xmm4; \
+	pxor	%xmm1, %xmm3; \
+	pxor	%xmm5, %xmm7; \
+	psrld	$2, %xmm1; \
+	psrld	$2, %xmm5; \
+	pxor	%xmm2, %xmm3; \
+	pxor	%xmm6, %xmm7; \
+	pslld	$2, %xmm2; \
+	pslld	$2, %xmm6; \
+	pxor	%xmm1, %xmm3; \
+	pxor	%xmm5, %xmm7; \
+	pxor	%xmm2, %xmm3; \
+	pxor	%xmm6, %xmm7; \
+	paddd	%xmm0, %xmm3; \
+	paddd	%xmm4, %xmm7; \
+	movdqa	%xmm3, i*16(%eax); \
+	movdqa	%xmm7, (i+1)*16(%eax); \
+
+
+#define sha256_sse2_main_round(i) \
+	movdqa	16*(i)(%eax), %xmm6; \
+	movdqa	%xmm0, %xmm1; \
+	movdqa	16(%esp), %xmm2; \
+	pandn	%xmm2, %xmm1; \
+	paddd	32(%esp), %xmm6; \
+	movdqa	%xmm2, 32(%esp); \
+	movdqa	0(%esp), %xmm2; \
+	movdqa	%xmm2, 16(%esp); \
+	pand	%xmm0, %xmm2; \
+	pxor	%xmm2, %xmm1; \
+	movdqa	%xmm0, 0(%esp); \
+	paddd	%xmm1, %xmm6; \
+	movdqa	%xmm0, %xmm1; \
+	psrld	$6, %xmm0; \
+	paddd	16*(i)+sha256_4k, %xmm6; \
+	movdqa	%xmm0, %xmm2; \
+	pslld	$7, %xmm1; \
+	psrld	$5, %xmm2; \
+	pxor	%xmm1, %xmm0; \
+	pxor	%xmm2, %xmm0; \
+	pslld	$14, %xmm1; \
+	psrld	$14, %xmm2; \
+	pxor	%xmm1, %xmm0; \
+	pslld	$5, %xmm1; \
+	pxor	%xmm2, %xmm0; \
+	pxor	%xmm1, %xmm0; \
+	movdqa	%xmm5, %xmm1; \
+	paddd	%xmm0, %xmm6; \
+	movdqa	%xmm3, %xmm0; \
+	movdqa	%xmm4, %xmm3; \
+	movdqa	%xmm4, %xmm2; \
+	paddd	%xmm6, %xmm0; \
+	pand	%xmm5, %xmm2; \
+	pand	%xmm7, %xmm1; \
+	pand	%xmm7, %xmm4; \
+	pxor	%xmm4, %xmm1; \
+	movdqa	%xmm5, %xmm4; \
+	movdqa	%xmm7, %xmm5; \
+	pxor	%xmm2, %xmm1; \
+	paddd	%xmm1, %xmm6; \
+	movdqa	%xmm7, %xmm2; \
+	psrld	$2, %xmm7; \
+	movdqa	%xmm7, %xmm1; \
+	pslld	$10, %xmm2; \
+	psrld	$11, %xmm1; \
+	pxor	%xmm2, %xmm7; \
+	pslld	$9, %xmm2; \
+	pxor	%xmm1, %xmm7; \
+	psrld	$9, %xmm1; \
+	pxor	%xmm2, %xmm7; \
+	pslld	$11, %xmm2; \
+	pxor	%xmm1, %xmm7; \
+	pxor	%xmm2, %xmm7; \
+	paddd	%xmm6, %xmm7; \
+
+
+#define sha256_sse2_main_quadround(i) \
+	sha256_sse2_main_round(i+0); \
+	sha256_sse2_main_round(i+1); \
+	sha256_sse2_main_round(i+2); \
+	sha256_sse2_main_round(i+3); \
+
+
+
+#define p2bswap_esi_esp(i) \
+	movdqu	i*16(%esi), %xmm0; \
+	movdqu	(i+1)*16(%esi), %xmm2; \
+	pshuflw	$0xb1, %xmm0, %xmm0; \
+	pshuflw	$0xb1, %xmm2, %xmm2; \
+	pshufhw	$0xb1, %xmm0, %xmm0; \
+	pshufhw	$0xb1, %xmm2, %xmm2; \
+	movdqa	%xmm0, %xmm1; \
+	movdqa	%xmm2, %xmm3; \
+	psrlw	$8, %xmm1; \
+	psrlw	$8, %xmm3; \
+	psllw	$8, %xmm0; \
+	psllw	$8, %xmm2; \
+	pxor	%xmm1, %xmm0; \
+	pxor	%xmm3, %xmm2; \
+	movdqa	%xmm0, (i+3)*16(%esp); \
+	movdqa	%xmm2, (i+4)*16(%esp); \
+
 
 	.text
 	.p2align 5
@@ -373,14 +360,14 @@ _sha256_transform_4way:
 	
 	.p2align 5
 sha256_transform_4way_swap:
-	p2bswap_esi_esp 0
-	p2bswap_esi_esp 2
-	p2bswap_esi_esp 4
-	p2bswap_esi_esp 6
-	p2bswap_esi_esp 8
-	p2bswap_esi_esp 10
-	p2bswap_esi_esp 12
-	p2bswap_esi_esp 14
+	p2bswap_esi_esp(0)
+	p2bswap_esi_esp(2)
+	p2bswap_esi_esp(4)
+	p2bswap_esi_esp(6)
+	p2bswap_esi_esp(8)
+	p2bswap_esi_esp(10)
+	p2bswap_esi_esp(12)
+	p2bswap_esi_esp(14)
 	
 sha256_transform_4way_extend:
 	leal	19*16(%esp), %ecx
@@ -784,23 +771,23 @@ sha256d_ms_4way_extend_loop1:
 	movdqa	%xmm7, 15*16(%eax)
 	
 sha256d_ms_4way_extend_loop2:
-	sha256_sse2_extend_doubleround 16
-	sha256_sse2_extend_doubleround 18
-	sha256_sse2_extend_doubleround 20
-	sha256_sse2_extend_doubleround 22
-	sha256_sse2_extend_doubleround 24
-	sha256_sse2_extend_doubleround 26
-	sha256_sse2_extend_doubleround 28
-	sha256_sse2_extend_doubleround 30
-	sha256_sse2_extend_doubleround 32
-	sha256_sse2_extend_doubleround 34
-	sha256_sse2_extend_doubleround 36
-	sha256_sse2_extend_doubleround 38
-	sha256_sse2_extend_doubleround 40
-	sha256_sse2_extend_doubleround 42
+	sha256_sse2_extend_doubleround(16)
+	sha256_sse2_extend_doubleround(18)
+	sha256_sse2_extend_doubleround(20)
+	sha256_sse2_extend_doubleround(22)
+	sha256_sse2_extend_doubleround(24)
+	sha256_sse2_extend_doubleround(26)
+	sha256_sse2_extend_doubleround(28)
+	sha256_sse2_extend_doubleround(30)
+	sha256_sse2_extend_doubleround(32)
+	sha256_sse2_extend_doubleround(34)
+	sha256_sse2_extend_doubleround(36)
+	sha256_sse2_extend_doubleround(38)
+	sha256_sse2_extend_doubleround(40)
+	sha256_sse2_extend_doubleround(42)
 	jz sha256d_ms_4way_extend_coda2
-	sha256_sse2_extend_doubleround 44
-	sha256_sse2_extend_doubleround 46
+	sha256_sse2_extend_doubleround(44)
+	sha256_sse2_extend_doubleround(46)
 	
 	movdqa	0(%ecx), %xmm3
 	movdqa	16(%ecx), %xmm0
@@ -818,30 +805,30 @@ sha256d_ms_4way_extend_loop2:
 	jmp sha256d_ms_4way_main_loop1
 	
 sha256d_ms_4way_main_loop2:
-	sha256_sse2_main_round 0
-	sha256_sse2_main_round 1
-	sha256_sse2_main_round 2
+	sha256_sse2_main_round(0)
+	sha256_sse2_main_round(1)
+	sha256_sse2_main_round(2)
 sha256d_ms_4way_main_loop1:
-	sha256_sse2_main_round 3
-	sha256_sse2_main_quadround 4
-	sha256_sse2_main_quadround 8
-	sha256_sse2_main_quadround 12
-	sha256_sse2_main_quadround 16
-	sha256_sse2_main_quadround 20
-	sha256_sse2_main_quadround 24
-	sha256_sse2_main_quadround 28
-	sha256_sse2_main_quadround 32
-	sha256_sse2_main_quadround 36
-	sha256_sse2_main_quadround 40
-	sha256_sse2_main_quadround 44
-	sha256_sse2_main_quadround 48
-	sha256_sse2_main_quadround 52
-	sha256_sse2_main_round 56
+	sha256_sse2_main_round(3)
+	sha256_sse2_main_quadround(4)
+	sha256_sse2_main_quadround(8)
+	sha256_sse2_main_quadround(12)
+	sha256_sse2_main_quadround(16)
+	sha256_sse2_main_quadround(20)
+	sha256_sse2_main_quadround(24)
+	sha256_sse2_main_quadround(28)
+	sha256_sse2_main_quadround(32)
+	sha256_sse2_main_quadround(36)
+	sha256_sse2_main_quadround(40)
+	sha256_sse2_main_quadround(44)
+	sha256_sse2_main_quadround(48)
+	sha256_sse2_main_quadround(52)
+	sha256_sse2_main_round(56)
 	jz sha256d_ms_4way_finish
-	sha256_sse2_main_round 57
-	sha256_sse2_main_round 58
-	sha256_sse2_main_round 59
-	sha256_sse2_main_quadround 60
+	sha256_sse2_main_round(57)
+	sha256_sse2_main_round(58)
+	sha256_sse2_main_round(59)
+	sha256_sse2_main_quadround(60)
 	
 	movdqa	5*16(%esp), %xmm1
 	movdqa	6*16(%esp), %xmm2
@@ -928,8 +915,8 @@ sha256d_ms_4way_main_loop1:
 	movdqa	%xmm3, 0*16(%eax)
 	movdqa	%xmm7, 1*16(%eax)
 	
-	sha256_sse2_extend_doubleround 2
-	sha256_sse2_extend_doubleround 4
+	sha256_sse2_extend_doubleround(2)
+	sha256_sse2_extend_doubleround(4)
 	
 	movdqa	-9*16(%eax), %xmm0
 	movdqa	sha256d_4preext2_23, %xmm4
@@ -1104,7 +1091,7 @@ sha256d_ms_4way_main_loop1:
 	jmp sha256d_ms_4way_extend_loop2
 	
 sha256d_ms_4way_extend_coda2:
-	sha256_sse2_extend_round 44
+	sha256_sse2_extend_round(44)
 	
 	movdqa	sha256_4h+0, %xmm7
 	movdqa	sha256_4h+16, %xmm5
@@ -1121,42 +1108,42 @@ sha256d_ms_4way_extend_coda2:
 	leal	48(%esp), %eax
 	jmp sha256d_ms_4way_main_loop2
 
-.macro sha256_sse2_main_round_red i, r7
-	movdqa	16*(\i)(%eax), %xmm6
-	paddd	16*(\i)+sha256_4k, %xmm6
-	paddd	32(%esp), %xmm6
-	movdqa	%xmm0, %xmm1
-	movdqa	16(%esp), %xmm2
-	paddd	\r7, %xmm6
-	pandn	%xmm2, %xmm1
-	movdqa	%xmm2, 32(%esp)
-	movdqa	0(%esp), %xmm2
-	movdqa	%xmm2, 16(%esp)
-	pand	%xmm0, %xmm2
-	pxor	%xmm2, %xmm1
-	movdqa	%xmm0, 0(%esp)
-	paddd	%xmm1, %xmm6
-	movdqa	%xmm0, %xmm1
-	psrld	$6, %xmm0
-	movdqa	%xmm0, %xmm2
-	pslld	$7, %xmm1
-	psrld	$5, %xmm2
-	pxor	%xmm1, %xmm0
-	pxor	%xmm2, %xmm0
-	pslld	$14, %xmm1
-	psrld	$14, %xmm2
-	pxor	%xmm1, %xmm0
-	pxor	%xmm2, %xmm0
-	pslld	$5, %xmm1
-	pxor	%xmm1, %xmm0
-	paddd	%xmm6, %xmm0
-.endm
+#define sha256_sse2_main_round_red(i, r7) \
+	movdqa	16*(i)(%eax), %xmm6; \
+	paddd	16*(i)+sha256_4k, %xmm6; \
+	paddd	32(%esp), %xmm6; \
+	movdqa	%xmm0, %xmm1; \
+	movdqa	16(%esp), %xmm2; \
+	paddd	r7, %xmm6; \
+	pandn	%xmm2, %xmm1; \
+	movdqa	%xmm2, 32(%esp); \
+	movdqa	0(%esp), %xmm2; \
+	movdqa	%xmm2, 16(%esp); \
+	pand	%xmm0, %xmm2; \
+	pxor	%xmm2, %xmm1; \
+	movdqa	%xmm0, 0(%esp); \
+	paddd	%xmm1, %xmm6; \
+	movdqa	%xmm0, %xmm1; \
+	psrld	$6, %xmm0; \
+	movdqa	%xmm0, %xmm2; \
+	pslld	$7, %xmm1; \
+	psrld	$5, %xmm2; \
+	pxor	%xmm1, %xmm0; \
+	pxor	%xmm2, %xmm0; \
+	pslld	$14, %xmm1; \
+	psrld	$14, %xmm2; \
+	pxor	%xmm1, %xmm0; \
+	pxor	%xmm2, %xmm0; \
+	pslld	$5, %xmm1; \
+	pxor	%xmm1, %xmm0; \
+	paddd	%xmm6, %xmm0; \
+
 
 sha256d_ms_4way_finish:
-	sha256_sse2_main_round_red 57, %xmm3
-	sha256_sse2_main_round_red 58, %xmm4
-	sha256_sse2_main_round_red 59, %xmm5
-	sha256_sse2_main_round_red 60, %xmm7
+	sha256_sse2_main_round_red(57, %xmm3)
+	sha256_sse2_main_round_red(58, %xmm4)
+	sha256_sse2_main_round_red(59, %xmm5)
+	sha256_sse2_main_round_red(60, %xmm7)
 	
 	paddd	sha256_4h+112, %xmm0
 	movdqa	%xmm0, 112(%edi)

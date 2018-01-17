@@ -29,3 +29,12 @@ mingw32-config.cache
 */.dirstamp
 
 *.iml
+aesb-arm.S.orig
+aesb-x64.S.orig
+aesb-x86.S.orig
+scrypt-arm.S.orig
+scrypt-x64.S.orig
+scrypt-x86.S.orig
+sha2-arm.S.orig
+sha2-x64.S.orig
+sha2-x86.S.orig

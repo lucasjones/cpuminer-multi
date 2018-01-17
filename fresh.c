@@ -11,7 +11,7 @@
 
 //#define DEBUG_ALGO
 
-inline void freshhash(void* output, const void* input, uint32_t len)
+static inline void freshhash(void* output, const void* input, uint32_t len)
 {
 	unsigned char hash[128]; // uint32_t hashA[16], hashB[16];
 	#define hashA hash
