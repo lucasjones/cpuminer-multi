@@ -5,16 +5,11 @@ else
 JANSSON_INCLUDES=
 endif
 
-OPENSSL_INCLUDE = -I/usr/local/opt/openssl/include
-OPENSSL_LIB = -L/usr/local/opt/openssl/lib
-
 EXTRA_DIST	= example-cfg.json nomacro.pl
-
-ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS		= compat
 
-INCLUDES	= $(PTHREAD_FLAGS) -fno-strict-aliasing $(JANSSON_INCLUDES) $(OPENSSL_INCLUDE)
+INCLUDES	= $(PTHREAD_FLAGS) -fno-strict-aliasing $(JANSSON_INCLUDES)
 
 bin_PROGRAMS	= minerd
 
@@ -75,7 +70,7 @@ minerd_SOURCES += sha2-arm.S scrypt-arm.S aesb-arm.S crypto/aesb-x86-impl.c
 endif
 endif
 
-minerd_LDFLAGS	= $(PTHREAD_FLAGS) $(OPENSSL_LIB)
+minerd_LDFLAGS	= $(PTHREAD_FLAGS)
 minerd_LDADD	= @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@
 minerd_CPPFLAGS = @LIBCURL_CPPFLAGS@
 minerd_CFLAGS   = -Ofast -flto -fuse-linker-plugin
