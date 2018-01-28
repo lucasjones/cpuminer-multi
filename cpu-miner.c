@@ -77,7 +77,8 @@ struct workio_cmd {
 };
 
 enum algos {
-	ALGO_KECCAK,      /* Keccak */
+	ALGO_KECCAK,      /* Keccak (old) */
+	ALGO_KECCAKC,     /* Keccak */
 	ALGO_HEAVY,       /* Heavy */
 	ALGO_NEOSCRYPT,   /* NeoScrypt(128, 2, 1) with Salsa20/20 and ChaCha20/20 */
 	ALGO_QUARK,       /* Quark */
@@ -134,6 +135,7 @@ enum algos {
 
 static const char *algo_names[] = {
 	"keccak",
+	"keccakc",
 	"heavy",
 	"neoscrypt",
 	"quark",
@@ -306,7 +308,8 @@ Options:\n\
                           groestl      GroestlCoin\n\
                           heavy        Heavy\n\
                           jha          JHA\n\
-                          keccak       Keccak\n\
+                          keccak       Keccak (Old and deprecated)\n\
+                          keccakc      Keccak (CreativeCoin)\n\
                           luffa        Luffa\n\
                           lyra2re      Lyra2RE\n\
                           lyra2rev2    Lyra2REv2 (Vertcoin)\n\
@@ -1798,6 +1801,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_FRESH:
 			case ALGO_DMD_GR:
 			case ALGO_GROESTL:
+			case ALGO_KECCAKC:
 			case ALGO_LBRY:
 			case ALGO_LYRA2REV2:
 			case ALGO_TIMETRAVEL:
@@ -2228,6 +2232,7 @@ static void *miner_thread(void *userdata)
 			rc = scanhash_groestl(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_KECCAK:
+		case ALGO_KECCAKC:
 			rc = scanhash_keccak(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_HEAVY:

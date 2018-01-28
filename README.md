@@ -70,6 +70,7 @@ Algorithms
 #### Implemented, but untested
  * ? hefty1 (Heavycoin)
  * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
+ * ? keccakc (Creativecoin)
  * ? luffa (Joincoin, Doomcoin)
  * ? shavite3 (INKcoin)
 
@@ -176,7 +177,6 @@ Donations for the work done in this fork are accepted :
 
 Tanguy Pruvot :
 * BTC: `1FhDPLPpw18X4srecguG3MxJYe4a1JsZnd`
-* ZRC: `ZX6LmrCwphNgitxvDnf8TX6Tsegfxpeozx`
 
 Lucas Jones :
 * MRO: `472haywQKoxFzf7asaQ4XKBc2foAY4ezk8HiN63ifW4iAbJiLnfmJfhHSR9XmVKw2WYPnszJV9MEHj9Z5WMK9VCNHaGLDmJ`

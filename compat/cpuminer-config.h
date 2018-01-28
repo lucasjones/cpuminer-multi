@@ -94,7 +94,7 @@
 #define PACKAGE_NAME "cpuminer-multi"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "cpuminer-multi 1.3.2"
+#define PACKAGE_STRING "cpuminer-multi 1.3.3"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "cpuminer-multi"
