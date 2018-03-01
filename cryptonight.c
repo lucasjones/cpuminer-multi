@@ -32,6 +32,29 @@ typedef __uint128_t uint128_t;
 #define INIT_SIZE_BLK   8
 #define INIT_SIZE_BYTE (INIT_SIZE_BLK * AES_BLOCK_SIZE)
 
+#define VARIANT1_1(p) \
+	do if (variant > 0) \
+	{ \
+		const uint8_t tmp = ((const uint8_t*)(p))[11]; \
+		static const uint32_t table = 0x75310; \
+		const uint8_t index = (((tmp >> 3) & 6) | (tmp & 1)) << 1; \
+		((uint8_t*)(p))[11] = tmp ^ ((table >> index) & 0x30); \
+	} while(0)
+
+#define VARIANT1_2(p) \
+	do if (variant > 0) \
+	{ \
+		((uint64_t*)p)[1] ^= tweak1_2; \
+	} while(0)
+
+#define VARIANT1_INIT() \
+	if (variant > 0 && len < 43) \
+	{ \
+		return 0; \
+	} \
+	const uint64_t tweak1_2 = variant > 0 ? *(const uint64_t*)(((const uint8_t*)input)+35) ^ ctx->state.hs.w[24] : 0
+
+
 #pragma pack(push, 1)
 union cn_slow_hash_state {
 	union hash_state hs;
@@ -112,11 +135,13 @@ struct cryptonight_ctx {
 	oaes_ctx* aes_ctx;
 };
 
-void cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cryptonight_ctx* ctx) {
+int cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cryptonight_ctx* ctx, int variant) {
 	hash_process(&ctx->state.hs, (const uint8_t*) input, len);
 	ctx->aes_ctx = (oaes_ctx*) oaes_alloc();
 	size_t i, j;
 	memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
+
+	VARIANT1_INIT();
 
 	oaes_key_import_data(ctx->aes_ctx, ctx->state.hs.b, AES_KEY_SIZE);
 	for (i = 0; likely(i < MEMORY); i += INIT_SIZE_BYTE) {
@@ -143,14 +168,18 @@ void cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cr
 		j = e2i(ctx->a);
 		aesb_single_round(&ctx->long_state[j], ctx->c, ctx->a);
 		xor_blocks_dst(ctx->c, ctx->b, &ctx->long_state[j]);
+		VARIANT1_1(&ctx->long_state[j]);
 		/* Iteration 2 */
 		mul_sum_xor_dst(ctx->c, ctx->a, &ctx->long_state[e2i(ctx->c)]);
+		VARIANT1_2(&ctx->long_state[e2i(ctx->c)]);
 		/* Iteration 3 */
 		j = e2i(ctx->a);
 		aesb_single_round(&ctx->long_state[j], ctx->b, ctx->a);
 		xor_blocks_dst(ctx->b, ctx->c, &ctx->long_state[j]);
+		VARIANT1_1(&ctx->long_state[j]);
 		/* Iteration 4 */
 		mul_sum_xor_dst(ctx->b, ctx->a, &ctx->long_state[e2i(ctx->b)]);
+		VARIANT1_2(&ctx->long_state[e2i(ctx->b)]);
 	}
 
 	memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
@@ -178,19 +207,23 @@ void cryptonight_hash_ctx(void* output, const void* input, size_t len, struct cr
 	/*memcpy(hash, &state, 32);*/
 	extra_hashes[ctx->state.hs.b[0] & 3](&ctx->state, 200, output);
 	oaes_free((OAES_CTX **) &ctx->aes_ctx);
+	return 1;
 }
 
-void cryptonight_hash(void* output, const void* input, size_t len) {
+int cryptonight_hash(void* output, const void* input, size_t len, int variant) {
 	struct cryptonight_ctx *ctx = (struct cryptonight_ctx*)malloc(sizeof(struct cryptonight_ctx));
-	cryptonight_hash_ctx(output, input, len, ctx);
+	const int rc = cryptonight_hash_ctx(output, input, len, ctx, variant);
 	free(ctx);
+        return rc;
 }
 
-void cryptonight_hash_ctx_aes_ni(void* output, const void* input, size_t len, struct cryptonight_ctx* ctx) {
+int cryptonight_hash_ctx_aes_ni(void* output, const void* input, size_t len, struct cryptonight_ctx* ctx, int variant) {
 	hash_process(&ctx->state.hs, (const uint8_t*) input, len);
 	ctx->aes_ctx = (oaes_ctx*) oaes_alloc();
 	size_t i, j;
 	memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
+
+	VARIANT1_INIT();
 
 	oaes_key_import_data(ctx->aes_ctx, ctx->state.hs.b, AES_KEY_SIZE);
 	for (i = 0; likely(i < MEMORY); i += INIT_SIZE_BYTE) {
@@ -217,14 +250,18 @@ void cryptonight_hash_ctx_aes_ni(void* output, const void* input, size_t len, st
 		j = e2i(ctx->a);
 		fast_aesb_single_round(&ctx->long_state[j], ctx->c, ctx->a);
 		xor_blocks_dst(ctx->c, ctx->b, &ctx->long_state[j]);
+		VARIANT1_1(&ctx->long_state[j]);
 		/* Iteration 2 */
 		mul_sum_xor_dst(ctx->c, ctx->a, &ctx->long_state[e2i(ctx->c)]);
+		VARIANT1_2(&ctx->long_state[j]);
 		/* Iteration 3 */
 		j = e2i(ctx->a);
 		fast_aesb_single_round(&ctx->long_state[j], ctx->b, ctx->a);
 		xor_blocks_dst(ctx->b, ctx->c, &ctx->long_state[j]);
+		VARIANT1_1(&ctx->long_state[j]);
 		/* Iteration 4 */
 		mul_sum_xor_dst(ctx->b, ctx->a, &ctx->long_state[e2i(ctx->b)]);
+		VARIANT1_2(&ctx->long_state[j]);
 	}
 
 	memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
@@ -252,12 +289,14 @@ void cryptonight_hash_ctx_aes_ni(void* output, const void* input, size_t len, st
 	/*memcpy(hash, &state, 32);*/
 	extra_hashes[ctx->state.hs.b[0] & 3](&ctx->state, 200, output);
 	oaes_free((OAES_CTX **) &ctx->aes_ctx);
+	return 1;
 }
 
 int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 		uint32_t max_nonce, uint64_t *hashes_done) {
 	uint32_t *nonceptr = (uint32_t*) (((char*)pdata) + 39);
 	uint32_t n = *nonceptr - 1;
+	int variant = ((const unsigned char*)pdata)[0] >= 7 ? ((const unsigned char*)pdata)[0] - 6 : 0;
 	const uint32_t first_nonce = n + 1;
 	const uint32_t Htarg = ptarget[7];
 	uint32_t hash[HASH_SIZE / 4] __attribute__((aligned(32)));
@@ -267,8 +306,8 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	if (aes_ni_supported) {
 		do {
 			*nonceptr = ++n;
-			cryptonight_hash_ctx_aes_ni(hash, pdata, 76, ctx);
-			if (unlikely(hash[7] < ptarget[7])) {
+			const int rc = cryptonight_hash_ctx_aes_ni(hash, pdata, 76, ctx, variant);
+			if (likely(rc) && unlikely(hash[7] < ptarget[7])) {
 				*hashes_done = n - first_nonce + 1;
 				free(ctx);
 				return true;
@@ -277,8 +316,8 @@ int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	} else {
 		do {
 			*nonceptr = ++n;
-			cryptonight_hash_ctx(hash, pdata, 76, ctx);
-			if (unlikely(hash[7] < ptarget[7])) {
+			const int rc = cryptonight_hash_ctx(hash, pdata, 76, ctx, variant);
+			if (likely(rc) && unlikely(hash[7] < ptarget[7])) {
 				*hashes_done = n - first_nonce + 1;
 				free(ctx);
 				return true;
