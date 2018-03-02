@@ -114,6 +114,7 @@ enum algos {
     ALGO_X14,         /* X14 */
     ALGO_X15,         /* X15 Whirlpool */
     ALGO_CRYPTONIGHT, /* CryptoNight */
+    ALGO_CRYPTONIGHT_MONERO, /* CryptoNight with Monero tweaks */
 };
 
 static const char *algo_names[] = {
@@ -131,6 +132,7 @@ static const char *algo_names[] = {
     [ALGO_X14] =         "x14",
     [ALGO_X15] =         "x15",
     [ALGO_CRYPTONIGHT] = "cryptonight",
+    [ALGO_CRYPTONIGHT_MONERO] = "cryptonight-monero",
 };
 
 bool opt_debug = false;
@@ -215,6 +217,7 @@ Options:\n\
                           x14          X14\n\
                           x15          X15\n\
                           cryptonight  CryptoNight\n\
+                          cryptonight-monero  CryptoNight with Monero variants\n\
   -o, --url=URL         URL of mining server\n\
   -O, --userpass=U:P    username:password pair for mining server\n\
   -u, --user=USERNAME   username for mining server\n\
@@ -560,6 +563,7 @@ static void share_result(int result, struct work *work, const char *reason) {
 
     switch (opt_algo) {
     case ALGO_CRYPTONIGHT:
+    case ALGO_CRYPTONIGHT_MONERO:
         applog(LOG_INFO, "accepted: %lu/%lu (%.2f%%), %.2f H/s at diff %g %s",
                 accepted_count, accepted_count + rejected_count,
                 100. * accepted_count / (accepted_count + rejected_count), hashrate,
@@ -585,6 +589,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
     char s[JSON_BUF_LEN];
     int i;
     bool rc = false;
+    bool is_monero = opt_algo == ALGO_CRYPTONIGHT_MONERO;
 
     /* pass if the previous hash is not the current previous hash */
     if (!submit_old && memcmp(work->data + 1, g_work.data + 1, 32)) {
@@ -596,14 +601,21 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
     if (have_stratum) {
         uint32_t ntime, nonce;
         char *ntimestr, *noncestr, *xnonce2str;
+        bool is_monero = opt_algo == ALGO_CRYPTONIGHT_MONERO;
+        int variant;
 
         if (jsonrpc_2) {
+            variant = is_monero && ((const unsigned char*)work->data)[0] >= 7 ? ((const unsigned char*)work->data)[0] - 6 : 0;
             noncestr = bin2hex(((const unsigned char*)work->data) + 39, 4);
             char hash[32];
             switch(opt_algo) {
             case ALGO_CRYPTONIGHT:
+            case ALGO_CRYPTONIGHT_MONERO:
             default:
-                cryptonight_hash(hash, work->data, 76);
+                if (!cryptonight_hash(hash, work->data, 76, variant)) {
+                    applog(LOG_ERR, "submit_upstream_work cryptonight_hash failed");
+                    goto out;
+                }
             }
             char *hashhex = bin2hex(hash, 32);
             snprintf(s, JSON_BUF_LEN,
@@ -631,12 +643,17 @@ static bool submit_upstream_work(CURL *curl, struct work *work) {
     } else {
         /* build JSON-RPC request */
         if(jsonrpc_2) {
+            int variant = is_monero && ((const unsigned char*)work->data)[0] >= 7 ? ((const unsigned char*)work->data)[0] - 6 : 0;
             char *noncestr = bin2hex(((const unsigned char*)work->data) + 39, 4);
             char hash[32];
             switch(opt_algo) {
             case ALGO_CRYPTONIGHT:
+            case ALGO_CRYPTONIGHT_MONERO:
             default:
-                cryptonight_hash(hash, work->data, 76);
+                if (!cryptonight_hash(hash, work->data, 76, variant)) {
+                    applog(LOG_ERR, "submit_upstream_work cryptonight_hash failed");
+                    goto out;
+                }
             }
             char *hashhex = bin2hex(hash, 32);
             snprintf(s, JSON_BUF_LEN,
@@ -1128,6 +1145,7 @@ static void *miner_thread(void *userdata) {
                 max64 = opt_scrypt_n < 16 ? 0x3ffff : 0x3fffff / opt_scrypt_n;
                 break;
             case ALGO_CRYPTONIGHT:
+            case ALGO_CRYPTONIGHT_MONERO:
                 max64 = 0x40LL;
                 break;
             case ALGO_FRESH:
@@ -1215,6 +1233,7 @@ static void *miner_thread(void *userdata) {
                     &hashes_done);
             break;
         case ALGO_CRYPTONIGHT:
+        case ALGO_CRYPTONIGHT_MONERO:
             rc = scanhash_cryptonight(thr_id, work.data, work.target,
                     max_nonce, &hashes_done);
             break;
@@ -1236,6 +1255,7 @@ static void *miner_thread(void *userdata) {
         if (!opt_quiet) {
             switch(opt_algo) {
             case ALGO_CRYPTONIGHT:
+            case ALGO_CRYPTONIGHT_MONERO:
                 applog(LOG_INFO, "thread %d: %lu hashes, %.2f H/s", thr_id,
                         hashes_done, thr_hashrates[thr_id]);
                 break;
@@ -1254,6 +1274,7 @@ static void *miner_thread(void *userdata) {
             if (i == opt_n_threads) {
                 switch(opt_algo) {
                 case ALGO_CRYPTONIGHT:
+                case ALGO_CRYPTONIGHT_MONERO:
                     applog(LOG_INFO, "Total: %s H/s", hashrate);
                     break;
                 default:
@@ -1852,7 +1873,7 @@ int main(int argc, char *argv[]) {
 		init_quarkhash_contexts();
 	} else if (opt_algo == ALGO_BLAKE) {
 		init_blakehash_contexts();
-	} else if(opt_algo == ALGO_CRYPTONIGHT) {
+	} else if(opt_algo == ALGO_CRYPTONIGHT || opt_algo == ALGO_CRYPTONIGHT_MONERO) {
 		jsonrpc_2 = true;
 		aes_ni_supported = has_aes_ni();
 		applog(LOG_INFO, "Using JSON-RPC 2.0");
