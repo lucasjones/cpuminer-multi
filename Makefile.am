@@ -96,6 +96,7 @@ cpuminer_SOURCES = \
   algo/veltor.c \
   algo/x11evo.c \
   algo/x11.c \
+  algo/x12.c \
   algo/x13.c \
   algo/x14.c \
   algo/x15.c \

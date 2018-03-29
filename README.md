@@ -59,6 +59,7 @@ Algorithms
  * ✓ __xevan__ x17 x 2 on bigger header (BitSend [BSD])
  * ✓ __x11evo__ (Revolver [XRE])
  * ✓ __x11__ (Darkcoin [DRK], Hirocoin, Limecoin, ...)
+ * ✓ __x12__ (GalaxyCash [GCH])
  * ✓ __x13__ (Sherlockcoin, [ACE], [B2B], [GRC], [XHC], ...)
  * ✓ __x14__ (X14, Webcoin [WEB])
  * ✓ __x15__ (RadianceCoin [RCE])

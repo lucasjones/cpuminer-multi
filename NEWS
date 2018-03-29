@@ -1,5 +1,6 @@
 Version 1.3.3
 - Add tribus algo
+- Add x12 algo
 - Add x16r algo
 - Add x16s algo
 - Add keccakc variant
