@@ -63,6 +63,7 @@ Algorithms
  * ✓ __x14__ (X14, Webcoin [WEB])
  * ✓ __x15__ (RadianceCoin [RCE])
  * ✓ __x16r__ (Ravencoin [RVN])
+ * ✓ __x16s__ (Pigeoncoin [PGN])
  * ✓ __x17__ (Verge [XVG])
  * ✓ __yescrypt__ (GlobalBoostY [BSTY], Unitus [UIS], MyriadCoin [MYR])
  * ✓ __zr5__ (Ziftrcoin [ZRC])

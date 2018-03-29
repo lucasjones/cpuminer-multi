@@ -50,7 +50,7 @@ static __thread uint32_t s_ntime = UINT32_MAX;
 static __thread char hashOrder[HASH_FUNC_COUNT + 1] = { 0 };
 
 
-static void getAlgoString(const uint32_t* prevblock, char *output)
+static void getAlgoString(const uint8_t* prevblock, char *output)
 {
 	uint8_t* data = (uint8_t*)prevblock;
 
@@ -207,7 +207,7 @@ int scanhash_x16s(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *h
 
 	if (s_ntime != pdata[17]) {
 		uint32_t ntime = swab32(pdata[17]);
-		getAlgoString((const char*) (&endiandata[1]), hashOrder);
+		getAlgoString((const uint8_t*) (&endiandata[1]), hashOrder);
 		s_ntime = ntime;
 		if (opt_debug && !thr_id) applog(LOG_DEBUG, "hash order %s (%08x)", hashOrder, ntime);
 	}
