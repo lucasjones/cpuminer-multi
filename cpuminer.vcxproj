@@ -202,6 +202,7 @@
     <ClCompile Include="util.c">
       <Optimization Condition="'$(Configuration)'=='Release'">Full</Optimization>
     </ClCompile>
+    <ClCompile Include="algo\allium.c" />
     <ClCompile Include="algo\axiom.c" />
     <ClCompile Include="algo\bastion.c" />
     <ClCompile Include="algo\bitcore.c" />

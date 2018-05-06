@@ -82,6 +82,7 @@ enum algos {
 	ALGO_HEAVY,       /* Heavy */
 	ALGO_NEOSCRYPT,   /* NeoScrypt(128, 2, 1) with Salsa20/20 and ChaCha20/20 */
 	ALGO_QUARK,       /* Quark */
+	ALGO_ALLIUM,      /* Garlicoin double lyra2 */
 	ALGO_AXIOM,       /* Shabal 256 Memohash */
 	ALGO_BASTION,
 	ALGO_BLAKE,       /* Blake 256 */
@@ -141,6 +142,7 @@ static const char *algo_names[] = {
 	"heavy",
 	"neoscrypt",
 	"quark",
+	"allium",
 	"axiom",
 	"bastion",
 	"blake",
@@ -296,6 +298,7 @@ static char const usage[] = "\
 Usage: " PACKAGE_NAME " [OPTIONS]\n\
 Options:\n\
   -a, --algo=ALGO       specify the algorithm to use\n\
+                          allium       Garlicoin double lyra2\n\
                           axiom        Shabal-256 MemoHash\n\
                           bitcore      Timetravel with 10 algos\n\
                           blake        Blake-256 14-rounds (SFR)\n\
@@ -1809,6 +1812,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_YESCRYPT:
 				work_set_target(work, sctx->job.diff / (65536.0 * opt_diff_factor));
 				break;
+			case ALGO_ALLIUM:
 			case ALGO_FRESH:
 			case ALGO_DMD_GR:
 			case ALGO_GROESTL:
@@ -2141,6 +2145,7 @@ static void *miner_thread(void *userdata)
 			case ALGO_YESCRYPT:
 				max64 = 0x1ff;
 				break;
+			case ALGO_ALLIUM:
 			case ALGO_LYRA2:
 			case ALGO_LYRA2REV2:
 			case ALGO_TIMETRAVEL:
@@ -2205,6 +2210,9 @@ static void *miner_thread(void *userdata)
 		/* scan nonces for a proof-of-work hash */
 		switch (opt_algo) {
 
+		case ALGO_ALLIUM:
+			rc = scanhash_allium(thr_id, &work, max_nonce, &hashes_done);
+			break;
 		case ALGO_AXIOM:
 			rc = scanhash_axiom(thr_id, &work, max_nonce, &hashes_done);
 			break;
