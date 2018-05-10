@@ -105,6 +105,8 @@ enum algos {
 	ALGO_MYR_GR,      /* Myriad Groestl */
 	ALGO_NIST5,       /* Nist5 */
 	ALGO_PENTABLAKE,  /* Pentablake */
+	ALGO_PHI1612,
+	ALGO_PHI2,
 	ALGO_PLUCK,       /* Pluck (Supcoin) */
 	ALGO_QUBIT,       /* Qubit */
 	ALGO_SCRYPT,      /* scrypt */
@@ -165,6 +167,8 @@ static const char *algo_names[] = {
 	"myr-gr",
 	"nist5",
 	"pentablake",
+	"phi1612",
+	"phi2",
 	"pluck",
 	"qubit",
 	"scrypt",
@@ -325,6 +329,8 @@ Options:\n\
                           nist5        Nist5\n\
                           pluck        Pluck:128 (Supcoin)\n\
                           pentablake   Pentablake\n\
+                          phi          LUX initial algo\n\
+                          phi2         LUX newer algo\n\
                           quark        Quark\n\
                           qubit        Qubit\n\
                           scrypt       scrypt(1024, 1, 1) (default)\n\
@@ -1819,6 +1825,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_KECCAKC:
 			case ALGO_LBRY:
 			case ALGO_LYRA2REV2:
+			case ALGO_PHI2:
 			case ALGO_TIMETRAVEL:
 			case ALGO_BITCORE:
 			case ALGO_XEVAN:
@@ -2148,6 +2155,8 @@ static void *miner_thread(void *userdata)
 			case ALGO_ALLIUM:
 			case ALGO_LYRA2:
 			case ALGO_LYRA2REV2:
+			case ALGO_PHI1612:
+			case ALGO_PHI2:
 			case ALGO_TIMETRAVEL:
 			case ALGO_BITCORE:
 			case ALGO_XEVAN:
@@ -2287,6 +2296,12 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_PENTABLAKE:
 			rc = scanhash_pentablake(thr_id, &work, max_nonce, &hashes_done);
+			break;
+		case ALGO_PHI1612:
+			rc = scanhash_phi1612(thr_id, &work, max_nonce, &hashes_done);
+			break;
+		case ALGO_PHI2:
+			rc = scanhash_phi2(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_PLUCK:
 			rc = scanhash_pluck(thr_id,  &work, max_nonce, &hashes_done, scratchbuf, opt_pluck_n);
@@ -2892,6 +2907,8 @@ void parse_arg(int key, char *arg)
 				i = opt_algo = ALGO_LYRA2;
 			else if (!strcasecmp("lyra2v2", arg))
 				i = opt_algo = ALGO_LYRA2REV2;
+			else if (!strcasecmp("phi", arg))
+				i = opt_algo = ALGO_PHI1612;
 			else if (!strcasecmp("scryptjane", arg))
 				i = opt_algo = ALGO_SCRYPTJANE;
 			else if (!strcasecmp("sibcoin", arg))

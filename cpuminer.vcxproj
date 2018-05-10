@@ -229,6 +229,8 @@
     <ClCompile Include="algo\neoscrypt.c" />
     <ClCompile Include="algo\nist5.c" />
     <ClCompile Include="algo\pentablake.c" />
+    <ClCompile Include="algo\phi1612.c" />
+    <ClCompile Include="algo\phi2.c" />
     <ClCompile Include="algo\pluck.c" />
     <ClCompile Include="algo\quark.c" />
     <ClCompile Include="algo\qubit.c" />

@@ -224,6 +224,8 @@ int scanhash_myriad(int thr_id, struct work *work, uint32_t max_nonce, uint64_t 
 int scanhash_neoscrypt(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done, uint32_t profile);
 int scanhash_nist5(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_pentablake(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
+int scanhash_phi1612(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
+int scanhash_phi2(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_pluck(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done,
 					unsigned char *scratchbuf, int N);
 int scanhash_quark(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
@@ -519,6 +521,8 @@ void lyra2rev2_hash(void *state, const void *input);
 void myriadhash(void *output, const void *input);
 void neoscrypt(unsigned char *output, const unsigned char *password, uint32_t profile);
 void nist5hash(void *output, const void *input);
+void phi1612_hash(void *state, const void *input);
+void phi2_hash(void *state, const void *input);
 void pluck_hash(uint32_t *hash, const uint32_t *data, uchar *hashbuffer, const int N);
 void pentablakehash(void *output, const void *input);
 void qubithash(void *output, const void *input);
