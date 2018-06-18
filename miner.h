@@ -418,7 +418,7 @@ struct stratum_job {
 	unsigned char version[4];
 	unsigned char nbits[4];
 	unsigned char ntime[4];
-	unsigned char claim[32]; // lbry
+	unsigned char extra[64]; // like lbry claimtrie
 	bool clean;
 	double diff;
 };

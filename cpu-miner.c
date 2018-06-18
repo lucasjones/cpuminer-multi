@@ -266,7 +266,7 @@ pthread_mutex_t rpc2_login_lock;
 pthread_mutex_t applog_lock;
 pthread_mutex_t stats_lock;
 uint32_t zr5_pok = 0;
-
+bool use_roots = false;
 uint32_t solved_count = 0L;
 uint32_t accepted_count = 0L;
 uint32_t rejected_count = 0L;
@@ -607,6 +607,9 @@ static bool work_decode(const json_t *val, struct work *work)
 		allow_mininginfo = false;
 		data_size = 192;
 		adata_sz = 180/4;
+	} else if (use_roots) {
+		data_size = 144;
+		adata_sz = 36;
 	}
 
 	if (jsonrpc_2) {
@@ -658,6 +661,11 @@ static bool work_decode(const json_t *val, struct work *work)
 			applog(LOG_BLUE, "%s block %d%s",
 				algo_names[opt_algo], work->height, netinfo);
 			net_blocks = work->height - 1;
+		}
+	} else if (opt_algo == ALGO_PHI2) {
+		if (work->data[0] & (1<<30)) use_roots = true;
+		else for (i = 20; i < 36; i++) {
+			if (work->data[i]) use_roots = true; break;
 		}
 	}
 
@@ -1298,7 +1306,10 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 		} else if (opt_algo == ALGO_DECRED) {
 			/* bigger data size : 180 + terminal hash ending */
 			data_size = 192;
+		} else if (opt_algo == ALGO_PHI2 && use_roots) {
+			data_size = 144;
 		}
+
 		adata_sz = data_size / sizeof(uint32_t);
 		if (opt_algo == ALGO_DECRED) adata_sz = 180 / 4; // dont touch the end tag
 
@@ -1767,10 +1778,16 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			//applog_hex(&work->data[36], 36);
 		} else if (opt_algo == ALGO_LBRY) {
 			for (i = 0; i < 8; i++)
-				work->data[17 + i] = ((uint32_t*)sctx->job.claim)[i];
+				work->data[17 + i] = ((uint32_t*)sctx->job.extra)[i];
 			work->data[25] = le32dec(sctx->job.ntime);
 			work->data[26] = le32dec(sctx->job.nbits);
 			work->data[28] = 0x80000000;
+		} else if (opt_algo == ALGO_PHI2) {
+			work->data[17] = le32dec(sctx->job.ntime);
+			work->data[18] = le32dec(sctx->job.nbits);
+			for (i = 0; i < 16; i++)
+				work->data[20 + i] = ((uint32_t*)sctx->job.extra)[i];
+			//applog_hex(&work->data[0], 144);
 		} else if (opt_algo == ALGO_SIA) {
 			for (i = 0; i < 8; i++) // prevhash
 				work->data[i] = ((uint32_t*)sctx->job.prevhash)[7-i];

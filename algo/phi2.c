@@ -15,11 +15,13 @@
 
 #include "miner.h"
 
+static bool has_roots;
+
 void phi2_hash(void *state, const void *input)
 {
-	unsigned char _ALIGN(128) hash[128] = { 0 };
-	unsigned char _ALIGN(128) hashA[64] = { 0 };
-	unsigned char _ALIGN(128) hashB[64] = { 0 };
+	unsigned char _ALIGN(128) hash[64];
+	unsigned char _ALIGN(128) hashA[64];
+	unsigned char _ALIGN(128) hashB[64];
 
 	sph_cubehash512_context ctx_cubehash;
 	sph_jh512_context ctx_jh;
@@ -28,7 +30,7 @@ void phi2_hash(void *state, const void *input)
 	sph_skein512_context ctx_skein;
 
 	sph_cubehash512_init(&ctx_cubehash);
-	sph_cubehash512(&ctx_cubehash, input, 80);
+	sph_cubehash512(&ctx_cubehash, input, has_roots ? 144 : 80);
 	sph_cubehash512_close(&ctx_cubehash, (void*)hashB);
 
 	LYRA2(&hashA[ 0], 32, &hashB[ 0], 32, &hashB[ 0], 32, 1, 8, 8);
@@ -56,8 +58,8 @@ void phi2_hash(void *state, const void *input)
 	sph_skein512(&ctx_skein, (const void*)hash, 64);
 	sph_skein512_close(&ctx_skein, (void*)hash);
 
-	for (int i=0; i<32; i++)
-		hash[i] ^= hash[i+32];
+	for (int i=0; i<4; i++)
+		((uint64_t*)hash)[i] ^= ((uint64_t*)hash)[i+4];
 
 	memcpy(state, hash, 32);
 }
@@ -77,8 +79,10 @@ int scanhash_phi2(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *h
 		ptarget[7] = 0x00ff;
 	}
 
-	for (int i=0; i < 19; i++) {
+	has_roots = false;
+	for (int i=0; i < 36; i++) {
 		be32enc(&endiandata[i], pdata[i]);
+		if (i >= 20 && pdata[i]) has_roots = true;
 	}
 
 	do {
