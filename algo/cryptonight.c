@@ -237,9 +237,9 @@ static void cryptonight_hash_ctx(void* output, const void* input, int len, struc
 	oaes_free((OAES_CTX **) &ctx->aes_ctx);
 }
 
-void cryptonight_hash(void* output, const void* input, int len) {
+void cryptonight_hash(void* output, const void* input) {
 	struct cryptonight_ctx *ctx = (struct cryptonight_ctx*)malloc(sizeof(struct cryptonight_ctx));
-	cryptonight_hash_ctx(output, input, len, ctx);
+	cryptonight_hash_ctx(output, input, 76, ctx);
 	free(ctx);
 }
 

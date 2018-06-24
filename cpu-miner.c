@@ -1129,10 +1129,10 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			bin2hex(noncestr, (const unsigned char *)work->data + 39, 4);
 			switch(opt_algo) {
 			case ALGO_CRYPTOLIGHT:
-				cryptolight_hash(hash, work->data, 76);
+				cryptolight_hash(hash, work->data);
 				break;
 			case ALGO_CRYPTONIGHT:
-				cryptonight_hash(hash, work->data, 76);
+				cryptonight_hash(hash, work->data);
 			default:
 				break;
 			}
@@ -1263,10 +1263,10 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 
 			switch(opt_algo) {
 			case ALGO_CRYPTOLIGHT:
-				cryptolight_hash(hash, work->data, 76);
+				cryptolight_hash(hash, work->data);
 				break;
 			case ALGO_CRYPTONIGHT:
-				cryptonight_hash(hash, work->data, 76);
+				cryptonight_hash(hash, work->data);
 			default:
 				break;
 			}

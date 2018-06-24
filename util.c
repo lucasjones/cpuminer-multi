@@ -2350,10 +2350,10 @@ void print_hash_tests(void)
 	c11hash(&hash[0], &buf[0]);
 	printpfx("c11", hash);
 
-	cryptolight_hash(&hash[0], &buf[0], 76);
+	cryptolight_hash(&hash[0], &buf[0]);
 	printpfx("cryptolight", hash);
 
-	cryptonight_hash(&hash[0], &buf[0], 76);
+	cryptonight_hash(&hash[0], &buf[0]);
 	printpfx("cryptonight", hash);
 
 	decred_hash(&hash[0], &buf[0]);
