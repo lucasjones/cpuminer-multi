@@ -5,6 +5,7 @@ Version 1.3.5
 - Add phi and phi2
 - Add sonoa
 - Handle new aeon cryptolight variant
+- Handle new monero algo (hardcoded)
 
 Version 1.3.3
 - Add tribus algo

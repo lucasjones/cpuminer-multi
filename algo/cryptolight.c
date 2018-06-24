@@ -175,11 +175,9 @@ struct cryptonight_ctx {
 	oaes_ctx* aes_ctx;
 };
 
-static int cryptolight_hash_ctx(void* output, const void* input, int len, struct cryptonight_ctx* ctx, int variant)
+static void cryptolight_hash_ctx(void* output, const void* input, int len, struct cryptonight_ctx* ctx, int variant)
 {
 	size_t i, j;
-	if (variant && len < 43)
-		return 0;
 
 	hash_process(&ctx->state.hs, (const uint8_t*) input, len);
 	ctx->aes_ctx = (oaes_ctx*) oaes_alloc();
@@ -215,6 +213,7 @@ static int cryptolight_hash_ctx(void* output, const void* input, int len, struct
 		/* Iteration 2 */
 		cryptolight_store_variant(&ctx->long_state[j], variant);
 		mul_sum_xor_dst(ctx->c, ctx->a, &ctx->long_state[e2i(ctx->c)], variant, tweak);
+
 		/* Iteration 3 */
 		j = e2i(ctx->a);
 		aesb_single_round(&ctx->long_state[j], ctx->b, ctx->a);
@@ -249,7 +248,6 @@ static int cryptolight_hash_ctx(void* output, const void* input, int len, struct
 	/*memcpy(hash, &state, 32);*/
 	extra_hashes[ctx->state.hs.b[0] & 3](&ctx->state, 200, output);
 	oaes_free((OAES_CTX **) &ctx->aes_ctx);
-	return 1;
 }
 
 void cryptolight_hash(void* output, const void* input) {
@@ -259,11 +257,9 @@ void cryptolight_hash(void* output, const void* input) {
 	free(ctx);
 }
 
-static int cryptolight_hash_ctx_aes_ni(void* output, const void* input, int len, struct cryptonight_ctx* ctx, int variant)
+static void cryptolight_hash_ctx_aes_ni(void* output, const void* input, int len, struct cryptonight_ctx* ctx, int variant)
 {
 	size_t i, j;
-	if (variant && len < 43)
-		return 0;
 
 	hash_process(&ctx->state.hs, (const uint8_t*)input, len);
 	ctx->aes_ctx = (oaes_ctx*) oaes_alloc();
@@ -287,8 +283,6 @@ static int cryptolight_hash_ctx_aes_ni(void* output, const void* input, int len,
 	xor_blocks_dst(&ctx->state.k[0], &ctx->state.k[32], ctx->a);
 	xor_blocks_dst(&ctx->state.k[16], &ctx->state.k[48], ctx->b);
 
-	//const uint64_t tweak = variant ? *((uint64_t*) (((uint8_t*)input) + 35)) ^ ctx->state.hs.w[24] : 0;
-
 	for (i = 0; likely(i < ITER / 4); ++i) {
 		/* Dependency chain: address -> read value ------+
 		 * written value <-+ hard function (AES or MUL) <+
@@ -301,6 +295,7 @@ static int cryptolight_hash_ctx_aes_ni(void* output, const void* input, int len,
 		/* Iteration 2 */
 		cryptolight_store_variant(&ctx->long_state[j], variant);
 		mul_sum_xor_dst(ctx->c, ctx->a, &ctx->long_state[e2i(ctx->c)], variant, tweak);
+
 		/* Iteration 3 */
 		j = e2i(ctx->a);
 		fast_aesb_single_round(&ctx->long_state[j], ctx->b, ctx->a);
@@ -335,7 +330,6 @@ static int cryptolight_hash_ctx_aes_ni(void* output, const void* input, int len,
 	/*memcpy(hash, &state, 32);*/
 	extra_hashes[ctx->state.hs.b[0] & 3](&ctx->state, 200, output);
 	oaes_free((OAES_CTX **) &ctx->aes_ctx);
-	return 1;
 }
 
 int scanhash_cryptolight(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done)

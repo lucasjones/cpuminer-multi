@@ -2931,6 +2931,8 @@ void parse_arg(int key, char *arg)
 				i = opt_algo = ALGO_LYRA2;
 			else if (!strcasecmp("lyra2v2", arg))
 				i = opt_algo = ALGO_LYRA2REV2;
+			else if (!strcasecmp("monero", arg))
+				i = opt_algo = ALGO_CRYPTONIGHT;
 			else if (!strcasecmp("phi", arg))
 				i = opt_algo = ALGO_PHI1612;
 			else if (!strcasecmp("scryptjane", arg))
