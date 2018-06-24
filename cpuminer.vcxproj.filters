@@ -339,6 +339,9 @@
     <ClCompile Include="algo\sibcoin.c">
       <Filter>algo</Filter>
     </ClCompile>
+    <ClCompile Include="algo\sonoa.c">
+      <Filter>algo</Filter>
+    </ClCompile>
     <ClCompile Include="algo\yescrypt.c">
       <Filter>algo</Filter>
     </ClCompile>

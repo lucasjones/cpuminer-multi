@@ -1,7 +1,9 @@
-Version 1.3.4
+Version 1.3.5
 - Add allium algo
 - Add x12 algo
 - Add x16s algo
+- Add phi and phi2
+- Add sonoa
 
 Version 1.3.3
 - Add tribus algo

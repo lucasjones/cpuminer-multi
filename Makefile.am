@@ -92,6 +92,7 @@ cpuminer_SOURCES = \
   algo/sibcoin.c \
   algo/skein.c \
   algo/skein2.c \
+  algo/sonoa.c \
   algo/s3.c \
   algo/bitcore.c \
   algo/timetravel.c \

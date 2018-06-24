@@ -117,6 +117,7 @@ enum algos {
 	ALGO_SIB,         /* X11 + gost (Sibcoin) */
 	ALGO_SKEIN,       /* Skein */
 	ALGO_SKEIN2,      /* Double skein (Woodcoin) */
+	ALGO_SONOA,
 	ALGO_S3,          /* S3 */
 	ALGO_TIMETRAVEL,  /* Timetravel-8 (Machinecoin) */
 	ALGO_BITCORE,     /* Timetravel-10 (Bitcore) */
@@ -179,6 +180,7 @@ static const char *algo_names[] = {
 	"sib",
 	"skein",
 	"skein2",
+	"sonoa",
 	"s3",
 	"timetravel",
 	"bitcore",
@@ -342,6 +344,7 @@ Options:\n\
                           sib          X11 + gost (SibCoin)\n\
                           skein        Skein+Sha (Skeincoin)\n\
                           skein2       Double Skein (Woodcoin)\n\
+                          sonoa        A series of 97 hashes from x17\n\
                           s3           S3\n\
                           timetravel   Timetravel (Machinecoin)\n\
                           vanilla      Blake-256 8-rounds\n\
@@ -2194,6 +2197,7 @@ static void *miner_thread(void *userdata)
 				max64 = 0x3ffff;
 				break;
 			case ALGO_LBRY:
+			case ALGO_SONOA:
 			case ALGO_TRIBUS:
 			case ALGO_X15:
 			case ALGO_X16R:
@@ -2352,6 +2356,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_SKEIN2:
 			rc = scanhash_skein2(thr_id, &work, max_nonce, &hashes_done);
+			break;
+		case ALGO_SONOA:
+			rc = scanhash_sonoa(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_S3:
 			rc = scanhash_s3(thr_id, &work, max_nonce, &hashes_done);
