@@ -257,6 +257,13 @@ void cryptonight_hash(void* output, const void* input) {
 	free(ctx);
 }
 
+void cryptonight_hash_v1(void* output, const void* input) {
+	const int variant = 0;
+	struct cryptonight_ctx *ctx = (struct cryptonight_ctx*)malloc(sizeof(struct cryptonight_ctx));
+	cryptonight_hash_ctx(output, input, 76, ctx, variant);
+	free(ctx);
+}
+
 static void cryptonight_hash_ctx_aes_ni(void* output, const void* input, int len, struct cryptonight_ctx* ctx, int variant)
 {
 	size_t i, j;

@@ -506,6 +506,7 @@ void bmwhash(void *output, const void *input);
 void c11hash(void *output, const void *input);
 void cryptolight_hash(void* output, const void* input);
 void cryptonight_hash(void* output, const void* input);
+void cryptonight_hash_v1(void* output, const void* input);
 void decred_hash(void *output, const void *input);
 void droplp_hash(void *output, const void *input);
 void groestlhash(void *output, const void *input);

@@ -2353,7 +2353,7 @@ void print_hash_tests(void)
 	cryptolight_hash(&hash[0], &buf[0]);
 	printpfx("cryptolight", hash);
 
-	cryptonight_hash(&hash[0], &buf[0]);
+	cryptonight_hash_v1(&hash[0], &buf[0]);
 	printpfx("cryptonight", hash);
 
 	decred_hash(&hash[0], &buf[0]);
@@ -2389,6 +2389,9 @@ void print_hash_tests(void)
 	lyra2rev2_hash(&hash[0], &buf[0]);
 	printpfx("lyra2v2", hash);
 
+	cryptonight_hash(&hash[0], &buf[0]);
+	printpfx("monero", hash);
+
 	myriadhash(&hash[0], &buf[0]);
 	printpfx("myr-gr", hash);
 
@@ -2400,6 +2403,12 @@ void print_hash_tests(void)
 
 	pentablakehash(&hash[0], &buf[0]);
 	printpfx("pentablake", hash);
+
+	phi1612_hash(&hash[0], &buf[0]);
+	printpfx("phi1612", hash);
+
+	phi2_hash(&hash[0], &buf[0]);
+	printpfx("phi2", hash);
 
 	pluck_hash((uint32_t*)&hash[0], (uint32_t*)&buf[0], scratchbuf, 128);
 	memset(&buf[0], 0, sizeof(buf));
@@ -2438,6 +2447,9 @@ void print_hash_tests(void)
 
 	skein2hash(&hash[0], &buf[0]);
 	printpfx("skein2", hash);
+
+	sonoa_hash(&hash[0], &buf[0]);
+	printpfx("sonoa", hash);
 
 	s3hash(&hash[0], &buf[0]);
 	printpfx("s3", hash);
