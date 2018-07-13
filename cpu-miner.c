@@ -228,7 +228,6 @@ static int opt_fail_pause = 10;
 static int opt_time_limit = 0;
 int opt_timeout = 300;
 static int opt_scantime = 5;
-static const bool opt_time = true;
 static enum algos opt_algo = ALGO_SCRYPT;
 static int opt_scrypt_n = 1024;
 static int opt_pluck_n = 128;
@@ -668,7 +667,7 @@ static bool work_decode(const json_t *val, struct work *work)
 	} else if (opt_algo == ALGO_PHI2) {
 		if (work->data[0] & (1<<30)) use_roots = true;
 		else for (i = 20; i < 36; i++) {
-			if (work->data[i]) use_roots = true; break;
+			if (work->data[i]) { use_roots = true; break; }
 		}
 	}
 

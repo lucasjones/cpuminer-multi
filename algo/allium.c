@@ -14,16 +14,6 @@
 
 #include "miner.h"
 
-static char* format_hash(char* buf, uint8_t *hash)
-{
-	int len = 0;
-	for (int i=0; i < 32; i += 4) {
-		len += sprintf(buf+len, "%02x%02x%02x%02x ",
-			hash[i], hash[i+1], hash[i+2], hash[i+3]);
-	}
-	return buf;
-}
-
 void allium_hash(void *state, const void *input)
 {
 	uint32_t hashA[8], hashB[8];
