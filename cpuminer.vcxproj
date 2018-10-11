@@ -234,6 +234,7 @@
     <ClCompile Include="algo\pluck.c" />
     <ClCompile Include="algo\quark.c" />
     <ClCompile Include="algo\qubit.c" />
+    <ClCompile Include="algo\rainforest.c" />
     <ClCompile Include="algo\s3.c" />
     <ClCompile Include="algo\sha2.c" />
     <ClCompile Include="algo\sia.c" />

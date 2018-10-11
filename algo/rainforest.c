@@ -158,7 +158,7 @@ static inline uint32_t sbox(uint32_t in, uint8_t n) {
 // this version is optimized for exactly two rounds.
 // _state_ must be 16-byte aligned.
 static void aes2r_encrypt(uint8_t * state, uint8_t * key) {
-    uint32_t key_schedule[12] __attribute__((aligned(16)));
+    uint32_t _ALIGN(16) key_schedule[12];
     uint32_t t;
 
     /* initialize key schedule; its first 16 bytes are the key */
@@ -228,10 +228,18 @@ static void aes2r_encrypt(uint8_t * state, uint8_t * key) {
 }
 
 // this seems necessary only for gcc, otherwise hash is bogus
+#ifdef _MSC_VER
+typedef unsigned long ulong;
+typedef uint8_t  rf_u8;
+typedef uint16_t rf_u16;
+typedef uint32_t rf_u32;
+typedef uint64_t rf_u64;
+#else
 typedef __attribute__((may_alias)) uint8_t  rf_u8;
 typedef __attribute__((may_alias)) uint16_t rf_u16;
 typedef __attribute__((may_alias)) uint32_t rf_u32;
 typedef __attribute__((may_alias)) uint64_t rf_u64;
+#endif
 
 // 2048 entries for the rambox => 16kB
 #define RAMBOX_SIZE 2048
@@ -244,7 +252,7 @@ typedef union {
   rf_u64 q[4];
 } hash256_t;
 
-typedef struct __attribute__((aligned(16))) rf_ctx {
+typedef struct _ALIGN(128) rf_ctx {
   uint64_t rambox[RAMBOX_SIZE];
   hash256_t hash;
   uint32_t crc;
@@ -509,7 +517,7 @@ static inline uint64_t rf_rotr64(uint64_t v, uint8_t bits) {
 
 // reverse all bytes in the word _v_
 static inline uint64_t rf_bswap64(uint64_t v) {
-#if defined(__x86_64__)
+#if defined(__x86_64__) && !defined(_MSC_VER)
   asm("bswap %0":"+r"(v));
 #elif defined(__aarch64__)
   asm("rev %0,%0\n":"+r"(v));
@@ -530,12 +538,12 @@ static inline uint32_t rf_rambox(uint64_t *rambox, uint64_t old) {
   for (loops=0; loops<RAMBOX_LOOPS; loops++) {
     old=rf_add64_crc32(old);
     p=&rambox[old&(RAMBOX_SIZE-1)];
-    old+=rf_rotr64(*p, old/RAMBOX_SIZE);
+    old+=rf_rotr64(*p, (uint8_t) (old/RAMBOX_SIZE));
     // 0x80 below gives a write ratio of 50%
     if ((old>>56)<0x80)
       *p = old;
   }
-  return old;
+  return (uint32_t)old;
 }
 
 // write (_x_,_y_) at cell _cell_ for offset _ofs_
@@ -553,7 +561,7 @@ static inline void rf_w128(uint64_t *cell, ulong ofs, uint64_t x, uint64_t y) {
 }
 
 // initialize the ram box
-static __attribute__((noinline)) void rf_raminit(uint64_t *rambox) {
+static void rf_raminit(uint64_t *rambox) {
   uint64_t pat1 = 0x0123456789ABCDEFULL;
   uint64_t pat2 = 0xFEDCBA9876543210ULL;
   uint64_t pat3;
@@ -576,35 +584,35 @@ static __attribute__((noinline)) void rf_raminit(uint64_t *rambox) {
 
   for (pos = 0; pos < RAMBOX_SIZE; pos += 16) {
     pat3 = pat1;
-    pat1 = rf_rotr64(pat2, pat3) + 0x111;
+    pat1 = rf_rotr64(pat2, (uint8_t)pat3) + 0x111;
     rf_w128(rambox + pos, 0, pat1, pat3);
 
     pat3 = pat2;
-    pat2 = rf_rotr64(pat1, pat3) + 0x222;
+    pat2 = rf_rotr64(pat1, (uint8_t)pat3) + 0x222;
     rf_w128(rambox + pos, 2, pat2, pat3);
 
     pat3 = pat1;
-    pat1 = rf_rotr64(pat2, pat3) + 0x333;
+    pat1 = rf_rotr64(pat2, (uint8_t)pat3) + 0x333;
     rf_w128(rambox + pos, 4, pat1, pat3);
 
     pat3 = pat2;
-    pat2 = rf_rotr64(pat1, pat3) + 0x444;
+    pat2 = rf_rotr64(pat1, (uint8_t)pat3) + 0x444;
     rf_w128(rambox + pos, 6, pat2, pat3);
 
     pat3 = pat1;
-    pat1 = rf_rotr64(pat2, pat3) + 0x555;
+    pat1 = rf_rotr64(pat2, (uint8_t)pat3) + 0x555;
     rf_w128(rambox + pos, 8, pat1, pat3);
 
     pat3 = pat2;
-    pat2 = rf_rotr64(pat1, pat3) + 0x666;
+    pat2 = rf_rotr64(pat1, (uint8_t)pat3) + 0x666;
     rf_w128(rambox + pos, 10, pat2, pat3);
 
     pat3 = pat1;
-    pat1 = rf_rotr64(pat2, pat3) + 0x777;
+    pat1 = rf_rotr64(pat2, (uint8_t)pat3) + 0x777;
     rf_w128(rambox + pos, 12, pat1, pat3);
 
     pat3 = pat2;
-    pat2 = rf_rotr64(pat1, pat3) + 0x888;
+    pat2 = rf_rotr64(pat1, (uint8_t)pat3) + 0x888;
     rf_w128(rambox + pos, 14, pat2, pat3);
   }
 }
@@ -637,9 +645,9 @@ static inline void rf256_rotbox(rf_u64 *v0, rf_u64 *v1, uint8_t b0, uint8_t b1) 
   l=*v0;                  h=*v1;
   l=rf_rotr64(l,b0);      h=rf_rotl64(h,b1);
   l+=rf_wltable(b0);      h+=rf_whtable(b1);
-  b0=l;                   b1=h;
+  b0=(uint8_t)l;          b1=(uint8_t)h;
   l=rf_rotl64(l,b1);      h=rf_rotr64(h,b0);
-  b0=l;                   b1=h;
+  b0=(uint8_t)l;          b1=(uint8_t)h;
   l=rf_rotr64(l,b1);      h=rf_rotl64(h,b0);
   *v0=l;                  *v1=h;
 }
@@ -714,7 +722,7 @@ static inline void rf256_one_round(rf256_ctx_t *ctx) {
   rf256_scramble(ctx);
 
   carry=rf_rambox(ctx->rambox, carry);
-  rf256_rotbox(ctx->hash.q, ctx->hash.q+1, carry, carry>>56);
+  rf256_rotbox(ctx->hash.q, ctx->hash.q+1, (uint8_t)carry, (uint8_t) (carry>>56));
   rf256_scramble(ctx);
   rf256_divbox(ctx->hash.q, ctx->hash.q+1);
   rf256_scramble(ctx);
@@ -722,7 +730,7 @@ static inline void rf256_one_round(rf256_ctx_t *ctx) {
   rf256_scramble(ctx);
 
   carry=rf_rambox(ctx->rambox, carry);
-  rf256_rotbox(ctx->hash.q, ctx->hash.q+1, carry>>8, carry>>48);
+  rf256_rotbox(ctx->hash.q, ctx->hash.q+1, (uint8_t)(carry>>8), (uint8_t) (carry>>48));
   rf256_scramble(ctx);
   rf256_divbox(ctx->hash.q, ctx->hash.q+1);
   rf256_scramble(ctx);
@@ -730,7 +738,7 @@ static inline void rf256_one_round(rf256_ctx_t *ctx) {
   rf256_scramble(ctx);
 
   carry=rf_rambox(ctx->rambox, carry);
-  rf256_rotbox(ctx->hash.q, ctx->hash.q+1, carry>>16, carry>>40);
+  rf256_rotbox(ctx->hash.q, ctx->hash.q+1, (uint8_t)(carry>>16), (uint8_t) (carry>>40));
   rf256_scramble(ctx);
   rf256_divbox(ctx->hash.q, ctx->hash.q+1);
   rf256_scramble(ctx);
@@ -738,7 +746,7 @@ static inline void rf256_one_round(rf256_ctx_t *ctx) {
   rf256_scramble(ctx);
 
   carry=rf_rambox(ctx->rambox,carry);
-  rf256_rotbox(ctx->hash.q, ctx->hash.q+1, carry>>24, carry>>32);
+  rf256_rotbox(ctx->hash.q, ctx->hash.q+1, (uint8_t)(carry>>24), (uint8_t) (carry>>32));
   rf256_scramble(ctx);
   rf256_divbox(ctx->hash.q, ctx->hash.q+1);
   rf256_inject(ctx);
@@ -756,18 +764,19 @@ static void rf256_init(rf256_ctx_t *ctx) {
 
 // update the hash context _ctx_ with _len_ bytes from message _msg_
 static void rf256_update(rf256_ctx_t *ctx, const void *msg, size_t len) {
+  const uint8_t* ptr = (uint8_t*)msg;
   while (len > 0) {
 #ifdef RF_UNALIGNED_LE32
     if (!(ctx->len&3) && len>=4) {
-      ctx->word=*(uint32_t *)msg;
+      ctx->word=*(uint32_t*)ptr;
       ctx->len+=4;
       rf256_one_round(ctx);
-      msg+=4;
+      ptr+=4;
       len-=4;
       continue;
     }
 #endif
-    ctx->word|=((uint32_t)*(uint8_t *)msg++)<<(8*(ctx->len++&3));
+    ctx->word |= (uint32_t)*(ptr++) << (8 * (ctx->len++ & 3));
     len--;
     if (!(ctx->len&3))
       rf256_one_round(ctx);

@@ -258,6 +258,9 @@
     <ClCompile Include="algo\qubit.c">
       <Filter>algo</Filter>
     </ClCompile>
+    <ClCompile Include="algo\rainforest.c">
+      <Filter>algo</Filter>
+    </ClCompile>
     <ClCompile Include="algo\s3.c">
       <Filter>algo</Filter>
     </ClCompile>
