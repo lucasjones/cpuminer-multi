@@ -2341,6 +2341,9 @@ void print_hash_tests(void)
 	blakecoinhash(&hash[0], &buf[0]);
 	printpfx("blakecoin", hash);
 
+	blake2b_hash(&hash[0], &buf[0]);
+	printpfx("blake2b", hash);
+
 	blake2s_hash(&hash[0], &buf[0]);
 	printpfx("blake2s", hash);
 

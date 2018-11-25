@@ -87,6 +87,7 @@ enum algos {
 	ALGO_BASTION,
 	ALGO_BLAKE,       /* Blake 256 */
 	ALGO_BLAKECOIN,   /* Simplified 8 rounds Blake 256 */
+	ALGO_BLAKE2B,
 	ALGO_BLAKE2S,     /* Blake2s */
 	ALGO_BMW,         /* BMW 256 */
 	ALGO_C11,         /* C11 Chaincoin/Flaxcoin X11 variant */
@@ -152,6 +153,7 @@ static const char *algo_names[] = {
 	"bastion",
 	"blake",
 	"blakecoin",
+	"blake2b",
 	"blake2s",
 	"bmw",
 	"c11",
@@ -312,6 +314,7 @@ Options:\n\
                           bitcore      Timetravel with 10 algos\n\
                           blake        Blake-256 14-rounds (SFR)\n\
                           blakecoin    Blake-256 single sha256 merkle\n\
+                          blake2b      Blake2-B (512)\n\
                           blake2s      Blake2-S (256)\n\
                           bmw          BMW 256\n\
                           c11/flax     C11\n\
@@ -2261,6 +2264,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_BLAKECOIN:
 			rc = scanhash_blakecoin(thr_id, &work, max_nonce, &hashes_done);
+			break;
+		case ALGO_BLAKE2B:
+			rc = scanhash_blake2b(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_BLAKE2S:
 			rc = scanhash_blake2s(thr_id, &work, max_nonce, &hashes_done);
