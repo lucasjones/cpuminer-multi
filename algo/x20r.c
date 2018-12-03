@@ -42,10 +42,10 @@ enum Algo {
 	SHABAL,
 	WHIRLPOOL,
 	SHA512,
-	HAVAL,
+	HAVAL,      // 256-bits output
 	GOST,
-	RADIOGATUN,
-	PANAMA,
+	RADIOGATUN, // 256-bits output
+	PANAMA,     // 256-bits output
 	HASH_FUNC_COUNT
 };
 
@@ -191,6 +191,7 @@ void x20r_hash(void* output, const void* input)
 			sph_haval256_5_init(&ctx_haval);
 			sph_haval256_5(&ctx_haval, in, size);
 			sph_haval256_5_close(&ctx_haval, hash);
+			memset(&hash[8], 0, 32);
 			break;
 		case GOST:
 			sph_gost512_init(&ctx_gost);
@@ -201,11 +202,13 @@ void x20r_hash(void* output, const void* input)
 			sph_radiogatun64_init(&ctx_radiogatun);
 			sph_radiogatun64(&ctx_radiogatun, in, size);
 			sph_radiogatun64_close(&ctx_radiogatun, hash);
+			memset(&hash[8], 0, 32);
 			break;
 		case PANAMA:
 			sph_panama_init(&ctx_panama);
 			sph_panama(&ctx_panama, in, size);
 			sph_panama_close(&ctx_panama, hash);
+			memset(&hash[8], 0, 32);
 			break;
 		}
 		in = (void*) hash;
