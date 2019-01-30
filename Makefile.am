@@ -77,6 +77,7 @@ cpuminer_SOURCES = \
   algo/luffa.c \
   algo/lyra2re.c \
   algo/lyra2rev2.c \
+  algo/lyra2v3.c \
   algo/myr-groestl.c \
   algo/keccak.c \
   algo/pentablake.c \

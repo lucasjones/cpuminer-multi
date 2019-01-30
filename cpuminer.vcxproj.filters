@@ -237,6 +237,9 @@
     <ClCompile Include="algo\lyra2rev2.c">
       <Filter>algo</Filter>
     </ClCompile>
+    <ClCompile Include="algo\lyra2v3.c">
+      <Filter>algo</Filter>
+    </ClCompile>
     <ClCompile Include="algo\myr-groestl.c">
       <Filter>algo</Filter>
     </ClCompile>

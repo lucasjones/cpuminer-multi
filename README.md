@@ -24,11 +24,13 @@ Algorithms
  * ✓ __scrypt:N__
  * ✓ __scrypt-jane:N__
  * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, ...)
+ * ✓ __allium__ (Garlicoin, Tuxcoin)
  * ✓ __axiom__ (Axiom Shabal-256 based MemoHash)
  * ✓ __bastion__ (Joincoin [J])
  * ✓ __bitcore__ Permuted serie of 10 algos (BitCore)
  * ✓ __blake__ (Saffron [SFR] Blake-256)
  * ✓ __blake2s__ (NevaCoin Blake2-S 256)
+ * ✓ __blake2b__ (Not SIA one)
  * ✓ __bmw__ (Midnight [MDT] BMW-256)
  * ✓ __cryptonight__ (Bytecoin [BCN], Monero [XMR])
  * ✓ __cryptonight-light__ (Aeon)
@@ -39,7 +41,8 @@ Algorithms
  * ✓ __jha__ (JackpotCoin, SweepStake)
  * ✓ __lbry__ (LBRY Credits [LBC])
  * ✓ __lyra2RE__ (Cryptocoin)
- * ✓ __lyra2REv2__ (VertCoin [VTC])
+ * ✓ __lyra2REv2__
+ * ✓ __lyra2REv3__ (VertCoin [VTC])
  * ✓ __myr-gr__ Myriad-Groestl (MyriadCoin [MYR])
  * ✓ __neoscrypt__ (Feathercoin)
  * ✓ __nist5__ (MistCoin [MIC], TalkCoin [TAC], ...)
@@ -66,6 +69,7 @@ Algorithms
  * ✓ __x16r__ (Ravencoin [RVN])
  * ✓ __x16s__ (Pigeoncoin [PGN])
  * ✓ __x17__ (Verge [XVG])
+ * ✓ __x20r__
  * ✓ __yescrypt__ (GlobalBoostY [BSTY], Unitus [UIS], MyriadCoin [MYR])
  * ✓ __zr5__ (Ziftrcoin [ZRC])
 
@@ -74,6 +78,7 @@ Algorithms
  * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
  * ? keccakc (Creativecoin)
  * ? luffa (Joincoin, Doomcoin)
+ * ? rainforest
  * ? shavite3 (INKcoin)
 
 #### Planned support for

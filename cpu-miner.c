@@ -102,7 +102,8 @@ enum algos {
 	ALGO_LBRY,        /* Lbry Sha Ripemd */
 	ALGO_LUFFA,       /* Luffa (Joincoin, Doom) */
 	ALGO_LYRA2,       /* Lyra2RE */
-	ALGO_LYRA2REV2,   /* Lyra2REv2 (Vertcoin) */
+	ALGO_LYRA2REV2,   /* Lyra2REv2 */
+	ALGO_LYRA2V3,     /* Lyra2REv3 (Vertcoin) */
 	ALGO_MYR_GR,      /* Myriad Groestl */
 	ALGO_NIST5,       /* Nist5 */
 	ALGO_PENTABLAKE,  /* Pentablake */
@@ -169,6 +170,7 @@ static const char *algo_names[] = {
 	"luffa",
 	"lyra2re",
 	"lyra2rev2",
+	"lyra2v3",
 	"myr-gr",
 	"nist5",
 	"pentablake",
@@ -331,7 +333,8 @@ Options:\n\
                           keccakc      Keccak (CreativeCoin)\n\
                           luffa        Luffa\n\
                           lyra2re      Lyra2RE\n\
-                          lyra2rev2    Lyra2REv2 (Vertcoin)\n\
+                          lyra2rev2    Lyra2REv2\n\
+                          lyra2v3      Lyra2REv3 (Vertcoin)\n\
                           myr-gr       Myriad-Groestl\n\
                           neoscrypt    NeoScrypt(128, 2, 1)\n\
                           nist5        Nist5\n\
@@ -1853,6 +1856,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_KECCAKC:
 			case ALGO_LBRY:
 			case ALGO_LYRA2REV2:
+			case ALGO_LYRA2V3:
 			case ALGO_PHI2:
 			case ALGO_TIMETRAVEL:
 			case ALGO_BITCORE:
@@ -2184,6 +2188,7 @@ static void *miner_thread(void *userdata)
 			case ALGO_ALLIUM:
 			case ALGO_LYRA2:
 			case ALGO_LYRA2REV2:
+			case ALGO_LYRA2V3:
 			case ALGO_PHI1612:
 			case ALGO_PHI2:
 			case ALGO_TIMETRAVEL:
@@ -2317,6 +2322,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_LYRA2REV2:
 			rc = scanhash_lyra2rev2(thr_id, &work, max_nonce, &hashes_done);
+			break;
+		case ALGO_LYRA2V3:
+			rc = scanhash_lyra2v3(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_MYR_GR:
 			rc = scanhash_myriad(thr_id, &work, max_nonce, &hashes_done);
@@ -2950,6 +2958,8 @@ void parse_arg(int key, char *arg)
 				i = opt_algo = ALGO_LYRA2;
 			else if (!strcasecmp("lyra2v2", arg))
 				i = opt_algo = ALGO_LYRA2REV2;
+			else if (!strcasecmp("lyra2rev3", arg))
+				i = opt_algo = ALGO_LYRA2V3;
 			else if (!strcasecmp("monero", arg))
 				i = opt_algo = ALGO_CRYPTONIGHT;
 			else if (!strcasecmp("phi", arg))
