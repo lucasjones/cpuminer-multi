@@ -164,10 +164,10 @@ int LYRA2(void *K, int64_t kLen, const void *pwd, int32_t pwdlen, const void *sa
 
 		//Checks if all rows in the window where visited.
 		if (rowa == 0) {
-		step = window + gap; //changes the step: approximately doubles its value
-		window *= 2; //doubles the size of the re-visitation window
-		gap = -gap; //inverts the modifier to the step
-	}
+			step = window + gap; //changes the step: approximately doubles its value
+			window *= 2; //doubles the size of the re-visitation window
+			gap = -gap; //inverts the modifier to the step
+		}
 
 	} while (row < nRows);
 	//==========================================================================/
@@ -333,10 +333,10 @@ int LYRA2_3(void *K, int64_t kLen, const void *pwd, int32_t pwdlen, const void *
 
 		//Checks if all rows in the window where visited.
 		if (rowa == 0) {
-		step = window + gap; //changes the step: approximately doubles its value
-		window *= 2; //doubles the size of the re-visitation window
-		gap = -gap; //inverts the modifier to the step
-	}
+			step = window + gap; //changes the step: approximately doubles its value
+			window *= 2; //doubles the size of the re-visitation window
+			gap = -gap; //inverts the modifier to the step
+		}
 
 	} while (row < nRows);
 	//==========================================================================/
