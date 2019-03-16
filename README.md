@@ -120,9 +120,17 @@ _OR_
  apt-get install automake autoconf pkg-config libcurl4-openssl-dev libjansson-dev libssl-dev libgmp-dev make g++
 ```
 
+#### Note for OS X users:
+
+```
+ brew install openssl curl
+ ./build.sh # if curl was installed to /usr/local/opt, else update build.sh paths in darwin section
+```
+
 #### Note for pi64 users:
 
 ```
+ ./autogen.sh
  ./configure --disable-assembly CFLAGS="-Ofast -march=native" --with-crypto --with-curl
 ```
 
