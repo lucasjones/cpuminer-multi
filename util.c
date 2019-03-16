@@ -2368,6 +2368,9 @@ void print_hash_tests(void)
 	freshhash(&hash[0], &buf[0], 80);
 	printpfx("fresh", hash);
 
+	geekhash(&hash[0], &buf[0]);
+	printpfx("geek", hash);
+
 	groestlhash(&hash[0], &buf[0]);
 	printpfx("groestl", hash);
 

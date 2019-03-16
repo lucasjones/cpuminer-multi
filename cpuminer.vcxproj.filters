@@ -210,6 +210,9 @@
     <ClCompile Include="algo\fresh.c">
       <Filter>algo</Filter>
     </ClCompile>
+    <ClCompile Include="algo\geek.c">
+      <Filter>algo</Filter>
+    </ClCompile>
     <ClCompile Include="algo\groestl.c">
       <Filter>algo</Filter>
     </ClCompile>

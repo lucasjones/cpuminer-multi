@@ -212,6 +212,7 @@ int scanhash_c11(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *ha
 int scanhash_decred(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_drop(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_fresh(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
+int scanhash_geek(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_groestl(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_heavy(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
 int scanhash_ink(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done);
@@ -517,6 +518,7 @@ void groestlhash(void *output, const void *input);
 void heavyhash(unsigned char* output, const unsigned char* input, int len);
 void quarkhash(void *state, const void *input);
 void freshhash(void* output, const void* input, uint32_t len);
+void geekhash(void *output, const void *input);
 void keccakhash(void *state, const void *input);
 void inkhash(void *state, const void *input); /* shavite */
 void jha_hash(void *output, const void *input);

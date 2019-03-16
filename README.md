@@ -37,6 +37,7 @@ Algorithms
  * ✓ __decred__ (Blake256-14 [DCR])
  * ✓ __dmd-gr__ (Diamond-Groestl)
  * ✓ __fresh__ (FreshCoin)
+ * ✓ __geek__ (GeekCash [GEEK])
  * ✓ __groestl__ (Groestlcoin)
  * ✓ __jha__ (JackpotCoin, SweepStake)
  * ✓ __lbry__ (LBRY Credits [LBC])

@@ -97,6 +97,7 @@ enum algos {
 	ALGO_DMD_GR,      /* Diamond */
 	ALGO_DROP,        /* Dropcoin */
 	ALGO_FRESH,       /* Fresh */
+	ALGO_GEEK,
 	ALGO_GROESTL,     /* Groestl */
 	ALGO_JHA,
 	ALGO_LBRY,        /* Lbry Sha Ripemd */
@@ -164,6 +165,7 @@ static const char *algo_names[] = {
 	"dmd-gr",
 	"drop",
 	"fresh",
+	"geek",
 	"groestl",
 	"jha",
 	"lbry",
@@ -326,6 +328,7 @@ Options:\n\
                           dmd-gr       Diamond-Groestl\n\
                           drop         Dropcoin\n\
                           fresh        Fresh\n\
+                          geek         GeekCash\n\
                           groestl      GroestlCoin\n\
                           heavy        Heavy\n\
                           jha          JHA\n\
@@ -2199,6 +2202,7 @@ static void *miner_thread(void *userdata)
 			case ALGO_C11:
 			case ALGO_DMD_GR:
 			case ALGO_FRESH:
+			case ALGO_GEEK:
 			case ALGO_GROESTL:
 			case ALGO_MYR_GR:
 			case ALGO_SIB:
@@ -2296,6 +2300,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_FRESH:
 			rc = scanhash_fresh(thr_id, &work, max_nonce, &hashes_done);
+			break;
+		case ALGO_GEEK:
+			rc = scanhash_geek(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_DMD_GR:
 		case ALGO_GROESTL:
