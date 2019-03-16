@@ -15,8 +15,6 @@
 #include <sha3/sph_hamsi.h>
 #include <sha3/sph_simd.h>
 
-//#define DEBUG_ALGO
-
 void geekhash(void *output, const void *input)
 {
 	sph_blake512_context    ctx_blake;

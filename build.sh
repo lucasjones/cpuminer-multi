@@ -5,10 +5,10 @@ if [ "$OS" = "Windows_NT" ]; then
     exit 0
 fi
 
-make clean && echo clean
+make clean || echo clean
 
 rm -f config.status
-./autogen.sh && echo done
+./autogen.sh
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
     ./nomacro.pl
