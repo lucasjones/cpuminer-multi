@@ -561,7 +561,7 @@ static inline void rf_w128(uint64_t *cell, uint64_t ofs, uint64_t x, uint64_t y)
   // used between two calls to keep the pipe full.
   asm volatile("stp %0, %1, [%2,#%3]\n\t"
                : /* no output */
-               : "r"(x), "r"(y), "r" (cell), "l" (ofs*8));
+               : "r"(x), "r"(y), "r" (cell), "I" (ofs*8));
 #else
   cell[ofs+0] = x;
   cell[ofs+1] = y;
@@ -815,11 +815,12 @@ static void rf256_final(void *out, rf256_ctx_t *ctx) {
 }
 
 // hash _len_ bytes from _in_ into _out_
-void rf256_hash(void *out, const void *in, size_t len) {
-  rf256_ctx_t ctx;
-  rf256_init(&ctx);
-  rf256_update(&ctx, in, len);
-  rf256_final(out, &ctx);
+void rf256_hash(void *out, const void *in, size_t len)
+{
+	rf256_ctx_t ctx;
+	rf256_init(&ctx);
+	rf256_update(&ctx, in, len);
+	rf256_final(out, &ctx);
 }
 
 int scanhash_rf256(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done)

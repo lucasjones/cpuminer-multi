@@ -533,6 +533,7 @@ void phi2_hash(void *state, const void *input);
 void pluck_hash(uint32_t *hash, const uint32_t *data, uchar *hashbuffer, const int N);
 void pentablakehash(void *output, const void *input);
 void qubithash(void *output, const void *input);
+void rf256_hash(void *out, const void *in, size_t len);
 void scrypthash(void *output, const void *input, uint32_t N);
 void scryptjanehash(void *output, const void *input, uint32_t Nfactor);
 void sibhash(void *output, const void *input);
