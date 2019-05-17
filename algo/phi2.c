@@ -67,7 +67,7 @@ void phi2_hash(void *state, const void *input)
 int scanhash_phi2(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done)
 {
 	uint32_t _ALIGN(128) hash[8];
-	uint32_t _ALIGN(128) endiandata[20];
+	uint32_t _ALIGN(128) endiandata[36];
 	uint32_t *pdata = work->data;
 	uint32_t *ptarget = work->target;
 
