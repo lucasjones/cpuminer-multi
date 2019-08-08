@@ -148,6 +148,10 @@ cpuminer_CFLAGS += -Wl,--stack,10485760
 cpuminer_LDADD += -lcrypt32 -lgdi32 -lgcc -lgcc_eh
 endif
 
+if ARCH_ARM
+cpuminer_CFLAGS += -D__arm__
+endif
+
 if HAVE_WINDOWS
 # use to profile an object
 # gprof_cflags = -pg -g3
