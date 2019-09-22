@@ -2500,7 +2500,11 @@ void print_hash_tests(void)
 	printpfx("x15", hash);
 
 	x16r_hash(&hash[0], &buf[0]);
-	printpfx("x16r", hash);
+	//hidden, same as x16rv2 without prevhash
+	//printpfx("x16r", hash);
+
+	x16rv2_hash(&hash[0], &buf[0]);
+	printpfx("x16rv2", hash);
 
 	x16s_hash(&hash[0], &buf[0]);
 	printpfx("x16s", hash);

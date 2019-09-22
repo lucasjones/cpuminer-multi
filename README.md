@@ -67,7 +67,8 @@ Algorithms
  * ✓ __x13__ (Sherlockcoin, [ACE], [B2B], [GRC], [XHC], ...)
  * ✓ __x14__ (X14, Webcoin [WEB])
  * ✓ __x15__ (RadianceCoin [RCE])
- * ✓ __x16r__ (Ravencoin [RVN])
+ * ✓ __x16r__
+ * ✓ __x16rv2__ (Ravencoin [RVN], Trivechain [TRVC])
  * ✓ __x16s__ (Pigeoncoin [PGN])
  * ✓ __x17__ (Verge [XVG])
  * ✓ __x20r__
