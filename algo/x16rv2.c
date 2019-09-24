@@ -65,6 +65,11 @@ static void getAlgoString(const uint8_t* prevblock, char *output)
 	*sptr = '\0';
 }
 
+// Pad the 24 bytes tiger hash to 64 bytes
+inline void padtiger512(uint32_t* hash) {
+	for (int i = (24/4); i < (64/4); i++) hash[i] = 0;
+}
+
 void x16rv2_hash(void* output, const void* input)
 {
 	uint32_t _ALIGN(128) hash[64/4];
@@ -85,8 +90,7 @@ void x16rv2_hash(void* output, const void* input)
 	sph_shabal512_context    ctx_shabal1;
 	sph_whirlpool_context    ctx_whirlpool1;
 	sph_sha512_context       ctx_sha512;
-
-	sph_tiger_context       ctx_tiger;
+	sph_tiger_context        ctx_tiger;
 
 	void *in = (void*) input;
 	int size = 80;
@@ -129,9 +133,9 @@ void x16rv2_hash(void* output, const void* input)
 			break;
 		case KECCAK:
 			sph_tiger_init(&ctx_tiger);
-			sph_tiger (&ctx_tiger, in, size);
+			sph_tiger(&ctx_tiger, in, size);
 			sph_tiger_close(&ctx_tiger, hash);
-			for (int j = 24; j < 64; ++j) ((uint8_t*)hash)[j] = 0; // Pad the 24 bytes to bring it to 64 bytes
+			padtiger512(hash);
 
 			sph_keccak512_init(&ctx_keccak);
 			sph_keccak512(&ctx_keccak, hash, 64);
@@ -139,9 +143,9 @@ void x16rv2_hash(void* output, const void* input)
 			break;
 		case LUFFA:
 			sph_tiger_init(&ctx_tiger);
-			sph_tiger (&ctx_tiger, in, size);
+			sph_tiger(&ctx_tiger, in, size);
 			sph_tiger_close(&ctx_tiger, hash);
-			for (int j = 24; j < 64; ++j) ((uint8_t*)hash)[j] = 0; // Pad the 24 bytes to bring it to 64 bytes
+			padtiger512(hash);
 
 			sph_luffa512_init(&ctx_luffa1);
 			sph_luffa512(&ctx_luffa1, hash, 64);
@@ -189,9 +193,9 @@ void x16rv2_hash(void* output, const void* input)
 			break;
 		case SHA512:
 			sph_tiger_init(&ctx_tiger);
-			sph_tiger (&ctx_tiger, in, size);
+			sph_tiger(&ctx_tiger, in, size);
 			sph_tiger_close(&ctx_tiger, hash);
-			for (int j = 24; j < 64; ++j) ((uint8_t*)hash)[j] = 0; // Pad the 24 bytes to bring it to 64 bytes
+			padtiger512(hash);
 
 			sph_sha512_init(&ctx_sha512);
 			sph_sha512(&ctx_sha512,(const void*) hash, 64);
