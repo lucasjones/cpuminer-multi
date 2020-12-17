@@ -42,7 +42,7 @@ extern "C"{
 #if SPH_HAMSI_EXPAND_SMALL == 1
 
 /* Note: this table lists bits within each byte from least
-   siginificant to most significant. */
+   significant to most significant. */
 static const sph_u32 T256[32][8] = {
 	{ SPH_C32(0x74951000), SPH_C32(0x5a2b467e), SPH_C32(0x88fd1d2b),
 	  SPH_C32(0x1ee68292), SPH_C32(0xcba90000), SPH_C32(0x90273769),
@@ -7986,7 +7986,7 @@ static const sph_u32 T256_24[256][8] = {
 #if SPH_HAMSI_EXPAND_BIG == 1
 
 /* Note: this table lists bits within each byte from least
-   siginificant to most significant. */
+   significant to most significant. */
 static const sph_u32 T512[64][16] = {
 	{ SPH_C32(0xef0b0270), SPH_C32(0x3afd0000), SPH_C32(0x5dae0000),
 	  SPH_C32(0x69490000), SPH_C32(0x9b0f3c06), SPH_C32(0x4405b5f9),
