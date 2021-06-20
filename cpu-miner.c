@@ -382,9 +382,9 @@ Options:\n\
                           x20r         X20R\n\
                           xevan        Xevan (BitSend)\n\
                           yescrypt     Yescrypt\n\
-			  yescryptr8   Yescrypt r8\n\
-			  yescryptr16  Yescrypt r16\n\
-			  yescryptr32  Yescrypt r32\n\
+                          yescryptr8   Yescrypt r8\n\
+                          yescryptr16  Yescrypt r16\n\
+                          yescryptr32  Yescrypt r32\n\
                           zr5          ZR5\n\
   -o, --url=URL         URL of mining server\n\
   -O, --userpass=U:P    username:password pair for mining server\n\

@@ -2518,6 +2518,15 @@ void print_hash_tests(void)
 	yescrypthash(&hash[0], &buf[0]);
 	printpfx("yescrypt", hash);
 
+	yescrypt_hash_r8(&buf[0], &hash[0], 80);
+	printpfx("yescryptr8", hash);
+
+	yescrypt_hash_r16(&buf[0], &hash[0], 80);
+	printpfx("yescryptr16", hash);
+
+	yescrypt_hash_r32(&buf[0], &hash[0], 80);
+	printpfx("yescryptr32", hash);
+
 	//zr5hash(&hash[0], &buf[0]);
 	zr5hash(&hash[0], (uint32_t*) &buf[0]);
 	memset(buf, 0, sizeof(buf));
