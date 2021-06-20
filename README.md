@@ -82,6 +82,7 @@ Algorithms
  * ? luffa (Joincoin, Doomcoin)
  * ? rainforest
  * ? shavite3 (INKcoin)
+ * ? __yescryptr8__ __yescryptr16__ and __yescryptr32__ variants
 
 #### Planned support for
  * *scrypt-jane* (YaCoin, CopperBars, Pennies, Tickets, etc..)

@@ -1,6 +1,7 @@
 Version 1.3.7
 - Add geek algo
 - Add x16rv2 algo
+- Add yescriptr8/16/32 variants
 
 Version 1.3.6
 - Add lyra2v3 algo
