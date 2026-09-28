@@ -1,2 +1,3 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Normalize line endings, and check text files out with LF everywhere: the
+# autotools scripts and the assembly sources break with CRLF (Windows).
+* text=auto eol=lf

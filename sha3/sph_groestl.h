@@ -163,7 +163,7 @@ void sph_groestl224(void *cc, const void *data, size_t len);
 /**
  * Terminate the current Groestl-224 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
- * accomodate the result (28 bytes). The context is automatically
+ * accommodate the result (28 bytes). The context is automatically
  * reinitialized.
  *
  * @param cc    the Groestl-224 context
@@ -174,7 +174,7 @@ void sph_groestl224_close(void *cc, void *dst);
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
  * terminate it and output the result in the provided buffer, which must
- * be wide enough to accomodate the result (28 bytes). If bit number i
+ * be wide enough to accommodate the result (28 bytes). If bit number i
  * in <code>ub</code> has value 2^i, then the extra bits are those
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
@@ -208,7 +208,7 @@ void sph_groestl256(void *cc, const void *data, size_t len);
 /**
  * Terminate the current Groestl-256 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
- * accomodate the result (32 bytes). The context is automatically
+ * accommodate the result (32 bytes). The context is automatically
  * reinitialized.
  *
  * @param cc    the Groestl-256 context
@@ -219,7 +219,7 @@ void sph_groestl256_close(void *cc, void *dst);
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
  * terminate it and output the result in the provided buffer, which must
- * be wide enough to accomodate the result (32 bytes). If bit number i
+ * be wide enough to accommodate the result (32 bytes). If bit number i
  * in <code>ub</code> has value 2^i, then the extra bits are those
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
@@ -253,7 +253,7 @@ void sph_groestl384(void *cc, const void *data, size_t len);
 /**
  * Terminate the current Groestl-384 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
- * accomodate the result (48 bytes). The context is automatically
+ * accommodate the result (48 bytes). The context is automatically
  * reinitialized.
  *
  * @param cc    the Groestl-384 context
@@ -264,7 +264,7 @@ void sph_groestl384_close(void *cc, void *dst);
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
  * terminate it and output the result in the provided buffer, which must
- * be wide enough to accomodate the result (48 bytes). If bit number i
+ * be wide enough to accommodate the result (48 bytes). If bit number i
  * in <code>ub</code> has value 2^i, then the extra bits are those
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
@@ -298,7 +298,7 @@ void sph_groestl512(void *cc, const void *data, size_t len);
 /**
  * Terminate the current Groestl-512 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
- * accomodate the result (64 bytes). The context is automatically
+ * accommodate the result (64 bytes). The context is automatically
  * reinitialized.
  *
  * @param cc    the Groestl-512 context
@@ -309,7 +309,7 @@ void sph_groestl512_close(void *cc, void *dst);
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
  * terminate it and output the result in the provided buffer, which must
- * be wide enough to accomodate the result (64 bytes). If bit number i
+ * be wide enough to accommodate the result (64 bytes). If bit number i
  * in <code>ub</code> has value 2^i, then the extra bits are those
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.

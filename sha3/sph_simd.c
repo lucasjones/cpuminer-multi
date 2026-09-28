@@ -169,7 +169,9 @@ static const s32 alpha_tab[] = {
 
 /*
  * When k=16, we have alpha=2. Multiplication by alpha^i is then reduced
- * to some shifting.
+ * to some shifting (written as multiplications: the values can be negative,
+ * and shifting a negative number left is undefined behaviour in C; the
+ * compiler emits the same shift instructions).
  *
  * Output: within -591471..591723
  */
@@ -179,21 +181,21 @@ static const s32 alpha_tab[] = {
 		FFT8(xb, (xs) << 1, d1_); \
 		FFT8((xb) + (xs), (xs) << 1, d2_); \
 		q[(rb) +  0] = d1_0 + d2_0; \
-		q[(rb) +  1] = d1_1 + (d2_1 << 1); \
-		q[(rb) +  2] = d1_2 + (d2_2 << 2); \
-		q[(rb) +  3] = d1_3 + (d2_3 << 3); \
-		q[(rb) +  4] = d1_4 + (d2_4 << 4); \
-		q[(rb) +  5] = d1_5 + (d2_5 << 5); \
-		q[(rb) +  6] = d1_6 + (d2_6 << 6); \
-		q[(rb) +  7] = d1_7 + (d2_7 << 7); \
+		q[(rb) +  1] = d1_1 + d2_1 * (1 << 1); \
+		q[(rb) +  2] = d1_2 + d2_2 * (1 << 2); \
+		q[(rb) +  3] = d1_3 + d2_3 * (1 << 3); \
+		q[(rb) +  4] = d1_4 + d2_4 * (1 << 4); \
+		q[(rb) +  5] = d1_5 + d2_5 * (1 << 5); \
+		q[(rb) +  6] = d1_6 + d2_6 * (1 << 6); \
+		q[(rb) +  7] = d1_7 + d2_7 * (1 << 7); \
 		q[(rb) +  8] = d1_0 - d2_0; \
-		q[(rb) +  9] = d1_1 - (d2_1 << 1); \
-		q[(rb) + 10] = d1_2 - (d2_2 << 2); \
-		q[(rb) + 11] = d1_3 - (d2_3 << 3); \
-		q[(rb) + 12] = d1_4 - (d2_4 << 4); \
-		q[(rb) + 13] = d1_5 - (d2_5 << 5); \
-		q[(rb) + 14] = d1_6 - (d2_6 << 6); \
-		q[(rb) + 15] = d1_7 - (d2_7 << 7); \
+		q[(rb) +  9] = d1_1 - d2_1 * (1 << 1); \
+		q[(rb) + 10] = d1_2 - d2_2 * (1 << 2); \
+		q[(rb) + 11] = d1_3 - d2_3 * (1 << 3); \
+		q[(rb) + 12] = d1_4 - d2_4 * (1 << 4); \
+		q[(rb) + 13] = d1_5 - d2_5 * (1 << 5); \
+		q[(rb) + 14] = d1_6 - d2_6 * (1 << 6); \
+		q[(rb) + 15] = d1_7 - d2_7 * (1 << 7); \
 	} while (0)
 
 /*

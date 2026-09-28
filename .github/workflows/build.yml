@@ -1,0 +1,158 @@
+# Build and test on every platform the miner supports: the known-answer
+# tests ("make check") check every algorithm against reference hashes.
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Linux ${{ matrix.arch }}, ${{ matrix.cc }}${{ matrix.variant && format(', {0}', matrix.variant) || '' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-24.04, arch: x86-64, cc: gcc, cxx: g++, distcheck: true }
+          - { os: ubuntu-24.04, arch: x86-64, cc: clang, cxx: clang++ }
+          - { os: ubuntu-24.04, arch: x86-64, cc: gcc, cxx: g++, variant: no assembly, configure: --disable-assembly }
+          - { os: ubuntu-24.04, arch: x86-64, cc: gcc, cxx: g++, variant: no RandomX, configure: --disable-randomx }
+          - os: ubuntu-24.04
+            arch: x86-64
+            cc: gcc
+            cxx: g++
+            variant: sanitizers
+            cflags: -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=undefined
+            ldflags: -fsanitize=address,undefined
+          - { os: ubuntu-24.04-arm, arch: arm64, cc: gcc, cxx: g++ }
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autoconf automake pkg-config g++ libcurl4-openssl-dev libjansson-dev
+      - run: ./autogen.sh
+      - name: Configure
+        env:
+          CC: ${{ matrix.cc }}
+          CXX: ${{ matrix.cxx }}
+          CFLAGS: ${{ matrix.cflags || '-O2' }}
+          CXXFLAGS: ${{ matrix.cflags || '-O2' }}
+          LDFLAGS: ${{ matrix.ldflags }}
+        run: ./configure ${{ matrix.configure }}
+      - run: make -j"$(nproc)"
+      - run: make check VERBOSE=1
+      - run: ./minerd --version
+      - name: Check the source tarball builds
+        if: matrix.distcheck
+        run: make distcheck
+      - name: Keep the source tarball (for a release)
+        if: matrix.distcheck
+        uses: actions/upload-artifact@v7
+        with:
+          name: source-tarball
+          path: cpuminer-multi-*.tar.gz
+          if-no-files-found: error
+
+  macos:
+    name: macOS ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-15, arch: arm64 }
+          - { os: macos-15-intel, arch: x86-64 }
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install dependencies
+        run: brew install autoconf automake pkgconf jansson
+      - run: ./autogen.sh
+      - run: ./configure
+      - run: make -j"$(sysctl -n hw.ncpu)"
+      - run: make check VERBOSE=1
+      - run: ./minerd --version
+
+  windows:
+    name: Windows x86-64 (MSYS2 UCRT64)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            autoconf
+            automake
+            make
+          pacboy: >-
+            gcc:p
+            curl:p
+            jansson:p
+            pkgconf:p
+      - run: ./autogen.sh
+      - run: ./configure
+      - run: make -j"$(nproc)"
+      - run: make check VERBOSE=1
+      - name: Package minerd.exe with the DLLs it needs
+        run: |
+          mkdir dist
+          cp minerd.exe README.md NEWS LICENSE COPYING example-cfg.json dist/
+          ldd minerd.exe | awk '$3 ~ /\/ucrt64\// { print $3 }' | xargs -r cp -t dist/
+          dist/minerd.exe --version
+      - uses: actions/upload-artifact@v7
+        with:
+          name: minerd-windows-x86_64
+          path: dist/
+
+  # A tag v<version>, where <version> is the one in configure.ac, publishes a
+  # GitHub release with the Windows build and the source tarball, once every
+  # job above has passed.
+  release:
+    name: Publish the release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [linux, macos, windows]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v7
+        with:
+          path: artifacts
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          version=${TAG#v}
+          if ! grep -qF "AC_INIT([cpuminer-multi], [$version]," configure.ac; then
+            echo "::error::the tag $TAG is not the version in configure.ac"
+            exit 1
+          fi
+          mkdir release
+          (cd artifacts/minerd-windows-x86_64 &&
+           zip -9 -r "../../release/cpuminer-multi-$version-windows-x86_64.zip" .)
+          cp "artifacts/source-tarball/cpuminer-multi-$version.tar.gz" release/
+          (cd release && sha256sum -- * > SHA256SUMS)
+          # the notes: how to use the files, then this version's NEWS
+          # (Markdown punctuation escaped: NEWS is plain text)
+          {
+            echo "- **Windows:** unzip \`cpuminer-multi-$version-windows-x86_64.zip\` and run \`minerd.exe\` from a command prompt."
+            echo "- **Linux, macOS:** \`cpuminer-multi-$version.tar.gz\` builds with \`./configure && make\` (see the README)."
+            echo "- \`SHA256SUMS\`: the files' SHA-256 checksums."
+            echo
+            awk 'NR == 1 { next } /^Version / { exit } { print }' NEWS |
+              sed -e 's/[][\`*_<>#]/\\&/g' -e 's/^[A-Za-z]/### &/'
+          } > notes.md
+          gh release create "$TAG" --verify-tag --title "cpuminer-multi $version" \
+            --notes-file notes.md release/*

@@ -1,0 +1,14 @@
+yespower from Openwall (https://www.openwall.com/yespower/ and
+https://github.com/openwall/yespower): version 1.0.1 and the changes
+since, commit 1977c28 of 2026-06-15. By Alexander Peslyak (Solar
+Designer) and Colin Percival, under the BSD 2-clause license (see the
+header of each file).
+
+It computes yescrypt 0.5 (re-implemented for proof of work) and
+yespower 1.0; cpuminer-multi's yescrypt.c chooses the parameters.
+
+Local changes:
+- sha256.h renames PBKDF2_SHA256 like the other functions (libcperciva_
+  prefix), so that no global symbol can clash with another library's;
+- yespower-opt.c's notes on the instruction set it is built for are
+  compiler warnings only with -DYESPOWER_BUILD_NOTES.

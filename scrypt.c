@@ -527,6 +527,27 @@ static void scrypt_1024_1_1_256(const uint32_t *input, uint32_t *output,
 	PBKDF2_SHA256_128_32(tstate, ostate, X, output);
 }
 
+/* One scrypt(N, 1, 1) hash of an 80-byte block header, in header byte order.
+ * Slow (allocates a scratchpad per call): meant for tests and share checks,
+ * not for the scan loop. */
+void scrypt_hash(void *output, const void *input, int N)
+{
+	uint32_t data[20], hash[8], midstate[8];
+	unsigned char *scratchpad = scrypt_buffer_alloc(N);
+	int i;
+
+	if (!scratchpad)
+		return;
+	for (i = 0; i < 20; i++)
+		data[i] = be32dec((const uint8_t *)input + 4 * i);
+	sha256_init(midstate);
+	sha256_transform(midstate, data, 0);
+	scrypt_1024_1_1_256(data, hash, midstate, scratchpad, N);
+	for (i = 0; i < 8; i++)
+		le32enc((uint8_t *)output + 4 * i, hash[i]);
+	free(scratchpad);
+}
+
 #ifdef HAVE_SHA256_4WAY
 static void scrypt_1024_1_1_256_4way(const uint32_t *input,
 	uint32_t *output, uint32_t *midstate, unsigned char *scratchpad, int N)

@@ -1,3 +1,100 @@
+Version multi 1.1.0 (September 2026)
+
+Algorithms
+- New: randomx (rx/0), Monero's proof of work, with tevador's RandomX
+  library (v2.0.1): JIT compilers for x86-64, ARM64 and 64-bit RISC-V,
+  hardware AES, fast mode (2080 MiB dataset, built with every processor,
+  and rebuilt when the pool's seed hash changes) or light mode
+  (--randomx-mode), large pages when the system has them and transparent
+  huge pages otherwise (on Linux; 18% faster than without on the machine
+  it was tested on). Checked against RandomX's own test vectors, fast mode
+  against light mode, and every share against an independent build of the
+  library. Needs a C++11 compiler; without one, configure leaves it out.
+- New: verthash (Vertcoin). The 1.2 GB data file is read (from
+  --verthash-data, the current directory or Vertcoin Core's data
+  directory), or built in 10 to 30 seconds on a typical machine (six
+  times as fast as Vertcoin's own tool) and saved, and checked against its
+  SHA-256 either way. Four nonces at a time per thread and huge pages make
+  it about 4 times as fast as the reference code. Checked against the data
+  file's checksum and test vector that Vertcoin publishes, and every hash
+  against the reference code.
+- New: qubit and odo (Odocrypt) for DigiByte, checked against real
+  DigiByte blocks; odo is 4 times as fast as DigiByte Core's own code.
+- New: neoscrypt (Feathercoin), checked against real Feathercoin blocks;
+  4 hashes at a time, 1.5 times as fast as Feathercoin Core's code with
+  SSE2 or NEON, 3 times with AVX2 and 3.7 times with AVX-512.
+- New: argon2d4096 (Myriad, Unitus), argon2d500 (Dynamic), argon2d250
+  (Credits) and argon2d16000 (Alterdot), checked against RFC 9106 and
+  the reference implementation; with AVX2, 2.2 times as fast as the
+  reference implementation.
+- New: yescrypt (Myriad, GlobalBoost-Y), yescryptr8, yescryptr16,
+  yescryptr32, yespower and yespowerr16 (Yenten), with Openwall's
+  yespower code; --param-n, --param-r and --param-key for the other
+  yespower coins.
+- blake: shares are now valid for Blakecoin and the coins merge-mined
+  with it (their transaction ids are single SHA-256).
+- skein: shares are checked against the real target (DigiByte); about
+  twice as fast (x86 SHA extensions for its final SHA-256, and the
+  header's constant first block hashed once per scan).
+- blake: 1.9 times as fast (constant first block hashed once per scan).
+- cryptonight: the whole job blob is hashed (pools send 76-byte and
+  longer blobs), with 64-bit share targets; works over stratum and HTTP.
+  About 45% faster with AES-NI (intrinsics instead of a function call per
+  AES round, one scratchpad per thread on a huge page), now also on
+  32-bit x86; the OpenAES library is gone.
+- cryptonight: the share's hash is the one the miner thread found, instead
+  of being hashed again when the share is sent.
+- keccak and all the scan loops check shares against the real target.
+- Removed heavy (Heavycoin) and the unused scrypt-jane sources.
+
+Mining
+- Solo mining with getblocktemplate (--coinbase-addr, --coinbase-sig):
+  segwit, BIP 34, long polling; getwork kept as a fallback (--no-gbt,
+  --no-getwork). A DigiByte node is asked for a template for the
+  algorithm being mined.
+- minerd exits with status 1 when it gives up (a fatal error, or
+  --retries failures in a row), so a service manager can tell.
+- By default there is one miner thread per processor, as documented (it
+  was one fewer, and so none at all on a single-processor machine); for
+  randomx and cryptonight, no more than the L3 cache holds 2 MiB
+  scratchpads.
+- JSON-RPC 2.0 pools (RandomX, CryptoNight): the miner says which
+  algorithm it mines at login and refuses jobs for another one; it sends a
+  keep-alive after a minute without a word from the pool, instead of
+  reconnecting after two (Monero blocks are often further apart); it keeps
+  the top nonce byte of the job, which NiceHash-style proxies (xmrig-proxy)
+  give each miner, and waits for a new job rather than take other
+  threads' nonces when its own are used up.
+- Stratum: every message from the pool is validated; no more mining a
+  stale job after a reconnect; jobs re-sent with a new id or difficulty
+  are followed; blank keep-alive lines are accepted.
+- The miner no longer dies (SIGPIPE) when a pool drops the connection
+  while shares are being sent; shares that cannot be sent are dropped
+  instead of retried forever; at most 256 shares wait to be sent.
+- -f, --diff-factor divides the pool's share difficulty.
+- Thread safety: the data races found by ThreadSanitizer are fixed (the
+  work-restart flag and other shared flags are atomic), signals are taken
+  in a sigwait() thread (the old handler could deadlock), a spurious
+  wakeup can no longer stop the miner, and shares from before a
+  reconnect are no longer sent on the new connection.
+
+Platforms and building
+- Builds and passes its known-answer tests ("make check") on Linux
+  (x86-64, 32-bit x86, arm64, 32-bit ARM, 64-bit RISC-V), macOS (arm64 and
+  x86-64) and Windows (MSYS2), with gcc and clang, and with
+  --disable-assembly.
+- Requires jansson 2.7 or newer (the bundled 1.x copy is gone) and no
+  longer needs OpenSSL.
+- GitHub Actions CI replaces Travis CI; the Dockerfile builds this tree.
+- Releases: pushing a tag v<version> has GitHub Actions publish the
+  Windows build (minerd.exe with the DLLs it needs) and the source
+  tarball, once every build and test has passed.
+- Fixed undefined behaviour found with AddressSanitizer and UBSan.
+- 32-bit ARM builds no longer get an executable stack.
+- Apple Silicon Macs: the build no longer fails at the link. Apple's
+  compilers define __ARM_NEON__ on arm64 too, which asked for the four-way
+  SHA-256 assembly that only 32-bit ARM has.
+
 Version multi 1.0.4 (Tanguy Pruvot)
 
 - Add x13 x14 and x15 algos (Sherlockcoin, X14Coin, Webcoin..)
@@ -177,7 +274,7 @@ Version 0.8 - March 21, 2011
 
 - Standardize program output, and support syslog on Unix platforms
 
-- Suport --user/--pass options (and "user" and "pass" in config file),
+- Support --user/--pass options (and "user" and "pass" in config file),
   as an alternative to the current --userpass
 
 Version 0.7.2 - March 14, 2011

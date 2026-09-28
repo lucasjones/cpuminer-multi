@@ -1,25 +1,34 @@
+# syntax=docker/dockerfile:1
 #
-# Dockerfile for cpuminer
-# usage: docker run creack/cpuminer --url xxxx --user xxxx --pass xxxx
-# ex: docker run creack/cpuminer --url stratum+tcp://ltc.pool.com:80 --user creack.worker1 --pass abcdef
+# cpuminer-multi in a container.
 #
+#   docker build -t cpuminer-multi .
+#   docker run --rm cpuminer-multi -a sha256d -o stratum+tcp://POOL:PORT -u USER -p PASS
 #
+# The binary is built for the platform the image is built for (amd64 or
+# arm64, e.g. with docker buildx --platform). For the fastest code on one
+# machine, build there with: --build-arg CFLAGS="-O2 -march=native"
 
-FROM		ubuntu:12.10
-MAINTAINER	Guillaume J. Charmes <guillaume@charmes.net>
+FROM ubuntu:24.04 AS build
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+        autoconf automake make gcc g++ libc6-dev pkg-config \
+        libcurl4-openssl-dev libjansson-dev \
+ && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY . .
+ARG CFLAGS="-O2"
+RUN ./autogen.sh \
+ && ./configure CFLAGS="$CFLAGS" CXXFLAGS="$CFLAGS" \
+ && make -j"$(nproc)" \
+ && make check \
+ && strip minerd
 
-RUN		apt-get update -qq
-
-RUN		apt-get install -qqy automake
-RUN		apt-get install -qqy libcurl4-openssl-dev
-RUN		apt-get install -qqy git
-RUN		apt-get install -qqy make
-
-RUN		git clone https://github.com/pooler/cpuminer
-
-RUN		cd cpuminer && ./autogen.sh
-RUN		cd cpuminer && ./configure CFLAGS="-O3"
-RUN		cd cpuminer && make
-
-WORKDIR		/cpuminer
-ENTRYPOINT	["./minerd"]
+FROM ubuntu:24.04
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libcurl4t64 libjansson4 libstdc++6 ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+COPY --from=build /src/minerd /usr/local/bin/minerd
+USER nobody
+ENTRYPOINT ["minerd"]
+CMD ["--help"]

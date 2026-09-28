@@ -1,0 +1,22 @@
+# keep build products of an in-tree build out of the image's build context
+.git
+*.o
+*.a
+*.exe
+minerd
+tests/kat
+Makefile
+Makefile.in
+aclocal.m4
+autom4te.cache
+build-aux
+config.log
+config.status
+configure
+configure~
+cpuminer-config.h
+cpuminer-config.h.in
+cpuminer-config.h.in~
+stamp-h1
+.deps
+.dirstamp

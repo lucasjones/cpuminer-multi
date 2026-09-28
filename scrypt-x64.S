@@ -26,7 +26,8 @@
 
 #include "cpuminer-config.h"
 
-#if defined(__linux__) && defined(__ELF__)
+/* the stack is not executable */
+#if defined(__ELF__)
 	.section .note.GNU-stack,"",%progbits
 #endif
 
@@ -152,122 +153,122 @@ scrypt_best_throughput_exit:
 	movq	72(%rsp), %r15
 	
 	leaq	(%r14, %rdx), %rbp
-	roll	$7, %ebp
+	roll	$(7), %ebp
 	xorl	%ebp, %r9d
 	leaq	(%rdi, %r15), %rbp
-	roll	$7, %ebp
+	roll	$(7), %ebp
 	xorl	%ebp, %r10d
 	leaq	(%rdx, %r9), %rbp
-	roll	$9, %ebp
+	roll	$(9), %ebp
 	xorl	%ebp, %r11d
 	leaq	(%r15, %r10), %rbp
-	roll	$9, %ebp
+	roll	$(9), %ebp
 	xorl	%ebp, %r13d
 	
 	leaq	(%r9, %r11), %rbp
-	roll	$13, %ebp
+	roll	$(13), %ebp
 	xorl	%ebp, %r14d
 	leaq	(%r10, %r13), %rbp
-	roll	$13, %ebp
+	roll	$(13), %ebp
 	xorl	%ebp, %edi
 	leaq	(%r11, %r14), %rbp
-	roll	$18, %ebp
+	roll	$(18), %ebp
 	xorl	%ebp, %edx
 	leaq	(%r13, %rdi), %rbp
-	roll	$18, %ebp
+	roll	$(18), %ebp
 	xorl	%ebp, %r15d
 	
 	movq	48(%rsp), %rbp
 	movq	%r15, 72(%rsp)
 	
 	leaq	(%rax, %rbp), %r15
-	roll	$7, %r15d
+	roll	$(7), %r15d
 	xorl	%r15d, %ebx
 	leaq	(%rbp, %rbx), %r15
-	roll	$9, %r15d
+	roll	$(9), %r15d
 	xorl	%r15d, %ecx
 	leaq	(%rbx, %rcx), %r15
-	roll	$13, %r15d
+	roll	$(13), %r15d
 	xorl	%r15d, %eax
 	leaq	(%rcx, %rax), %r15
-	roll	$18, %r15d
+	roll	$(18), %r15d
 	xorl	%r15d, %ebp
 	
 	movq	88(%rsp), %r15
 	movq	%rbp, 48(%rsp)
 	
 	leaq	(%r12, %r15), %rbp
-	roll	$7, %ebp
+	roll	$(7), %ebp
 	xorl	%ebp, %esi
 	leaq	(%r15, %rsi), %rbp
-	roll	$9, %ebp
+	roll	$(9), %ebp
 	xorl	%ebp, %r8d
 	leaq	(%rsi, %r8), %rbp
-	roll	$13, %ebp
+	roll	$(13), %ebp
 	xorl	%ebp, %r12d
 	leaq	(%r8, %r12), %rbp
-	roll	$18, %ebp
+	roll	$(18), %ebp
 	xorl	%ebp, %r15d
 	
 	movq	%r15, 88(%rsp)
 	movq	72(%rsp), %r15
 	
 	leaq	(%rsi, %rdx), %rbp
-	roll	$7, %ebp
+	roll	$(7), %ebp
 	xorl	%ebp, %edi
 	leaq	(%r9, %r15), %rbp
-	roll	$7, %ebp
+	roll	$(7), %ebp
 	xorl	%ebp, %eax
 	leaq	(%rdx, %rdi), %rbp
-	roll	$9, %ebp
+	roll	$(9), %ebp
 	xorl	%ebp, %ecx
 	leaq	(%r15, %rax), %rbp
-	roll	$9, %ebp
+	roll	$(9), %ebp
 	xorl	%ebp, %r8d
 	
 	leaq	(%rdi, %rcx), %rbp
-	roll	$13, %ebp
+	roll	$(13), %ebp
 	xorl	%ebp, %esi
 	leaq	(%rax, %r8), %rbp
-	roll	$13, %ebp
+	roll	$(13), %ebp
 	xorl	%ebp, %r9d
 	leaq	(%rcx, %rsi), %rbp
-	roll	$18, %ebp
+	roll	$(18), %ebp
 	xorl	%ebp, %edx
 	leaq	(%r8, %r9), %rbp
-	roll	$18, %ebp
+	roll	$(18), %ebp
 	xorl	%ebp, %r15d
 	
 	movq	48(%rsp), %rbp
 	movq	%r15, 72(%rsp)
 	
 	leaq	(%r10, %rbp), %r15
-	roll	$7, %r15d
+	roll	$(7), %r15d
 	xorl	%r15d, %r12d
 	leaq	(%rbp, %r12), %r15
-	roll	$9, %r15d
+	roll	$(9), %r15d
 	xorl	%r15d, %r11d
 	leaq	(%r12, %r11), %r15
-	roll	$13, %r15d
+	roll	$(13), %r15d
 	xorl	%r15d, %r10d
 	leaq	(%r11, %r10), %r15
-	roll	$18, %r15d
+	roll	$(18), %r15d
 	xorl	%r15d, %ebp
 	
 	movq	88(%rsp), %r15
 	movq	%rbp, 48(%rsp)
 	
 	leaq	(%rbx, %r15), %rbp
-	roll	$7, %ebp
+	roll	$(7), %ebp
 	xorl	%ebp, %r14d
 	leaq	(%r15, %r14), %rbp
-	roll	$9, %ebp
+	roll	$(9), %ebp
 	xorl	%ebp, %r13d
 	leaq	(%r14, %r13), %rbp
-	roll	$13, %ebp
+	roll	$(13), %ebp
 	xorl	%ebp, %ebx
 	leaq	(%r13, %rbx), %rbp
-	roll	$18, %ebp
+	roll	$(18), %ebp
 	xorl	%ebp, %r15d
 	
 	movq	%r15, 88(%rsp)
@@ -402,7 +403,7 @@ _scrypt_core:
 	movdqa	120(%rsp), %xmm13
 	movdqa	136(%rsp), %xmm14
 	movdqa	152(%rsp), %xmm15
-	addq	$176, %rsp
+	addq	$(176), %rsp
 #endif
 	popq	%r15
 	popq	%r14
@@ -567,71 +568,71 @@ scrypt_core_gen_loop2:
 	movdqa	%xmm1, %xmm4
 	paddd	%xmm0, %xmm4
 	movdqa	%xmm4, %xmm5
-	pslld	$7, %xmm4
-	psrld	$25, %xmm5
+	pslld	$(7), %xmm4
+	psrld	$(25), %xmm5
 	pxor	%xmm4, %xmm3
 	movdqa	%xmm0, %xmm4
 	pxor	%xmm5, %xmm3
 	
 	paddd	%xmm3, %xmm4
 	movdqa	%xmm4, %xmm5
-	pslld	$9, %xmm4
-	psrld	$23, %xmm5
+	pslld	$(9), %xmm4
+	psrld	$(23), %xmm5
 	pxor	%xmm4, %xmm2
 	movdqa	%xmm3, %xmm4
 	pxor	%xmm5, %xmm2
-	pshufd	$0x93, %xmm3, %xmm3
+	pshufd	$(0x93), %xmm3, %xmm3
 	
 	paddd	%xmm2, %xmm4
 	movdqa	%xmm4, %xmm5
-	pslld	$13, %xmm4
-	psrld	$19, %xmm5
+	pslld	$(13), %xmm4
+	psrld	$(19), %xmm5
 	pxor	%xmm4, %xmm1
 	movdqa	%xmm2, %xmm4
 	pxor	%xmm5, %xmm1
-	pshufd	$0x4e, %xmm2, %xmm2
+	pshufd	$(0x4e), %xmm2, %xmm2
 	
 	paddd	%xmm1, %xmm4
 	movdqa	%xmm4, %xmm5
-	pslld	$18, %xmm4
-	psrld	$14, %xmm5
+	pslld	$(18), %xmm4
+	psrld	$(14), %xmm5
 	pxor	%xmm4, %xmm0
 	movdqa	%xmm3, %xmm4
 	pxor	%xmm5, %xmm0
-	pshufd	$0x39, %xmm1, %xmm1
+	pshufd	$(0x39), %xmm1, %xmm1
 	
 	paddd	%xmm0, %xmm4
 	movdqa	%xmm4, %xmm5
-	pslld	$7, %xmm4
-	psrld	$25, %xmm5
+	pslld	$(7), %xmm4
+	psrld	$(25), %xmm5
 	pxor	%xmm4, %xmm1
 	movdqa	%xmm0, %xmm4
 	pxor	%xmm5, %xmm1
 	
 	paddd	%xmm1, %xmm4
 	movdqa	%xmm4, %xmm5
-	pslld	$9, %xmm4
-	psrld	$23, %xmm5
+	pslld	$(9), %xmm4
+	psrld	$(23), %xmm5
 	pxor	%xmm4, %xmm2
 	movdqa	%xmm1, %xmm4
 	pxor	%xmm5, %xmm2
-	pshufd	$0x93, %xmm1, %xmm1
+	pshufd	$(0x93), %xmm1, %xmm1
 	
 	paddd	%xmm2, %xmm4
 	movdqa	%xmm4, %xmm5
-	pslld	$13, %xmm4
-	psrld	$19, %xmm5
+	pslld	$(13), %xmm4
+	psrld	$(19), %xmm5
 	pxor	%xmm4, %xmm3
 	movdqa	%xmm2, %xmm4
 	pxor	%xmm5, %xmm3
-	pshufd	$0x4e, %xmm2, %xmm2
+	pshufd	$(0x4e), %xmm2, %xmm2
 	
 	paddd	%xmm3, %xmm4
 	movdqa	%xmm4, %xmm5
-	pslld	$18, %xmm4
-	psrld	$14, %xmm5
+	pslld	$(18), %xmm4
+	psrld	$(14), %xmm5
 	pxor	%xmm4, %xmm0
-	pshufd	$0x39, %xmm3, %xmm3
+	pshufd	$(0x39), %xmm3, %xmm3
 	pxor	%xmm5, %xmm0
 .endm
 
@@ -855,146 +856,146 @@ scrypt_core_xmm_loop2:
 	vpaddd	%xmm0, %xmm1, %xmm4
 	vpaddd	%xmm8, %xmm9, %xmm6
 	vpaddd	%xmm12, %xmm13, %xmm7
-	vpslld	$7, %xmm4, %xmm5
-	vpsrld	$25, %xmm4, %xmm4
+	vpslld	$(7), %xmm4, %xmm5
+	vpsrld	$(25), %xmm4, %xmm4
 	vpxor	%xmm5, %xmm3, %xmm3
 	vpxor	%xmm4, %xmm3, %xmm3
-	vpslld	$7, %xmm6, %xmm5
-	vpsrld	$25, %xmm6, %xmm6
+	vpslld	$(7), %xmm6, %xmm5
+	vpsrld	$(25), %xmm6, %xmm6
 	vpxor	%xmm5, %xmm11, %xmm11
 	vpxor	%xmm6, %xmm11, %xmm11
-	vpslld	$7, %xmm7, %xmm5
-	vpsrld	$25, %xmm7, %xmm7
+	vpslld	$(7), %xmm7, %xmm5
+	vpsrld	$(25), %xmm7, %xmm7
 	vpxor	%xmm5, %xmm15, %xmm15
 	vpxor	%xmm7, %xmm15, %xmm15
 	
 	vpaddd	%xmm3, %xmm0, %xmm4
 	vpaddd	%xmm11, %xmm8, %xmm6
 	vpaddd	%xmm15, %xmm12, %xmm7
-	vpslld	$9, %xmm4, %xmm5
-	vpsrld	$23, %xmm4, %xmm4
+	vpslld	$(9), %xmm4, %xmm5
+	vpsrld	$(23), %xmm4, %xmm4
 	vpxor	%xmm5, %xmm2, %xmm2
 	vpxor	%xmm4, %xmm2, %xmm2
-	vpslld	$9, %xmm6, %xmm5
-	vpsrld	$23, %xmm6, %xmm6
+	vpslld	$(9), %xmm6, %xmm5
+	vpsrld	$(23), %xmm6, %xmm6
 	vpxor	%xmm5, %xmm10, %xmm10
 	vpxor	%xmm6, %xmm10, %xmm10
-	vpslld	$9, %xmm7, %xmm5
-	vpsrld	$23, %xmm7, %xmm7
+	vpslld	$(9), %xmm7, %xmm5
+	vpsrld	$(23), %xmm7, %xmm7
 	vpxor	%xmm5, %xmm14, %xmm14
 	vpxor	%xmm7, %xmm14, %xmm14
 	
 	vpaddd	%xmm2, %xmm3, %xmm4
 	vpaddd	%xmm10, %xmm11, %xmm6
 	vpaddd	%xmm14, %xmm15, %xmm7
-	vpslld	$13, %xmm4, %xmm5
-	vpsrld	$19, %xmm4, %xmm4
-	vpshufd	$0x93, %xmm3, %xmm3
-	vpshufd	$0x93, %xmm11, %xmm11
-	vpshufd	$0x93, %xmm15, %xmm15
+	vpslld	$(13), %xmm4, %xmm5
+	vpsrld	$(19), %xmm4, %xmm4
+	vpshufd	$(0x93), %xmm3, %xmm3
+	vpshufd	$(0x93), %xmm11, %xmm11
+	vpshufd	$(0x93), %xmm15, %xmm15
 	vpxor	%xmm5, %xmm1, %xmm1
 	vpxor	%xmm4, %xmm1, %xmm1
-	vpslld	$13, %xmm6, %xmm5
-	vpsrld	$19, %xmm6, %xmm6
+	vpslld	$(13), %xmm6, %xmm5
+	vpsrld	$(19), %xmm6, %xmm6
 	vpxor	%xmm5, %xmm9, %xmm9
 	vpxor	%xmm6, %xmm9, %xmm9
-	vpslld	$13, %xmm7, %xmm5
-	vpsrld	$19, %xmm7, %xmm7
+	vpslld	$(13), %xmm7, %xmm5
+	vpsrld	$(19), %xmm7, %xmm7
 	vpxor	%xmm5, %xmm13, %xmm13
 	vpxor	%xmm7, %xmm13, %xmm13
 	
 	vpaddd	%xmm1, %xmm2, %xmm4
 	vpaddd	%xmm9, %xmm10, %xmm6
 	vpaddd	%xmm13, %xmm14, %xmm7
-	vpslld	$18, %xmm4, %xmm5
-	vpsrld	$14, %xmm4, %xmm4
-	vpshufd	$0x4e, %xmm2, %xmm2
-	vpshufd	$0x4e, %xmm10, %xmm10
-	vpshufd	$0x4e, %xmm14, %xmm14
+	vpslld	$(18), %xmm4, %xmm5
+	vpsrld	$(14), %xmm4, %xmm4
+	vpshufd	$(0x4e), %xmm2, %xmm2
+	vpshufd	$(0x4e), %xmm10, %xmm10
+	vpshufd	$(0x4e), %xmm14, %xmm14
 	vpxor	%xmm5, %xmm0, %xmm0
 	vpxor	%xmm4, %xmm0, %xmm0
-	vpslld	$18, %xmm6, %xmm5
-	vpsrld	$14, %xmm6, %xmm6
+	vpslld	$(18), %xmm6, %xmm5
+	vpsrld	$(14), %xmm6, %xmm6
 	vpxor	%xmm5, %xmm8, %xmm8
 	vpxor	%xmm6, %xmm8, %xmm8
-	vpslld	$18, %xmm7, %xmm5
-	vpsrld	$14, %xmm7, %xmm7
+	vpslld	$(18), %xmm7, %xmm5
+	vpsrld	$(14), %xmm7, %xmm7
 	vpxor	%xmm5, %xmm12, %xmm12
 	vpxor	%xmm7, %xmm12, %xmm12
 	
 	vpaddd	%xmm0, %xmm3, %xmm4
 	vpaddd	%xmm8, %xmm11, %xmm6
 	vpaddd	%xmm12, %xmm15, %xmm7
-	vpslld	$7, %xmm4, %xmm5
-	vpsrld	$25, %xmm4, %xmm4
-	vpshufd	$0x39, %xmm1, %xmm1
+	vpslld	$(7), %xmm4, %xmm5
+	vpsrld	$(25), %xmm4, %xmm4
+	vpshufd	$(0x39), %xmm1, %xmm1
 	vpxor	%xmm5, %xmm1, %xmm1
 	vpxor	%xmm4, %xmm1, %xmm1
-	vpslld	$7, %xmm6, %xmm5
-	vpsrld	$25, %xmm6, %xmm6
-	vpshufd	$0x39, %xmm9, %xmm9
+	vpslld	$(7), %xmm6, %xmm5
+	vpsrld	$(25), %xmm6, %xmm6
+	vpshufd	$(0x39), %xmm9, %xmm9
 	vpxor	%xmm5, %xmm9, %xmm9
 	vpxor	%xmm6, %xmm9, %xmm9
-	vpslld	$7, %xmm7, %xmm5
-	vpsrld	$25, %xmm7, %xmm7
-	vpshufd	$0x39, %xmm13, %xmm13
+	vpslld	$(7), %xmm7, %xmm5
+	vpsrld	$(25), %xmm7, %xmm7
+	vpshufd	$(0x39), %xmm13, %xmm13
 	vpxor	%xmm5, %xmm13, %xmm13
 	vpxor	%xmm7, %xmm13, %xmm13
 	
 	vpaddd	%xmm1, %xmm0, %xmm4
 	vpaddd	%xmm9, %xmm8, %xmm6
 	vpaddd	%xmm13, %xmm12, %xmm7
-	vpslld	$9, %xmm4, %xmm5
-	vpsrld	$23, %xmm4, %xmm4
+	vpslld	$(9), %xmm4, %xmm5
+	vpsrld	$(23), %xmm4, %xmm4
 	vpxor	%xmm5, %xmm2, %xmm2
 	vpxor	%xmm4, %xmm2, %xmm2
-	vpslld	$9, %xmm6, %xmm5
-	vpsrld	$23, %xmm6, %xmm6
+	vpslld	$(9), %xmm6, %xmm5
+	vpsrld	$(23), %xmm6, %xmm6
 	vpxor	%xmm5, %xmm10, %xmm10
 	vpxor	%xmm6, %xmm10, %xmm10
-	vpslld	$9, %xmm7, %xmm5
-	vpsrld	$23, %xmm7, %xmm7
+	vpslld	$(9), %xmm7, %xmm5
+	vpsrld	$(23), %xmm7, %xmm7
 	vpxor	%xmm5, %xmm14, %xmm14
 	vpxor	%xmm7, %xmm14, %xmm14
 	
 	vpaddd	%xmm2, %xmm1, %xmm4
 	vpaddd	%xmm10, %xmm9, %xmm6
 	vpaddd	%xmm14, %xmm13, %xmm7
-	vpslld	$13, %xmm4, %xmm5
-	vpsrld	$19, %xmm4, %xmm4
-	vpshufd	$0x93, %xmm1, %xmm1
-	vpshufd	$0x93, %xmm9, %xmm9
-	vpshufd	$0x93, %xmm13, %xmm13
+	vpslld	$(13), %xmm4, %xmm5
+	vpsrld	$(19), %xmm4, %xmm4
+	vpshufd	$(0x93), %xmm1, %xmm1
+	vpshufd	$(0x93), %xmm9, %xmm9
+	vpshufd	$(0x93), %xmm13, %xmm13
 	vpxor	%xmm5, %xmm3, %xmm3
 	vpxor	%xmm4, %xmm3, %xmm3
-	vpslld	$13, %xmm6, %xmm5
-	vpsrld	$19, %xmm6, %xmm6
+	vpslld	$(13), %xmm6, %xmm5
+	vpsrld	$(19), %xmm6, %xmm6
 	vpxor	%xmm5, %xmm11, %xmm11
 	vpxor	%xmm6, %xmm11, %xmm11
-	vpslld	$13, %xmm7, %xmm5
-	vpsrld	$19, %xmm7, %xmm7
+	vpslld	$(13), %xmm7, %xmm5
+	vpsrld	$(19), %xmm7, %xmm7
 	vpxor	%xmm5, %xmm15, %xmm15
 	vpxor	%xmm7, %xmm15, %xmm15
 	
 	vpaddd	%xmm3, %xmm2, %xmm4
 	vpaddd	%xmm11, %xmm10, %xmm6
 	vpaddd	%xmm15, %xmm14, %xmm7
-	vpslld	$18, %xmm4, %xmm5
-	vpsrld	$14, %xmm4, %xmm4
-	vpshufd	$0x4e, %xmm2, %xmm2
-	vpshufd	$0x4e, %xmm10, %xmm10
+	vpslld	$(18), %xmm4, %xmm5
+	vpsrld	$(14), %xmm4, %xmm4
+	vpshufd	$(0x4e), %xmm2, %xmm2
+	vpshufd	$(0x4e), %xmm10, %xmm10
 	vpxor	%xmm5, %xmm0, %xmm0
 	vpxor	%xmm4, %xmm0, %xmm0
-	vpslld	$18, %xmm6, %xmm5
-	vpsrld	$14, %xmm6, %xmm6
-	vpshufd	$0x4e, %xmm14, %xmm14
-	vpshufd	$0x39, %xmm11, %xmm11
+	vpslld	$(18), %xmm6, %xmm5
+	vpsrld	$(14), %xmm6, %xmm6
+	vpshufd	$(0x4e), %xmm14, %xmm14
+	vpshufd	$(0x39), %xmm11, %xmm11
 	vpxor	%xmm5, %xmm8, %xmm8
 	vpxor	%xmm6, %xmm8, %xmm8
-	vpslld	$18, %xmm7, %xmm5
-	vpsrld	$14, %xmm7, %xmm7
-	vpshufd	$0x39, %xmm3, %xmm3
-	vpshufd	$0x39, %xmm15, %xmm15
+	vpslld	$(18), %xmm7, %xmm5
+	vpsrld	$(14), %xmm7, %xmm7
+	vpshufd	$(0x39), %xmm3, %xmm3
+	vpshufd	$(0x39), %xmm15, %xmm15
 	vpxor	%xmm5, %xmm12, %xmm12
 	vpxor	%xmm7, %xmm12, %xmm12
 .endm
@@ -1037,7 +1038,7 @@ _scrypt_core_3way:
 	subq	$392, %rsp
 	
 .macro scrypt_core_3way_cleanup
-	addq	$392, %rsp
+	addq	$(392), %rsp
 #if defined(_WIN64) || defined(__CYGWIN__)
 	popq	%rsi
 	popq	%rdi
@@ -1051,7 +1052,7 @@ _scrypt_core_3way:
 	movdqa	120(%rsp), %xmm13
 	movdqa	136(%rsp), %xmm14
 	movdqa	152(%rsp), %xmm15
-	addq	$176, %rsp
+	addq	$(176), %rsp
 #endif
 	popq	%rbp
 	popq	%rbx
@@ -1382,9 +1383,9 @@ scrypt_core_3way_avx_loop2:
 	vpaddd	%xmm0, %xmm1, %xmm4
 	vpaddd	%xmm8, %xmm9, %xmm6
 	vpaddd	%xmm12, %xmm13, %xmm7
-	vprotd	$7, %xmm4, %xmm4
-	vprotd	$7, %xmm6, %xmm6
-	vprotd	$7, %xmm7, %xmm7
+	vprotd	$(7), %xmm4, %xmm4
+	vprotd	$(7), %xmm6, %xmm6
+	vprotd	$(7), %xmm7, %xmm7
 	vpxor	%xmm4, %xmm3, %xmm3
 	vpxor	%xmm6, %xmm11, %xmm11
 	vpxor	%xmm7, %xmm15, %xmm15
@@ -1392,9 +1393,9 @@ scrypt_core_3way_avx_loop2:
 	vpaddd	%xmm3, %xmm0, %xmm4
 	vpaddd	%xmm11, %xmm8, %xmm6
 	vpaddd	%xmm15, %xmm12, %xmm7
-	vprotd	$9, %xmm4, %xmm4
-	vprotd	$9, %xmm6, %xmm6
-	vprotd	$9, %xmm7, %xmm7
+	vprotd	$(9), %xmm4, %xmm4
+	vprotd	$(9), %xmm6, %xmm6
+	vprotd	$(9), %xmm7, %xmm7
 	vpxor	%xmm4, %xmm2, %xmm2
 	vpxor	%xmm6, %xmm10, %xmm10
 	vpxor	%xmm7, %xmm14, %xmm14
@@ -1402,12 +1403,12 @@ scrypt_core_3way_avx_loop2:
 	vpaddd	%xmm2, %xmm3, %xmm4
 	vpaddd	%xmm10, %xmm11, %xmm6
 	vpaddd	%xmm14, %xmm15, %xmm7
-	vprotd	$13, %xmm4, %xmm4
-	vprotd	$13, %xmm6, %xmm6
-	vprotd	$13, %xmm7, %xmm7
-	vpshufd	$0x93, %xmm3, %xmm3
-	vpshufd	$0x93, %xmm11, %xmm11
-	vpshufd	$0x93, %xmm15, %xmm15
+	vprotd	$(13), %xmm4, %xmm4
+	vprotd	$(13), %xmm6, %xmm6
+	vprotd	$(13), %xmm7, %xmm7
+	vpshufd	$(0x93), %xmm3, %xmm3
+	vpshufd	$(0x93), %xmm11, %xmm11
+	vpshufd	$(0x93), %xmm15, %xmm15
 	vpxor	%xmm4, %xmm1, %xmm1
 	vpxor	%xmm6, %xmm9, %xmm9
 	vpxor	%xmm7, %xmm13, %xmm13
@@ -1415,12 +1416,12 @@ scrypt_core_3way_avx_loop2:
 	vpaddd	%xmm1, %xmm2, %xmm4
 	vpaddd	%xmm9, %xmm10, %xmm6
 	vpaddd	%xmm13, %xmm14, %xmm7
-	vprotd	$18, %xmm4, %xmm4
-	vprotd	$18, %xmm6, %xmm6
-	vprotd	$18, %xmm7, %xmm7
-	vpshufd	$0x4e, %xmm2, %xmm2
-	vpshufd	$0x4e, %xmm10, %xmm10
-	vpshufd	$0x4e, %xmm14, %xmm14
+	vprotd	$(18), %xmm4, %xmm4
+	vprotd	$(18), %xmm6, %xmm6
+	vprotd	$(18), %xmm7, %xmm7
+	vpshufd	$(0x4e), %xmm2, %xmm2
+	vpshufd	$(0x4e), %xmm10, %xmm10
+	vpshufd	$(0x4e), %xmm14, %xmm14
 	vpxor	%xmm6, %xmm8, %xmm8
 	vpxor	%xmm4, %xmm0, %xmm0
 	vpxor	%xmm7, %xmm12, %xmm12
@@ -1428,12 +1429,12 @@ scrypt_core_3way_avx_loop2:
 	vpaddd	%xmm0, %xmm3, %xmm4
 	vpaddd	%xmm8, %xmm11, %xmm6
 	vpaddd	%xmm12, %xmm15, %xmm7
-	vprotd	$7, %xmm4, %xmm4
-	vprotd	$7, %xmm6, %xmm6
-	vprotd	$7, %xmm7, %xmm7
-	vpshufd	$0x39, %xmm1, %xmm1
-	vpshufd	$0x39, %xmm9, %xmm9
-	vpshufd	$0x39, %xmm13, %xmm13
+	vprotd	$(7), %xmm4, %xmm4
+	vprotd	$(7), %xmm6, %xmm6
+	vprotd	$(7), %xmm7, %xmm7
+	vpshufd	$(0x39), %xmm1, %xmm1
+	vpshufd	$(0x39), %xmm9, %xmm9
+	vpshufd	$(0x39), %xmm13, %xmm13
 	vpxor	%xmm4, %xmm1, %xmm1
 	vpxor	%xmm6, %xmm9, %xmm9
 	vpxor	%xmm7, %xmm13, %xmm13
@@ -1441,9 +1442,9 @@ scrypt_core_3way_avx_loop2:
 	vpaddd	%xmm1, %xmm0, %xmm4
 	vpaddd	%xmm9, %xmm8, %xmm6
 	vpaddd	%xmm13, %xmm12, %xmm7
-	vprotd	$9, %xmm4, %xmm4
-	vprotd	$9, %xmm6, %xmm6
-	vprotd	$9, %xmm7, %xmm7
+	vprotd	$(9), %xmm4, %xmm4
+	vprotd	$(9), %xmm6, %xmm6
+	vprotd	$(9), %xmm7, %xmm7
 	vpxor	%xmm4, %xmm2, %xmm2
 	vpxor	%xmm6, %xmm10, %xmm10
 	vpxor	%xmm7, %xmm14, %xmm14
@@ -1451,12 +1452,12 @@ scrypt_core_3way_avx_loop2:
 	vpaddd	%xmm2, %xmm1, %xmm4
 	vpaddd	%xmm10, %xmm9, %xmm6
 	vpaddd	%xmm14, %xmm13, %xmm7
-	vprotd	$13, %xmm4, %xmm4
-	vprotd	$13, %xmm6, %xmm6
-	vprotd	$13, %xmm7, %xmm7
-	vpshufd	$0x93, %xmm1, %xmm1
-	vpshufd	$0x93, %xmm9, %xmm9
-	vpshufd	$0x93, %xmm13, %xmm13
+	vprotd	$(13), %xmm4, %xmm4
+	vprotd	$(13), %xmm6, %xmm6
+	vprotd	$(13), %xmm7, %xmm7
+	vpshufd	$(0x93), %xmm1, %xmm1
+	vpshufd	$(0x93), %xmm9, %xmm9
+	vpshufd	$(0x93), %xmm13, %xmm13
 	vpxor	%xmm4, %xmm3, %xmm3
 	vpxor	%xmm6, %xmm11, %xmm11
 	vpxor	%xmm7, %xmm15, %xmm15
@@ -1464,18 +1465,18 @@ scrypt_core_3way_avx_loop2:
 	vpaddd	%xmm3, %xmm2, %xmm4
 	vpaddd	%xmm11, %xmm10, %xmm6
 	vpaddd	%xmm15, %xmm14, %xmm7
-	vprotd	$18, %xmm4, %xmm4
-	vprotd	$18, %xmm6, %xmm6
-	vprotd	$18, %xmm7, %xmm7
-	vpshufd	$0x4e, %xmm2, %xmm2
-	vpshufd	$0x4e, %xmm10, %xmm10
-	vpshufd	$0x4e, %xmm14, %xmm14
+	vprotd	$(18), %xmm4, %xmm4
+	vprotd	$(18), %xmm6, %xmm6
+	vprotd	$(18), %xmm7, %xmm7
+	vpshufd	$(0x4e), %xmm2, %xmm2
+	vpshufd	$(0x4e), %xmm10, %xmm10
+	vpshufd	$(0x4e), %xmm14, %xmm14
 	vpxor	%xmm4, %xmm0, %xmm0
 	vpxor	%xmm6, %xmm8, %xmm8
 	vpxor	%xmm7, %xmm12, %xmm12
-	vpshufd	$0x39, %xmm3, %xmm3
-	vpshufd	$0x39, %xmm11, %xmm11
-	vpshufd	$0x39, %xmm15, %xmm15
+	vpshufd	$(0x39), %xmm3, %xmm3
+	vpshufd	$(0x39), %xmm11, %xmm11
+	vpshufd	$(0x39), %xmm15, %xmm15
 .endm
 
 .macro salsa8_core_3way_xop
@@ -1793,20 +1794,20 @@ scrypt_core_3way_xop_loop2:
 	paddd	%xmm8, %xmm6
 	paddd	%xmm12, %xmm7
 	movdqa	%xmm4, %xmm5
-	pslld	$7, %xmm4
-	psrld	$25, %xmm5
+	pslld	$(7), %xmm4
+	psrld	$(25), %xmm5
 	pxor	%xmm4, %xmm3
 	pxor	%xmm5, %xmm3
 	movdqa	%xmm0, %xmm4
 	movdqa	%xmm6, %xmm5
-	pslld	$7, %xmm6
-	psrld	$25, %xmm5
+	pslld	$(7), %xmm6
+	psrld	$(25), %xmm5
 	pxor	%xmm6, %xmm11
 	pxor	%xmm5, %xmm11
 	movdqa	%xmm8, %xmm6
 	movdqa	%xmm7, %xmm5
-	pslld	$7, %xmm7
-	psrld	$25, %xmm5
+	pslld	$(7), %xmm7
+	psrld	$(25), %xmm5
 	pxor	%xmm7, %xmm15
 	pxor	%xmm5, %xmm15
 	movdqa	%xmm12, %xmm7
@@ -1815,95 +1816,95 @@ scrypt_core_3way_xop_loop2:
 	paddd	%xmm11, %xmm6
 	paddd	%xmm15, %xmm7
 	movdqa	%xmm4, %xmm5
-	pslld	$9, %xmm4
-	psrld	$23, %xmm5
+	pslld	$(9), %xmm4
+	psrld	$(23), %xmm5
 	pxor	%xmm4, %xmm2
 	movdqa	%xmm3, %xmm4
-	pshufd	$0x93, %xmm3, %xmm3
+	pshufd	$(0x93), %xmm3, %xmm3
 	pxor	%xmm5, %xmm2
 	movdqa	%xmm6, %xmm5
-	pslld	$9, %xmm6
-	psrld	$23, %xmm5
+	pslld	$(9), %xmm6
+	psrld	$(23), %xmm5
 	pxor	%xmm6, %xmm10
 	movdqa	%xmm11, %xmm6
-	pshufd	$0x93, %xmm11, %xmm11
+	pshufd	$(0x93), %xmm11, %xmm11
 	pxor	%xmm5, %xmm10
 	movdqa	%xmm7, %xmm5
-	pslld	$9, %xmm7
-	psrld	$23, %xmm5
+	pslld	$(9), %xmm7
+	psrld	$(23), %xmm5
 	pxor	%xmm7, %xmm14
 	movdqa	%xmm15, %xmm7
 	pxor	%xmm5, %xmm14
-	pshufd	$0x93, %xmm15, %xmm15
+	pshufd	$(0x93), %xmm15, %xmm15
 	
 	paddd	%xmm2, %xmm4
 	paddd	%xmm10, %xmm6
 	paddd	%xmm14, %xmm7
 	movdqa	%xmm4, %xmm5
-	pslld	$13, %xmm4
-	psrld	$19, %xmm5
+	pslld	$(13), %xmm4
+	psrld	$(19), %xmm5
 	pxor	%xmm4, %xmm1
 	movdqa	%xmm2, %xmm4
-	pshufd	$0x4e, %xmm2, %xmm2
+	pshufd	$(0x4e), %xmm2, %xmm2
 	pxor	%xmm5, %xmm1
 	movdqa	%xmm6, %xmm5
-	pslld	$13, %xmm6
-	psrld	$19, %xmm5
+	pslld	$(13), %xmm6
+	psrld	$(19), %xmm5
 	pxor	%xmm6, %xmm9
 	movdqa	%xmm10, %xmm6
-	pshufd	$0x4e, %xmm10, %xmm10
+	pshufd	$(0x4e), %xmm10, %xmm10
 	pxor	%xmm5, %xmm9
 	movdqa	%xmm7, %xmm5
-	pslld	$13, %xmm7
-	psrld	$19, %xmm5
+	pslld	$(13), %xmm7
+	psrld	$(19), %xmm5
 	pxor	%xmm7, %xmm13
 	movdqa	%xmm14, %xmm7
-	pshufd	$0x4e, %xmm14, %xmm14
+	pshufd	$(0x4e), %xmm14, %xmm14
 	pxor	%xmm5, %xmm13
 	
 	paddd	%xmm1, %xmm4
 	paddd	%xmm9, %xmm6
 	paddd	%xmm13, %xmm7
 	movdqa	%xmm4, %xmm5
-	pslld	$18, %xmm4
-	psrld	$14, %xmm5
+	pslld	$(18), %xmm4
+	psrld	$(14), %xmm5
 	pxor	%xmm4, %xmm0
-	pshufd	$0x39, %xmm1, %xmm1
+	pshufd	$(0x39), %xmm1, %xmm1
 	pxor	%xmm5, %xmm0
 	movdqa	%xmm3, %xmm4
 	movdqa	%xmm6, %xmm5
-	pslld	$18, %xmm6
-	psrld	$14, %xmm5
+	pslld	$(18), %xmm6
+	psrld	$(14), %xmm5
 	pxor	%xmm6, %xmm8
-	pshufd	$0x39, %xmm9, %xmm9
+	pshufd	$(0x39), %xmm9, %xmm9
 	pxor	%xmm5, %xmm8
 	movdqa	%xmm11, %xmm6
 	movdqa	%xmm7, %xmm5
-	pslld	$18, %xmm7
-	psrld	$14, %xmm5
+	pslld	$(18), %xmm7
+	psrld	$(14), %xmm5
 	pxor	%xmm7, %xmm12
 	movdqa	%xmm15, %xmm7
 	pxor	%xmm5, %xmm12
-	pshufd	$0x39, %xmm13, %xmm13
+	pshufd	$(0x39), %xmm13, %xmm13
 	
 	paddd	%xmm0, %xmm4
 	paddd	%xmm8, %xmm6
 	paddd	%xmm12, %xmm7
 	movdqa	%xmm4, %xmm5
-	pslld	$7, %xmm4
-	psrld	$25, %xmm5
+	pslld	$(7), %xmm4
+	psrld	$(25), %xmm5
 	pxor	%xmm4, %xmm1
 	pxor	%xmm5, %xmm1
 	movdqa	%xmm0, %xmm4
 	movdqa	%xmm6, %xmm5
-	pslld	$7, %xmm6
-	psrld	$25, %xmm5
+	pslld	$(7), %xmm6
+	psrld	$(25), %xmm5
 	pxor	%xmm6, %xmm9
 	pxor	%xmm5, %xmm9
 	movdqa	%xmm8, %xmm6
 	movdqa	%xmm7, %xmm5
-	pslld	$7, %xmm7
-	psrld	$25, %xmm5
+	pslld	$(7), %xmm7
+	psrld	$(25), %xmm5
 	pxor	%xmm7, %xmm13
 	pxor	%xmm5, %xmm13
 	movdqa	%xmm12, %xmm7
@@ -1912,72 +1913,72 @@ scrypt_core_3way_xop_loop2:
 	paddd	%xmm9, %xmm6
 	paddd	%xmm13, %xmm7
 	movdqa	%xmm4, %xmm5
-	pslld	$9, %xmm4
-	psrld	$23, %xmm5
+	pslld	$(9), %xmm4
+	psrld	$(23), %xmm5
 	pxor	%xmm4, %xmm2
 	movdqa	%xmm1, %xmm4
-	pshufd	$0x93, %xmm1, %xmm1
+	pshufd	$(0x93), %xmm1, %xmm1
 	pxor	%xmm5, %xmm2
 	movdqa	%xmm6, %xmm5
-	pslld	$9, %xmm6
-	psrld	$23, %xmm5
+	pslld	$(9), %xmm6
+	psrld	$(23), %xmm5
 	pxor	%xmm6, %xmm10
 	movdqa	%xmm9, %xmm6
-	pshufd	$0x93, %xmm9, %xmm9
+	pshufd	$(0x93), %xmm9, %xmm9
 	pxor	%xmm5, %xmm10
 	movdqa	%xmm7, %xmm5
-	pslld	$9, %xmm7
-	psrld	$23, %xmm5
+	pslld	$(9), %xmm7
+	psrld	$(23), %xmm5
 	pxor	%xmm7, %xmm14
 	movdqa	%xmm13, %xmm7
-	pshufd	$0x93, %xmm13, %xmm13
+	pshufd	$(0x93), %xmm13, %xmm13
 	pxor	%xmm5, %xmm14
 	
 	paddd	%xmm2, %xmm4
 	paddd	%xmm10, %xmm6
 	paddd	%xmm14, %xmm7
 	movdqa	%xmm4, %xmm5
-	pslld	$13, %xmm4
-	psrld	$19, %xmm5
+	pslld	$(13), %xmm4
+	psrld	$(19), %xmm5
 	pxor	%xmm4, %xmm3
 	movdqa	%xmm2, %xmm4
-	pshufd	$0x4e, %xmm2, %xmm2
+	pshufd	$(0x4e), %xmm2, %xmm2
 	pxor	%xmm5, %xmm3
 	movdqa	%xmm6, %xmm5
-	pslld	$13, %xmm6
-	psrld	$19, %xmm5
+	pslld	$(13), %xmm6
+	psrld	$(19), %xmm5
 	pxor	%xmm6, %xmm11
 	movdqa	%xmm10, %xmm6
-	pshufd	$0x4e, %xmm10, %xmm10
+	pshufd	$(0x4e), %xmm10, %xmm10
 	pxor	%xmm5, %xmm11
 	movdqa	%xmm7, %xmm5
-	pslld	$13, %xmm7
-	psrld	$19, %xmm5
+	pslld	$(13), %xmm7
+	psrld	$(19), %xmm5
 	pxor	%xmm7, %xmm15
 	movdqa	%xmm14, %xmm7
-	pshufd	$0x4e, %xmm14, %xmm14
+	pshufd	$(0x4e), %xmm14, %xmm14
 	pxor	%xmm5, %xmm15
 	
 	paddd	%xmm3, %xmm4
 	paddd	%xmm11, %xmm6
 	paddd	%xmm15, %xmm7
 	movdqa	%xmm4, %xmm5
-	pslld	$18, %xmm4
-	psrld	$14, %xmm5
+	pslld	$(18), %xmm4
+	psrld	$(14), %xmm5
 	pxor	%xmm4, %xmm0
-	pshufd	$0x39, %xmm3, %xmm3
+	pshufd	$(0x39), %xmm3, %xmm3
 	pxor	%xmm5, %xmm0
 	movdqa	%xmm6, %xmm5
-	pslld	$18, %xmm6
-	psrld	$14, %xmm5
+	pslld	$(18), %xmm6
+	psrld	$(14), %xmm5
 	pxor	%xmm6, %xmm8
-	pshufd	$0x39, %xmm11, %xmm11
+	pshufd	$(0x39), %xmm11, %xmm11
 	pxor	%xmm5, %xmm8
 	movdqa	%xmm7, %xmm5
-	pslld	$18, %xmm7
-	psrld	$14, %xmm5
+	pslld	$(18), %xmm7
+	psrld	$(14), %xmm5
 	pxor	%xmm7, %xmm12
-	pshufd	$0x39, %xmm15, %xmm15
+	pshufd	$(0x39), %xmm15, %xmm15
 	pxor	%xmm5, %xmm12
 .endm
 
@@ -2293,146 +2294,146 @@ scrypt_core_3way_xmm_loop2:
 	vpaddd	%ymm0, %ymm1, %ymm4
 	vpaddd	%ymm8, %ymm9, %ymm6
 	vpaddd	%ymm12, %ymm13, %ymm7
-	vpslld	$7, %ymm4, %ymm5
-	vpsrld	$25, %ymm4, %ymm4
+	vpslld	$(7), %ymm4, %ymm5
+	vpsrld	$(25), %ymm4, %ymm4
 	vpxor	%ymm5, %ymm3, %ymm3
 	vpxor	%ymm4, %ymm3, %ymm3
-	vpslld	$7, %ymm6, %ymm5
-	vpsrld	$25, %ymm6, %ymm6
+	vpslld	$(7), %ymm6, %ymm5
+	vpsrld	$(25), %ymm6, %ymm6
 	vpxor	%ymm5, %ymm11, %ymm11
 	vpxor	%ymm6, %ymm11, %ymm11
-	vpslld	$7, %ymm7, %ymm5
-	vpsrld	$25, %ymm7, %ymm7
+	vpslld	$(7), %ymm7, %ymm5
+	vpsrld	$(25), %ymm7, %ymm7
 	vpxor	%ymm5, %ymm15, %ymm15
 	vpxor	%ymm7, %ymm15, %ymm15
 	
 	vpaddd	%ymm3, %ymm0, %ymm4
 	vpaddd	%ymm11, %ymm8, %ymm6
 	vpaddd	%ymm15, %ymm12, %ymm7
-	vpslld	$9, %ymm4, %ymm5
-	vpsrld	$23, %ymm4, %ymm4
+	vpslld	$(9), %ymm4, %ymm5
+	vpsrld	$(23), %ymm4, %ymm4
 	vpxor	%ymm5, %ymm2, %ymm2
 	vpxor	%ymm4, %ymm2, %ymm2
-	vpslld	$9, %ymm6, %ymm5
-	vpsrld	$23, %ymm6, %ymm6
+	vpslld	$(9), %ymm6, %ymm5
+	vpsrld	$(23), %ymm6, %ymm6
 	vpxor	%ymm5, %ymm10, %ymm10
 	vpxor	%ymm6, %ymm10, %ymm10
-	vpslld	$9, %ymm7, %ymm5
-	vpsrld	$23, %ymm7, %ymm7
+	vpslld	$(9), %ymm7, %ymm5
+	vpsrld	$(23), %ymm7, %ymm7
 	vpxor	%ymm5, %ymm14, %ymm14
 	vpxor	%ymm7, %ymm14, %ymm14
 	
 	vpaddd	%ymm2, %ymm3, %ymm4
 	vpaddd	%ymm10, %ymm11, %ymm6
 	vpaddd	%ymm14, %ymm15, %ymm7
-	vpslld	$13, %ymm4, %ymm5
-	vpsrld	$19, %ymm4, %ymm4
-	vpshufd	$0x93, %ymm3, %ymm3
-	vpshufd	$0x93, %ymm11, %ymm11
-	vpshufd	$0x93, %ymm15, %ymm15
+	vpslld	$(13), %ymm4, %ymm5
+	vpsrld	$(19), %ymm4, %ymm4
+	vpshufd	$(0x93), %ymm3, %ymm3
+	vpshufd	$(0x93), %ymm11, %ymm11
+	vpshufd	$(0x93), %ymm15, %ymm15
 	vpxor	%ymm5, %ymm1, %ymm1
 	vpxor	%ymm4, %ymm1, %ymm1
-	vpslld	$13, %ymm6, %ymm5
-	vpsrld	$19, %ymm6, %ymm6
+	vpslld	$(13), %ymm6, %ymm5
+	vpsrld	$(19), %ymm6, %ymm6
 	vpxor	%ymm5, %ymm9, %ymm9
 	vpxor	%ymm6, %ymm9, %ymm9
-	vpslld	$13, %ymm7, %ymm5
-	vpsrld	$19, %ymm7, %ymm7
+	vpslld	$(13), %ymm7, %ymm5
+	vpsrld	$(19), %ymm7, %ymm7
 	vpxor	%ymm5, %ymm13, %ymm13
 	vpxor	%ymm7, %ymm13, %ymm13
 	
 	vpaddd	%ymm1, %ymm2, %ymm4
 	vpaddd	%ymm9, %ymm10, %ymm6
 	vpaddd	%ymm13, %ymm14, %ymm7
-	vpslld	$18, %ymm4, %ymm5
-	vpsrld	$14, %ymm4, %ymm4
-	vpshufd	$0x4e, %ymm2, %ymm2
-	vpshufd	$0x4e, %ymm10, %ymm10
-	vpshufd	$0x4e, %ymm14, %ymm14
+	vpslld	$(18), %ymm4, %ymm5
+	vpsrld	$(14), %ymm4, %ymm4
+	vpshufd	$(0x4e), %ymm2, %ymm2
+	vpshufd	$(0x4e), %ymm10, %ymm10
+	vpshufd	$(0x4e), %ymm14, %ymm14
 	vpxor	%ymm5, %ymm0, %ymm0
 	vpxor	%ymm4, %ymm0, %ymm0
-	vpslld	$18, %ymm6, %ymm5
-	vpsrld	$14, %ymm6, %ymm6
+	vpslld	$(18), %ymm6, %ymm5
+	vpsrld	$(14), %ymm6, %ymm6
 	vpxor	%ymm5, %ymm8, %ymm8
 	vpxor	%ymm6, %ymm8, %ymm8
-	vpslld	$18, %ymm7, %ymm5
-	vpsrld	$14, %ymm7, %ymm7
+	vpslld	$(18), %ymm7, %ymm5
+	vpsrld	$(14), %ymm7, %ymm7
 	vpxor	%ymm5, %ymm12, %ymm12
 	vpxor	%ymm7, %ymm12, %ymm12
 	
 	vpaddd	%ymm0, %ymm3, %ymm4
 	vpaddd	%ymm8, %ymm11, %ymm6
 	vpaddd	%ymm12, %ymm15, %ymm7
-	vpslld	$7, %ymm4, %ymm5
-	vpsrld	$25, %ymm4, %ymm4
-	vpshufd	$0x39, %ymm1, %ymm1
+	vpslld	$(7), %ymm4, %ymm5
+	vpsrld	$(25), %ymm4, %ymm4
+	vpshufd	$(0x39), %ymm1, %ymm1
 	vpxor	%ymm5, %ymm1, %ymm1
 	vpxor	%ymm4, %ymm1, %ymm1
-	vpslld	$7, %ymm6, %ymm5
-	vpsrld	$25, %ymm6, %ymm6
-	vpshufd	$0x39, %ymm9, %ymm9
+	vpslld	$(7), %ymm6, %ymm5
+	vpsrld	$(25), %ymm6, %ymm6
+	vpshufd	$(0x39), %ymm9, %ymm9
 	vpxor	%ymm5, %ymm9, %ymm9
 	vpxor	%ymm6, %ymm9, %ymm9
-	vpslld	$7, %ymm7, %ymm5
-	vpsrld	$25, %ymm7, %ymm7
-	vpshufd	$0x39, %ymm13, %ymm13
+	vpslld	$(7), %ymm7, %ymm5
+	vpsrld	$(25), %ymm7, %ymm7
+	vpshufd	$(0x39), %ymm13, %ymm13
 	vpxor	%ymm5, %ymm13, %ymm13
 	vpxor	%ymm7, %ymm13, %ymm13
 	
 	vpaddd	%ymm1, %ymm0, %ymm4
 	vpaddd	%ymm9, %ymm8, %ymm6
 	vpaddd	%ymm13, %ymm12, %ymm7
-	vpslld	$9, %ymm4, %ymm5
-	vpsrld	$23, %ymm4, %ymm4
+	vpslld	$(9), %ymm4, %ymm5
+	vpsrld	$(23), %ymm4, %ymm4
 	vpxor	%ymm5, %ymm2, %ymm2
 	vpxor	%ymm4, %ymm2, %ymm2
-	vpslld	$9, %ymm6, %ymm5
-	vpsrld	$23, %ymm6, %ymm6
+	vpslld	$(9), %ymm6, %ymm5
+	vpsrld	$(23), %ymm6, %ymm6
 	vpxor	%ymm5, %ymm10, %ymm10
 	vpxor	%ymm6, %ymm10, %ymm10
-	vpslld	$9, %ymm7, %ymm5
-	vpsrld	$23, %ymm7, %ymm7
+	vpslld	$(9), %ymm7, %ymm5
+	vpsrld	$(23), %ymm7, %ymm7
 	vpxor	%ymm5, %ymm14, %ymm14
 	vpxor	%ymm7, %ymm14, %ymm14
 	
 	vpaddd	%ymm2, %ymm1, %ymm4
 	vpaddd	%ymm10, %ymm9, %ymm6
 	vpaddd	%ymm14, %ymm13, %ymm7
-	vpslld	$13, %ymm4, %ymm5
-	vpsrld	$19, %ymm4, %ymm4
-	vpshufd	$0x93, %ymm1, %ymm1
-	vpshufd	$0x93, %ymm9, %ymm9
-	vpshufd	$0x93, %ymm13, %ymm13
+	vpslld	$(13), %ymm4, %ymm5
+	vpsrld	$(19), %ymm4, %ymm4
+	vpshufd	$(0x93), %ymm1, %ymm1
+	vpshufd	$(0x93), %ymm9, %ymm9
+	vpshufd	$(0x93), %ymm13, %ymm13
 	vpxor	%ymm5, %ymm3, %ymm3
 	vpxor	%ymm4, %ymm3, %ymm3
-	vpslld	$13, %ymm6, %ymm5
-	vpsrld	$19, %ymm6, %ymm6
+	vpslld	$(13), %ymm6, %ymm5
+	vpsrld	$(19), %ymm6, %ymm6
 	vpxor	%ymm5, %ymm11, %ymm11
 	vpxor	%ymm6, %ymm11, %ymm11
-	vpslld	$13, %ymm7, %ymm5
-	vpsrld	$19, %ymm7, %ymm7
+	vpslld	$(13), %ymm7, %ymm5
+	vpsrld	$(19), %ymm7, %ymm7
 	vpxor	%ymm5, %ymm15, %ymm15
 	vpxor	%ymm7, %ymm15, %ymm15
 	
 	vpaddd	%ymm3, %ymm2, %ymm4
 	vpaddd	%ymm11, %ymm10, %ymm6
 	vpaddd	%ymm15, %ymm14, %ymm7
-	vpslld	$18, %ymm4, %ymm5
-	vpsrld	$14, %ymm4, %ymm4
-	vpshufd	$0x4e, %ymm2, %ymm2
-	vpshufd	$0x4e, %ymm10, %ymm10
+	vpslld	$(18), %ymm4, %ymm5
+	vpsrld	$(14), %ymm4, %ymm4
+	vpshufd	$(0x4e), %ymm2, %ymm2
+	vpshufd	$(0x4e), %ymm10, %ymm10
 	vpxor	%ymm5, %ymm0, %ymm0
 	vpxor	%ymm4, %ymm0, %ymm0
-	vpslld	$18, %ymm6, %ymm5
-	vpsrld	$14, %ymm6, %ymm6
-	vpshufd	$0x4e, %ymm14, %ymm14
-	vpshufd	$0x39, %ymm11, %ymm11
+	vpslld	$(18), %ymm6, %ymm5
+	vpsrld	$(14), %ymm6, %ymm6
+	vpshufd	$(0x4e), %ymm14, %ymm14
+	vpshufd	$(0x39), %ymm11, %ymm11
 	vpxor	%ymm5, %ymm8, %ymm8
 	vpxor	%ymm6, %ymm8, %ymm8
-	vpslld	$18, %ymm7, %ymm5
-	vpsrld	$14, %ymm7, %ymm7
-	vpshufd	$0x39, %ymm3, %ymm3
-	vpshufd	$0x39, %ymm15, %ymm15
+	vpslld	$(18), %ymm7, %ymm5
+	vpsrld	$(14), %ymm7, %ymm7
+	vpshufd	$(0x39), %ymm3, %ymm3
+	vpshufd	$(0x39), %ymm15, %ymm15
 	vpxor	%ymm5, %ymm12, %ymm12
 	vpxor	%ymm7, %ymm12, %ymm12
 .endm
@@ -2490,7 +2491,7 @@ _scrypt_core_6way:
 	vmovdqa	120(%rsp), %xmm13
 	vmovdqa	136(%rsp), %xmm14
 	vmovdqa	152(%rsp), %xmm15
-	addq	$176, %rsp
+	addq	$(176), %rsp
 #endif
 	popq	%rbp
 	popq	%rbx

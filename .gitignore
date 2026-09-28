@@ -2,16 +2,21 @@
 minerd
 minerd.exe
 *.o
+*.a
+*.obj
 
 autom4te.cache
 .deps
+.dirstamp
 
 Makefile
 Makefile.in
 INSTALL
 aclocal.m4
 configure
+configure~
 configure.lineno
+build-aux/
 depcomp
 missing
 install-sh
@@ -29,3 +34,8 @@ mingw32-config.cache
 */.dirstamp
 
 *.iml
+tests/kat
+tests/kat.exe
+tests/*.log
+tests/*.trs
+test-suite.log

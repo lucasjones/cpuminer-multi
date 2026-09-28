@@ -9,7 +9,8 @@
 
 #include "cpuminer-config.h"
 
-#if defined(__linux__) && defined(__ELF__)
+/* the stack is not executable */
+#if defined(__ELF__)
 	.section .note.GNU-stack,"",%progbits
 #endif
 

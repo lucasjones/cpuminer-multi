@@ -18,6 +18,15 @@
 #define EXTERN_SHA256
 #endif
 
+/* x86 SHA extensions (Intel since Goldmont and Ice Lake, AMD since Zen),
+ * used when the CPU has them */
+#if !defined(EXTERN_SHA256) && (defined(__x86_64__) || defined(__i386__)) && \
+	(defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 5))
+#define HAVE_SHANI 1
+#include <cpuid.h>
+#include <immintrin.h>
+#endif
+
 static const uint32_t sha256_h[8] = {
 	0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
 	0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
@@ -79,7 +88,7 @@ void sha256_init(uint32_t *state)
  * SHA256 block compression function.  The 256-bit state is transformed via
  * the 512-bit input block to produce a new state.
  */
-void sha256_transform(uint32_t *state, const uint32_t *block, int swap)
+static void sha256_transform_c(uint32_t *state, const uint32_t *block, int swap)
 {
 	uint32_t W[64];
 	uint32_t S[8];
@@ -171,7 +180,106 @@ void sha256_transform(uint32_t *state, const uint32_t *block, int swap)
 		state[i] += S[i];
 }
 
+#ifdef HAVE_SHANI
+/*
+ * The same with the SHA extensions: four rounds per pair of sha256rnds2,
+ * the message schedule with sha256msg1/sha256msg2. The state is kept as
+ * ABEF and CDGH, as the instructions want it.
+ */
+__attribute__((target("sha,sse4.1")))
+static void sha256_transform_shani(uint32_t *state, const uint32_t *block, int swap)
+{
+	const __m128i bswap = _mm_set_epi64x(0x0c0d0e0f08090a0bULL,
+					     0x0405060700010203ULL);
+	__m128i st0, st1, abef, cdgh, msg, tmp, m[4];
+	int i;
+
+	tmp = _mm_loadu_si128((const __m128i *) &state[0]);	/* DCBA */
+	st1 = _mm_loadu_si128((const __m128i *) &state[4]);	/* HGFE */
+	tmp = _mm_shuffle_epi32(tmp, 0xB1);			/* CDAB */
+	st1 = _mm_shuffle_epi32(st1, 0x1B);			/* EFGH */
+	st0 = _mm_alignr_epi8(tmp, st1, 8);			/* ABEF */
+	st1 = _mm_blend_epi16(st1, tmp, 0xF0);			/* CDGH */
+	abef = st0;
+	cdgh = st1;
+
+	for (i = 0; i < 4; i++) {
+		m[i] = _mm_loadu_si128((const __m128i *) (block + 4 * i));
+		if (swap)
+			m[i] = _mm_shuffle_epi8(m[i], bswap);
+	}
+	for (i = 0; i < 16; i++) {
+		msg = _mm_add_epi32(m[i & 3],
+			_mm_loadu_si128((const __m128i *) &sha256_k[4 * i]));
+		st1 = _mm_sha256rnds2_epu32(st1, st0, msg);
+		if (i >= 3 && i < 15) {
+			/* next four words of the message schedule */
+			tmp = _mm_alignr_epi8(m[i & 3], m[(i - 1) & 3], 4);
+			m[(i + 1) & 3] = _mm_add_epi32(m[(i + 1) & 3], tmp);
+			m[(i + 1) & 3] = _mm_sha256msg2_epu32(m[(i + 1) & 3], m[i & 3]);
+		}
+		msg = _mm_shuffle_epi32(msg, 0x0E);
+		st0 = _mm_sha256rnds2_epu32(st0, st1, msg);
+		if (i >= 1 && i < 13)
+			m[(i - 1) & 3] = _mm_sha256msg1_epu32(m[(i - 1) & 3], m[i & 3]);
+	}
+
+	st0 = _mm_add_epi32(st0, abef);
+	st1 = _mm_add_epi32(st1, cdgh);
+	tmp = _mm_shuffle_epi32(st0, 0x1B);			/* FEBA */
+	st1 = _mm_shuffle_epi32(st1, 0xB1);			/* DCHG */
+	st0 = _mm_blend_epi16(tmp, st1, 0xF0);			/* DCBA */
+	st1 = _mm_alignr_epi8(st1, tmp, 8);			/* HGFE */
+	_mm_storeu_si128((__m128i *) &state[0], st0);
+	_mm_storeu_si128((__m128i *) &state[4], st1);
+}
+
+static bool cpu_has_shani(void)
+{
+	unsigned int eax, ebx, ecx, edx;
+
+	if (__get_cpuid_max(0, NULL) < 7)
+		return false;
+	__cpuid_count(7, 0, eax, ebx, ecx, edx);
+	if (!(ebx & (1u << 29)))		/* SHA */
+		return false;
+	__cpuid(1, eax, ebx, ecx, edx);
+	return (ecx & bit_SSSE3) && (ecx & bit_SSE4_1);
+}
+
+/* -1: not checked yet; 0: portable code; 1: SHA extensions */
+static _Atomic int shani = -1;
+#endif /* HAVE_SHANI */
+
+void sha256_transform(uint32_t *state, const uint32_t *block, int swap)
+{
+#ifdef HAVE_SHANI
+	int use = shani;
+
+	if (unlikely(use < 0))
+		shani = use = cpu_has_shani();
+	if (use) {
+		sha256_transform_shani(state, block, swap);
+		return;
+	}
+#endif
+	sha256_transform_c(state, block, swap);
+}
+
 #endif /* EXTERN_SHA256 */
+
+/* Use the x86 SHA extensions when the CPU has them (the default), or not
+ * (for tests); returns whether they are used. */
+bool sha256_use_shani(bool on)
+{
+#ifdef HAVE_SHANI
+	shani = on && cpu_has_shani();
+	return shani;
+#else
+	(void) on;
+	return false;
+#endif
+}
 
 
 static const uint32_t sha256d_hash1[16] = {
@@ -194,6 +302,40 @@ static void sha256d_80_swap(uint32_t *hash, const uint32_t *data)
 	sha256_transform(hash, S, 0);
 	for (i = 0; i < 8; i++)
 		hash[i] = swab32(hash[i]);
+}
+
+/* Plain SHA-256 of a short message (len < 512 MiB). */
+/* SHA-256 of any number of bytes (Verthash's data file is 1.2 GB: the
+ * length in bits takes more than 32 bits) */
+void sha256_hash(unsigned char *hash, const unsigned char *data, size_t len)
+{
+	uint32_t S[16], T[16];
+	const uint64_t bits = (uint64_t) len * 8;
+	size_t done = 0, rest;
+	int i;
+
+	sha256_init(S);
+	for (; len - done >= 64; done += 64) {
+		for (i = 0; i < 16; i++)
+			T[i] = be32dec(data + done + 4 * i);
+		sha256_transform(S, T, 0);
+	}
+	/* the rest, 0x80, zeros, and the length in bits: one block or two */
+	rest = len - done;
+	memset(T, 0, 64);
+	memcpy(T, data + done, rest);
+	((unsigned char *)T)[rest] = 0x80;
+	for (i = 0; i < 16; i++)
+		T[i] = be32dec(T + i);
+	if (rest >= 56) {
+		sha256_transform(S, T, 0);
+		memset(T, 0, 64);
+	}
+	T[14] = (uint32_t) (bits >> 32);
+	T[15] = (uint32_t) bits;
+	sha256_transform(S, T, 0);
+	for (i = 0; i < 8; i++)
+		be32enc((uint32_t *)hash + i, S[i]);
 }
 
 void sha256d(unsigned char *hash, const unsigned char *data, int len)

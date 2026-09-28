@@ -1,0 +1,15 @@
+RandomX from tevador (https://github.com/tevador/RandomX): release
+v2.0.1, commit aaafe71 of 2026-05-10. By tevador, SChernykh and the other
+RandomX authors, under the BSD 3-clause license (LICENSE, and the header
+of each file); its Argon2 and BLAKE2b code comes from the Argon2 and
+BLAKE2 reference code, under CC0.
+
+This is RandomX's src/ directory, less the MSVC assembly
+(jit_compiler_x86_static.asm) and the tests. cpuminer-multi's rx.c uses
+it for the randomx (rx/0, Monero) algorithm; Makefile.am builds it as the
+library's CMakeLists.txt does, with the same per-file flags.
+
+Local changes:
+- the .S files mark the stack as not executable on ELF systems (they
+  would give the whole program an executable stack otherwise);
+- line endings are LF (jit_compiler_rv64_vector_static.h had some CRLF).
